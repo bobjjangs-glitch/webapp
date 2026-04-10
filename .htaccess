@@ -1,0 +1,13 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteBase /
+
+    # 실제 파일이나 디렉토리면 그대로 서빙
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+
+    # 모든 요청을 index.php로 라우팅
+    RewriteRule ^(.*)$ index.php?route=$1 [QSA,L]
+</IfModule>
