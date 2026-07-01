@@ -1,0 +1,734 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>장바구니 - TIRETOP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <script src="js/store.js"></script>
+  <script src="components/loader.js" defer></script>
+  <style>
+    .cart-wrap {
+      max-width: var(--max-w); margin: 0 auto;
+      padding: 32px 24px 80px;
+      display: grid; grid-template-columns: 1fr 340px;
+      gap: 28px; align-items: start;
+    }
+    .cart-section {
+      background: #fff; border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm); overflow: hidden; margin-bottom: 20px;
+    }
+    .cart-section-head {
+      padding: 18px 24px; border-bottom: 1px solid var(--gray5);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .cart-section-title { font-size: 16px; font-weight: 800; }
+    .cart-select-all {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 14px; cursor: pointer;
+    }
+    .cart-select-all input { accent-color: var(--primary); width: 18px; height: 18px; }
+    .cart-item {
+      padding: 20px 24px; border-bottom: 1px solid var(--gray5);
+      display: flex; align-items: center; gap: 16px;
+    }
+    .cart-item:last-child { border-bottom: none; }
+    .cart-item-check { flex-shrink: 0; }
+    .cart-item-check input {
+      accent-color: var(--primary); width: 18px; height: 18px; cursor: pointer;
+    }
+    .cart-item-img {
+      width: 80px; height: 80px; background: var(--gray6);
+      border-radius: var(--radius-md);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 36px; flex-shrink: 0; overflow: hidden;
+    }
+    .cart-item-img img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .cart-item-info  { flex: 1; }
+    .cart-item-brand { font-size: 11px; color: var(--gray3); font-weight: 600; }
+    .cart-item-name  { font-size: 15px; font-weight: 700; margin-bottom: 4px; }
+    .cart-item-spec  { font-size: 12px; color: var(--gray3); margin-bottom: 8px; }
+    .cart-item-tags  { display: flex; gap: 4px; }
+    .cart-item-price { text-align: right; flex-shrink: 0; }
+    .cart-item-price .origin {
+      font-size: 12px; color: var(--gray4);
+      text-decoration: line-through; display: block; margin-bottom: 2px;
+    }
+    .cart-item-price .final {
+      font-size: 18px; font-weight: 900; color: var(--primary);
+    }
+    .cart-qty {
+      display: flex; align-items: center; gap: 0;
+      border: 1.5px solid var(--gray5); border-radius: var(--radius-sm);
+      overflow: hidden; margin-top: 8px; width: fit-content;
+    }
+    .cart-qty-btn {
+      width: 30px; height: 30px; background: var(--gray6);
+      border: none; font-size: 16px; cursor: pointer;
+    }
+    .cart-qty-val {
+      width: 36px; height: 30px; border: none;
+      border-left: 1px solid var(--gray5); border-right: 1px solid var(--gray5);
+      text-align: center; font-size: 13px; font-weight: 700;
+    }
+    .cart-item-del {
+      background: none; border: none; color: var(--gray4);
+      font-size: 18px; cursor: pointer; padding: 4px; flex-shrink: 0;
+    }
+    .cart-item-del:hover { color: var(--primary); }
+    /* 주문 요약 */
+    .order-summary {
+      background: #fff; border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-sm); padding: 24px;
+      position: sticky; top: calc(var(--header-h) + var(--gnb-h) + 16px);
+    }
+    .order-summary h3 { font-size: 18px; font-weight: 900; margin-bottom: 20px; }
+    .order-row {
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 10px 0; font-size: 14px; border-bottom: 1px solid var(--gray5);
+    }
+    .order-row:last-of-type { border-bottom: none; }
+    .order-row.total {
+      font-size: 18px; font-weight: 900; padding-top: 16px;
+      border-top: 2px solid var(--dark); border-bottom: none;
+    }
+    .order-row.total .val { color: var(--primary); }
+    .coupon-input { display: flex; gap: 8px; margin: 16px 0; }
+    .coupon-input input {
+      flex: 1; height: 42px; border: 1.5px solid var(--gray5);
+      border-radius: var(--radius-md); padding: 0 14px;
+      font-size: 13px; outline: none;
+    }
+    .coupon-input input:focus { border-color: var(--primary); }
+    .coupon-input button {
+      padding: 0 16px; height: 42px; background: var(--dark);
+      color: #fff; border: none; border-radius: var(--radius-md);
+      font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap;
+    }
+    .btn-checkout {
+      width: 100%; height: 56px; background: var(--primary);
+      color: #fff; border: none; border-radius: var(--radius-md);
+      font-size: 17px; font-weight: 900; cursor: pointer;
+      margin-top: 16px; transition: background var(--transition);
+    }
+    .btn-checkout:hover { background: var(--primary-dark); }
+    .reco-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; }
+    .empty-cart {
+      padding: 60px; text-align: center; color: var(--gray3);
+    }
+    .empty-cart .icon { font-size: 64px; margin-bottom: 16px; }
+    .empty-cart h3   { font-size: 18px; font-weight: 800; margin-bottom: 8px; color: var(--dark); }
+    .empty-cart p    { font-size: 14px; margin-bottom: 20px; }
+    /* 쿠폰 적용 결과 */
+    .coupon-result {
+      display: none; padding: 8px 12px;
+      background: #f0fdf4; border: 1px solid #86efac;
+      border-radius: 8px; font-size: 12px; color: #166534;
+      font-weight: 600; margin-top: 4px;
+    }
+    .coupon-result.show { display: block; }
+    .coupon-result.error {
+      background: #fff5f5; border-color: #fca5a5; color: #dc2626;
+    }
+    @media (max-width: 900px) {
+      .cart-wrap { grid-template-columns: 1fr; }
+      .order-summary { position: static; }
+    }
+    @media (max-width: 600px) {
+      .reco-grid { grid-template-columns: repeat(2,1fr); }
+      .cart-item { flex-wrap: wrap; }
+    }
+  </style>
+</head>
+<body>
+<div id="tt-header"></div>
+
+<div class="breadcrumb">
+  <div class="breadcrumb-inner">
+    <a href="index.html">홈</a> › <span>장바구니</span>
+  </div>
+</div>
+
+<div class="cart-wrap">
+  <!-- 왼쪽: 상품 목록 -->
+  <div>
+    <div class="cart-section">
+      <div class="cart-section-head">
+        <label class="cart-select-all">
+          <input type="checkbox" id="selectAll"
+                 onchange="toggleAll(this.checked)"> 전체 선택
+        </label>
+        <button onclick="deleteSelected()"
+                style="font-size:13px;color:var(--gray3);
+                       background:none;border:none;cursor:pointer">
+          선택 삭제
+        </button>
+      </div>
+      <div id="cartItems"></div>
+    </div>
+
+    <!-- 장착점 선택 -->
+    <div class="cart-section">
+      <div class="cart-section-head">
+        <span class="cart-section-title">📍 장착점 선택</span>
+      </div>
+      <div style="padding:20px 24px">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div id="storeOptionA" class="store-option"
+               style="border:2px solid var(--primary);border-radius:var(--radius-md);
+                      padding:16px;cursor:pointer;background:var(--primary-pale)"
+               onclick="selectStore('A',this)">
+            <div style="font-weight:800;margin-bottom:4px">🏪 서울 강남점</div>
+            <div style="font-size:12px;color:var(--gray2)">서울 강남구 테헤란로 123</div>
+            <div style="font-size:11px;color:var(--primary);margin-top:6px;font-weight:700">
+              ✓ 선택됨
+            </div>
+          </div>
+          <div id="storeOptionB" class="store-option"
+               style="border:2px solid var(--gray5);border-radius:var(--radius-md);
+                      padding:16px;cursor:pointer"
+               onclick="selectStore('B',this)">
+            <div style="font-weight:800;margin-bottom:4px">🏪 서울 송파점</div>
+            <div style="font-size:12px;color:var(--gray2)">서울 송파구 올림픽로 456</div>
+            <div style="font-size:12px;color:var(--gray3);margin-top:6px">다른 매장 →</div>
+          </div>
+        </div>
+        <button onclick="location.href='store.html'"
+                style="margin-top:12px;width:100%;height:40px;
+                       border:1.5px solid var(--gray5);border-radius:var(--radius-md);
+                       background:#fff;font-size:13px;font-weight:600;cursor:pointer">
+          📍 매장 더 보기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 오른쪽: 주문 요약 -->
+  <div class="order-summary">
+    <h3>주문 요약</h3>
+    <div class="order-row">
+      <span>상품금액</span>
+      <span id="sumPrice">0원</span>
+    </div>
+    <div class="order-row">
+      <span>할인금액</span>
+      <span id="sumDiscount" style="color:var(--primary)">-0원</span>
+    </div>
+    <div class="order-row">
+      <span>쿠폰 할인</span>
+      <span id="sumCoupon" style="color:var(--primary)">-0원</span>
+    </div>
+    <div class="order-row">
+      <span>배송비</span>
+      <span style="color:var(--green)" id="sumDelivery">무료</span>
+    </div>
+    <div class="order-row total">
+      <span>총 결제금액</span>
+      <span class="val" id="sumTotal">0원</span>
+    </div>
+
+    <!-- 쿠폰 입력 -->
+    <div class="coupon-input">
+      <input type="text" placeholder="쿠폰 코드 입력"
+             id="couponInput" style="text-transform:uppercase">
+      <button onclick="applyCoupon()">적용</button>
+    </div>
+    <div class="coupon-result" id="couponResult"></div>
+
+    <!-- 포인트 -->
+    <div style="font-size:12px;color:var(--gray3);margin-bottom:8px;margin-top:8px">
+      💰 보유 포인트:
+      <strong style="color:var(--dark)" id="myPointDisp">0P</strong>
+      <button onclick="usePoints()"
+              style="margin-left:8px;padding:2px 10px;
+                     border:1px solid var(--gray5);border-radius:4px;
+                     font-size:11px;cursor:pointer;background:#fff">
+        사용
+      </button>
+    </div>
+
+    <button class="btn-checkout" onclick="goCheckout()">결제하기 →</button>
+    <button onclick="location.href='product-list.html'"
+            style="width:100%;height:42px;border:1.5px solid var(--gray5);
+                   border-radius:var(--radius-md);background:#fff;
+                   font-size:14px;font-weight:600;cursor:pointer;margin-top:8px">
+      쇼핑 계속하기
+    </button>
+  </div>
+</div>
+
+<!-- 추천 상품 -->
+<div style="max-width:var(--max-w);margin:0 auto;padding:0 24px 80px">
+  <h3 style="font-size:20px;font-weight:900;margin-bottom:16px">함께 구매하면 좋아요</h3>
+  <div class="reco-grid" id="recoGrid"></div>
+</div>
+
+<div id="tt-footer"></div>
+
+<script>
+/* ══════════════════════════════
+   상태
+══════════════════════════════ */
+let cartState   = [];   /* { ...product, checked, qty } */
+let appliedCoupon = null;
+let usedPoint   = 0;
+
+/* ══════════════════════════════
+   초기화
+══════════════════════════════ */
+document.addEventListener('DOMContentLoaded', () => {
+  loadCart();
+  renderRecoProducts();
+  loadUserPoint();
+
+  /* TTStore 장바구니 변경 감지 */
+  window.addEventListener('tt_store_update', e => {
+    if (e.detail.key === 'tt_cart') {
+      loadCart();
+      loadUserPoint();
+    }
+  });
+});
+
+/* ── TTStore 에서 장바구니 로드 ── */
+function loadCart() {
+  const stored = TTStore.getCart();
+  /* checked 상태 유지 */
+  cartState = stored.map(item => {
+    const prev = cartState.find(x => x.id === item.id);
+    return { ...item, checked: prev ? prev.checked : true };
+  });
+  renderCart();
+}
+
+/* ── 보유 포인트 표시 ── */
+function loadUserPoint() {
+  const userStr = localStorage.getItem('tt_user') || sessionStorage.getItem('tt_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  const el   = document.getElementById('myPointDisp');
+  if (el) el.textContent = ((user?.points || user?.point)||0).toLocaleString() + 'P';
+}
+
+/* ══════════════════════════════
+   장바구니 렌더링
+══════════════════════════════ */
+function renderCart() {
+  const container = document.getElementById('cartItems');
+  if (!container) return;
+
+  if (!cartState.length) {
+    container.innerHTML = `
+      <div class="empty-cart">
+        <div class="icon">🛒</div>
+        <h3>장바구니가 비어 있습니다</h3>
+        <p>원하는 상품을 담아보세요!</p>
+        <button class="btn btn-primary"
+                onclick="location.href='product-list.html'">
+          쇼핑하러 가기
+        </button>
+      </div>`;
+    updateSummary();
+    return;
+  }
+
+  container.innerHTML = cartState.map((item, idx) => {
+    const disc   = item.price > item.salePrice
+      ? Math.round((1 - item.salePrice/item.price)*100) : 0;
+    const imgContent = item.img
+      ? `<img src="${item.img}"
+              alt="${item.name}"
+              onerror="this.parentElement.textContent='📦'">`
+      : (item.emoji || '📦');
+
+    return `
+      <div class="cart-item" id="cartItem${idx}">
+        <div class="cart-item-check">
+          <input type="checkbox" ${item.checked ? 'checked' : ''}
+                 onchange="toggleItem(${idx}, this.checked)">
+        </div>
+        <div class="cart-item-img">${imgContent}</div>
+        <div class="cart-item-info">
+          <div class="cart-item-brand">${item.brand || ''}</div>
+          <div class="cart-item-name">${item.name}</div>
+          <div class="cart-item-spec">${item.size || item.spec || ''}</div>
+          ${item.badge
+            ? `<div class="cart-item-tags">
+                 <span class="tag tag-red">${item.badge}</span>
+               </div>`
+            : ''}
+          <div class="cart-qty">
+            <button class="cart-qty-btn"
+                    onclick="changeCartQty(${idx}, -1)">−</button>
+            <input class="cart-qty-val" type="number"
+                   value="${item.qty}" min="1"
+                   onchange="setCartQty(${idx}, this.value)">
+            <button class="cart-qty-btn"
+                    onclick="changeCartQty(${idx}, 1)">+</button>
+          </div>
+        </div>
+        <div class="cart-item-price">
+          ${item.price > item.salePrice
+            ? `<span class="origin">${item.price.toLocaleString()}원</span>`
+            : ''}
+          ${disc > 0
+            ? `<span style="font-size:12px;color:var(--primary);font-weight:700;
+                           display:block;margin-bottom:2px;">-${disc}%</span>`
+            : ''}
+          <span class="final">
+            ${((item.salePrice||item.price) * item.qty).toLocaleString()}원
+          </span>
+        </div>
+        <button class="cart-item-del"
+                onclick="removeItem(${idx})">✕</button>
+      </div>`;
+  }).join('');
+
+  updateSummary();
+
+  /* 전체선택 체크박스 동기화 */
+  const allChk = document.getElementById('selectAll');
+  if (allChk) {
+    allChk.checked = cartState.length > 0 && cartState.every(i => i.checked);
+  }
+}
+
+/* ══════════════════════════════
+   주문 요약 계산
+══════════════════════════════ */
+function updateSummary() {
+  const checked  = cartState.filter(i => i.checked);
+  const origSum  = checked.reduce((s,i) => s + i.price * i.qty, 0);
+  const saleSum  = checked.reduce((s,i) => s + (i.salePrice||i.price) * i.qty, 0);
+  const disc     = origSum - saleSum;
+
+  /* 쿠폰 할인 */
+  const couponDisc = appliedCoupon?.disc || 0;
+
+  /* 포인트 사용 */
+  const pointDisc  = usedPoint;
+
+  /* 배송비 */
+  const settings   = TTStore.getSettings();
+  const freeAmt    = settings.freeDeliveryAmt || 50000;
+  const baseFee    = settings.baseDeliveryFee || 3000;
+  const deliveryFee= (settings.freeDelivery && saleSum - couponDisc >= freeAmt)
+    ? 0 : (checked.length > 0 ? baseFee : 0);
+
+  const total = Math.max(0, saleSum - couponDisc - pointDisc + deliveryFee);
+
+  document.getElementById('sumPrice').textContent    =
+    origSum.toLocaleString() + '원';
+  document.getElementById('sumDiscount').textContent =
+    '-' + disc.toLocaleString() + '원';
+  document.getElementById('sumCoupon').textContent   =
+    '-' + couponDisc.toLocaleString() + '원';
+  document.getElementById('sumDelivery').textContent =
+    deliveryFee === 0 ? '무료' : deliveryFee.toLocaleString() + '원';
+  document.getElementById('sumTotal').textContent    =
+    total.toLocaleString() + '원';
+}
+
+/* ══════════════════════════════
+   장바구니 조작 (TTStore 연동)
+══════════════════════════════ */
+function toggleItem(idx, val) {
+  cartState[idx].checked = val;
+  updateSummary();
+  /* 전체선택 동기화 */
+  const allChk = document.getElementById('selectAll');
+  if (allChk) allChk.checked = cartState.every(i => i.checked);
+}
+
+function toggleAll(val) {
+  cartState.forEach(i => i.checked = val);
+  renderCart();
+}
+
+function changeCartQty(idx, delta) {
+  const item = cartState[idx];
+  if (!item) return;
+  const newQty = Math.max(1, item.qty + delta);
+  item.qty = newQty;
+  /* TTStore 업데이트 */
+  TTStore.updateCartQty(item.id, newQty);
+  renderCart();
+}
+
+function setCartQty(idx, val) {
+  const item = cartState[idx];
+  if (!item) return;
+  const newQty = Math.max(1, parseInt(val)||1);
+  item.qty = newQty;
+  TTStore.updateCartQty(item.id, newQty);
+  renderCart();
+}
+
+function removeItem(idx) {
+  const item = cartState[idx];
+  if (!item) return;
+  TTStore.removeFromCart(item.id);
+  cartState.splice(idx, 1);
+  renderCart();
+  showToast('삭제', '상품을 삭제했습니다.', 'info');
+}
+
+function deleteSelected() {
+  const toRemove = cartState.filter(i => i.checked);
+  if (!toRemove.length) {
+    showToast('알림', '선택된 상품이 없습니다.', 'info');
+    return;
+  }
+  toRemove.forEach(i => TTStore.removeFromCart(i.id));
+  cartState = cartState.filter(i => !i.checked);
+  renderCart();
+  showToast('삭제', '선택 상품을 삭제했습니다.', 'info');
+}
+
+/* ══════════════════════════════
+   매장 선택
+══════════════════════════════ */
+function selectStore(key, el) {
+  document.querySelectorAll('.store-option').forEach(o => {
+    o.style.borderColor  = 'var(--gray5)';
+    o.style.background   = '#fff';
+    const last = o.querySelector('div:last-child');
+    if (last) { last.textContent = '다른 매장 →'; last.style.color = 'var(--gray3)'; }
+  });
+  el.style.borderColor = 'var(--primary)';
+  el.style.background  = 'var(--primary-pale)';
+  const last = el.querySelector('div:last-child');
+  if (last) { last.textContent = '✓ 선택됨'; last.style.color = 'var(--primary)'; }
+}
+
+/* ══════════════════════════════
+   쿠폰 적용 (TTStore 연동)
+══════════════════════════════ */
+function applyCoupon() {
+  const code    = document.getElementById('couponInput')?.value.trim().toUpperCase();
+  const resultEl= document.getElementById('couponResult');
+
+  if (!code) {
+    showToast('쿠폰', '쿠폰 코드를 입력해 주세요.', 'info');
+    return;
+  }
+
+  const checked = cartState.filter(i => i.checked);
+  const amount  = checked.reduce((s,i) => s + (i.salePrice||i.price)*i.qty, 0);
+
+  const result = TTStore.validateCoupon(code, amount);
+
+  if (!resultEl) return;
+
+  if (!result.ok) {
+    resultEl.textContent = '✗ ' + result.msg;
+    resultEl.className   = 'coupon-result show error';
+    appliedCoupon        = null;
+    showToast('쿠폰', result.msg, 'error');
+    return;
+  }
+
+  appliedCoupon  = result;
+  resultEl.textContent = '✓ ' + result.msg + (result.disc ? ` (${result.disc.toLocaleString()}원 할인)` : '');
+  resultEl.className   = 'coupon-result show';
+
+  updateSummary();
+  showToast('쿠폰 적용', result.msg, 'success');
+}
+
+/* ══════════════════════════════
+   포인트 사용
+══════════════════════════════ */
+function usePoints() {
+  if (!TTStore.isLoggedIn()) {
+    showToast('로그인 필요', '로그인 후 포인트를 사용할 수 있습니다.', 'info');
+    return;
+  }
+  const user = TTStore.getCurrentUser();
+  if (!user || !user.point) {
+    showToast('포인트', '사용 가능한 포인트가 없습니다.', 'info');
+    return;
+  }
+  const checked  = cartState.filter(i => i.checked);
+  const amount   = checked.reduce((s,i)=>s+(i.salePrice||i.price)*i.qty,0);
+  usedPoint = Math.min(user.point, amount);
+  updateSummary();
+  showToast('포인트', usedPoint.toLocaleString() + 'P가 적용되었습니다.', 'success');
+}
+
+/* ══════════════════════════════
+   결제 페이지 이동
+══════════════════════════════ */
+async function goCheckout() {
+  const checked = cartState.filter(i => i.checked);
+  if (!checked.length) {
+    showToast('알림', '상품을 선택해 주세요.', 'info');
+    return;
+  }
+  const token = localStorage.getItem('tt_token') || sessionStorage.getItem('tt_token');
+  const userStr = localStorage.getItem('tt_user') || sessionStorage.getItem('tt_user');
+  const user = userStr ? JSON.parse(userStr) : null;
+  if (!token || !user) {
+    showToast('로그인 필요', '주문하려면 로그인이 필요합니다.', 'info');
+    setTimeout(() => { location.href = 'login.html?redirect=cart.html'; }, 800);
+    return;
+  }
+  const sum = checked.reduce((a,i)=>a+(i.salePrice||i.price)*i.qty,0);
+  const deliveryFee = sum >= 50000 ? 0 : 3000;
+  const discountAmt = appliedCoupon
+    ? (appliedCoupon.type === 'rate' ? Math.floor(sum * appliedCoupon.discount / 100) : appliedCoupon.discount)
+    : 0;
+  const totalAmount = Math.max(0, sum + deliveryFee - discountAmt - usedPoint);
+
+  const orderPayload = {
+    customer_name:    user.name || '주문자',
+    customer_phone:   user.phone || '',
+    customer_email:   user.email || '',
+    items: checked.map(i => ({
+      product_id: i.id,
+      qty:        i.qty,
+    })),
+    payment_method:   'card',
+    coupon_id:        appliedCoupon?.id || null,
+    point_used:       usedPoint || 0,
+    shipping_address: user.address || '미입력',
+    memo: '',
+  };
+
+  try {
+    showToast('처리중', '주문을 접수하고 있습니다...', 'info');
+    const res = await fetch('/api/orders', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + token,
+      },
+      body: JSON.stringify(orderPayload),
+    });
+    const data = await res.json();
+    if (data?.success) {
+      // 장바구니 비우기
+      checked.forEach(i => TTStore.removeFromCart(i.id));
+      showToast('주문 완료', `주문이 접수되었습니다! (주문번호: ${data.data?.order_id || data.data?.id || ''})`, 'success');
+      setTimeout(() => { location.href = 'mypage.html?tab=orders'; }, 1800);
+    } else {
+      showToast('주문 실패', data?.error || '주문 처리 중 오류가 발생했습니다.', 'error');
+    }
+  } catch(e) {
+    showToast('오류', '서버 오류가 발생했습니다.', 'error');
+  }
+}
+
+/* ══════════════════════════════
+   추천 상품 렌더링 (TTStore 연동)
+══════════════════════════════ */
+function renderRecoProducts() {
+  const grid = document.getElementById('recoGrid');
+  if (!grid) return;
+
+  /* TTStore 에서 활성 상품 4개 */
+  const products = TTStore.getActiveProducts()
+    .filter(p => p.stock > 0)
+    .slice(0, 4);
+
+  if (!products.length) {
+    /* 폴백: 정적 데이터 */
+    grid.innerHTML = `
+      ${[
+        { id:7,  emoji:'🟡', brand:'모빌1',   name:'5W-30 6L',          price:42000 },
+        { id:9,  emoji:'🔋', brand:'델코',    name:'DIN60 배터리',       price:98000 },
+        { id:11, emoji:'🌧️', brand:'보쉬',   name:'에어로트윈 650mm',   price:32000 },
+        { id:2,  emoji:'🔵', brand:'미쉐린',  name:'에너지 세이버+',     price:112000 },
+      ].map(p => `
+        <div class="reco-card"
+             style="background:#fff;border-radius:var(--radius-lg);
+                    box-shadow:var(--shadow-sm);overflow:hidden;cursor:pointer"
+             onclick="location.href='product-detail.html?id=${p.id}'">
+          <div style="background:var(--gray6);aspect-ratio:1;
+                      display:flex;align-items:center;
+                      justify-content:center;font-size:40px">
+            ${p.emoji}
+          </div>
+          <div style="padding:12px">
+            <div style="font-size:11px;color:var(--gray3)">${p.brand}</div>
+            <div style="font-size:13px;font-weight:700;margin-bottom:4px">${p.name}</div>
+            <div style="color:var(--primary);font-weight:900">
+              ${p.price.toLocaleString()}원
+            </div>
+          </div>
+        </div>`).join('')}`;
+    return;
+  }
+
+  grid.innerHTML = products.map(p => {
+    const disc = p.price > p.salePrice
+      ? Math.round((1-p.salePrice/p.price)*100) : 0;
+    return `
+      <div class="reco-card"
+           style="background:#fff;border-radius:var(--radius-lg);
+                  box-shadow:var(--shadow-sm);overflow:hidden;cursor:pointer;
+                  transition:all var(--transition);"
+           onmouseover="this.style.transform='translateY(-3px)';
+                        this.style.boxShadow='var(--shadow-md)'"
+           onmouseout="this.style.transform='';this.style.boxShadow='var(--shadow-sm)'"
+           onclick="location.href='product-detail.html?id=${p.id}'">
+        <div style="background:var(--gray6);aspect-ratio:1;
+                    display:flex;align-items:center;
+                    justify-content:center;font-size:40px;
+                    position:relative;overflow:hidden;">
+          ${p.img
+            ? `<img src="${p.img}" alt="${p.name}"
+                    style="width:100%;height:100%;object-fit:cover;"
+                    onerror="this.parentElement.innerHTML='📦'">`
+            : '📦'}
+          ${disc > 0
+            ? `<span style="position:absolute;top:6px;left:6px;
+                            background:var(--primary);color:#fff;
+                            font-size:10px;font-weight:800;
+                            padding:2px 7px;border-radius:4px;">
+                -${disc}%
+               </span>`
+            : ''}
+        </div>
+        <div style="padding:12px">
+          <div style="font-size:11px;color:var(--gray3)">${p.brand||''}</div>
+          <div style="font-size:13px;font-weight:700;margin-bottom:4px;
+                      overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+            ${p.name}
+          </div>
+          <div style="display:flex;align-items:baseline;gap:4px;">
+            <span style="color:var(--primary);font-weight:900;">
+              ${(p.salePrice||p.price).toLocaleString()}원
+            </span>
+            ${disc > 0
+              ? `<span style="font-size:11px;color:var(--gray4);
+                              text-decoration:line-through;">
+                  ${p.price.toLocaleString()}원
+                 </span>`
+              : ''}
+          </div>
+          <button onclick="event.stopPropagation();quickAddToCart(${p.id})"
+                  style="width:100%;height:32px;margin-top:8px;
+                         background:var(--primary);color:#fff;
+                         border:none;border-radius:6px;
+                         font-size:12px;font-weight:600;cursor:pointer;">
+            🛒 담기
+          </button>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ── 추천 상품 빠른 담기 ── */
+function quickAddToCart(productId) {
+  const p = TTStore.getProduct(productId);
+  if (!p) return;
+  TTStore.addToCart(p, 1);
+  loadCart();
+  showToast('장바구니', p.name + '을(를) 담았습니다.', 'success');
+}
+</script>
+</body>
+</html>

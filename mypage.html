@@ -1,0 +1,1784 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>마이페이지 - TIRETOP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <script src="js/store.js"></script>
+  <script src="components/loader.js" defer></script>
+  <style>
+    :root {
+      --primary:#e02020; --primary-dark:#c01010; --primary-light:#fff0f0;
+      --gray1:#f8f9fa; --gray2:#e9ecef; --gray3:#adb5bd;
+      --gray4:#6c757d; --gray5:#343a40;
+      --text:#1a1a1a; --white:#ffffff;
+      --shadow:0 2px 12px rgba(0,0,0,.08);
+      --shadow-lg:0 8px 32px rgba(0,0,0,.14);
+      --radius-sm:6px; --radius-md:10px; --radius-lg:16px;
+    }
+
+    * { box-sizing:border-box; margin:0; padding:0; }
+    body { font-family:'Noto Sans KR',sans-serif; color:var(--text); background:#f4f6f9; }
+
+    /* ── 브레드크럼 ── */
+    .breadcrumb {
+      max-width:1200px; margin:0 auto; padding:14px 20px;
+      font-size:13px; color:var(--gray4);
+    }
+    .breadcrumb a { color:var(--gray4); text-decoration:none; }
+    .breadcrumb a:hover { color:var(--primary); }
+    .breadcrumb span { margin:0 6px; }
+
+    /* ── 레이아웃 ── */
+    .mypage-wrap {
+      max-width:1200px; margin:0 auto; padding:0 20px 60px;
+      display:grid; grid-template-columns:240px 1fr; gap:24px;
+    }
+
+    /* ── 사이드바 ── */
+    .mypage-sidebar { display:flex; flex-direction:column; gap:16px; }
+
+    .sidebar-profile {
+      background:#fff; border-radius:var(--radius-lg);
+      padding:24px 20px; box-shadow:var(--shadow);
+      text-align:center;
+    }
+    .sidebar-avatar {
+      width:72px; height:72px; border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),#ff6b6b);
+      color:#fff; font-size:28px; font-weight:900;
+      display:flex; align-items:center; justify-content:center;
+      margin:0 auto 12px;
+    }
+    .sidebar-name { font-size:17px; font-weight:700; margin-bottom:4px; }
+    .sidebar-email { font-size:12px; color:var(--gray4); margin-bottom:14px; }
+    .sidebar-grade {
+      display:inline-flex; align-items:center; gap:6px;
+      padding:5px 14px; border-radius:16px;
+      background:var(--primary-light); color:var(--primary);
+      font-size:12px; font-weight:700;
+    }
+    .sidebar-points {
+      margin-top:14px; padding:12px;
+      background:var(--gray1); border-radius:var(--radius-md);
+      font-size:13px;
+    }
+    .sidebar-points .point-val {
+      font-size:20px; font-weight:900; color:var(--primary);
+      display:block; margin-top:4px;
+    }
+
+    .sidebar-nav {
+      background:#fff; border-radius:var(--radius-lg);
+      padding:8px 0; box-shadow:var(--shadow);
+    }
+    .sidebar-nav-section {
+      padding:10px 20px 4px;
+      font-size:11px; font-weight:700; color:var(--gray3);
+      letter-spacing:.5px; text-transform:uppercase;
+    }
+    .sidebar-nav-item {
+      display:flex; align-items:center; gap:10px;
+      padding:11px 20px; font-size:14px; font-weight:500;
+      color:var(--gray5); cursor:pointer;
+      border:none; background:none; width:100%;
+      text-align:left; font-family:inherit;
+      transition:background .15s, color .15s;
+      border-left:3px solid transparent;
+    }
+    .sidebar-nav-item:hover { background:var(--gray1); color:var(--primary); }
+    .sidebar-nav-item.active {
+      background:var(--primary-light); color:var(--primary);
+      font-weight:700; border-left-color:var(--primary);
+    }
+    .sidebar-nav-badge {
+      margin-left:auto; min-width:18px; height:18px; border-radius:9px;
+      background:var(--primary); color:#fff; font-size:10px;
+      font-weight:700; display:flex; align-items:center;
+      justify-content:center; padding:0 5px;
+    }
+
+    /* ── 메인 콘텐츠 ── */
+    .mypage-content { display:flex; flex-direction:column; gap:20px; }
+
+    .mypage-section {
+      background:#fff; border-radius:var(--radius-lg);
+      padding:28px; box-shadow:var(--shadow);
+      display:none;
+    }
+    .mypage-section.active { display:block; }
+
+    .section-header {
+      display:flex; align-items:center; justify-content:space-between;
+      margin-bottom:20px; padding-bottom:16px;
+      border-bottom:2px solid var(--gray2);
+    }
+    .section-title {
+      font-size:18px; font-weight:700; display:flex;
+      align-items:center; gap:8px;
+    }
+    .section-action-btn {
+      padding:8px 16px; border-radius:var(--radius-sm);
+      border:1.5px solid var(--primary); background:#fff;
+      color:var(--primary); font-size:13px; font-weight:600;
+      cursor:pointer; font-family:inherit; transition:all .2s;
+    }
+    .section-action-btn:hover { background:var(--primary); color:#fff; }
+    .section-action-btn.primary {
+      background:var(--primary); color:#fff;
+    }
+    .section-action-btn.primary:hover { background:var(--primary-dark); }
+
+    /* ── 프로필 ── */
+    .profile-grid {
+      display:grid; grid-template-columns:1fr 1fr; gap:16px;
+    }
+    .profile-field { display:flex; flex-direction:column; gap:6px; }
+    .profile-field label {
+      font-size:12px; font-weight:700; color:var(--gray4);
+      text-transform:uppercase; letter-spacing:.3px;
+    }
+    .profile-field input, .profile-field select {
+      padding:11px 14px; border:1.5px solid var(--gray2);
+      border-radius:var(--radius-md); font-size:14px;
+      font-family:inherit; outline:none; transition:border-color .2s;
+    }
+    .profile-field input:focus, .profile-field select:focus {
+      border-color:var(--primary);
+    }
+    .profile-field input:read-only {
+      background:var(--gray1); color:var(--gray4); cursor:not-allowed;
+    }
+    .profile-field.full { grid-column:1/-1; }
+
+    /* ── 주문 ── */
+    .order-filter-bar {
+      display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;
+    }
+    .order-filter-btn {
+      padding:7px 16px; border-radius:20px; font-size:13px;
+      font-weight:600; border:1.5px solid var(--gray2);
+      background:#fff; cursor:pointer; font-family:inherit;
+      transition:all .2s; color:var(--gray4);
+    }
+    .order-filter-btn.active {
+      border-color:var(--primary); background:var(--primary);
+      color:#fff;
+    }
+
+    .order-card {
+      border:1.5px solid var(--gray2); border-radius:var(--radius-lg);
+      overflow:hidden; margin-bottom:16px; transition:box-shadow .2s;
+    }
+    .order-card:hover { box-shadow:var(--shadow); }
+    .order-card-head {
+      padding:14px 20px;
+      background:var(--gray1); border-bottom:1px solid var(--gray2);
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:8px;
+    }
+    .order-card-id { font-size:13px; font-weight:700; color:var(--gray5); }
+    .order-card-date { font-size:12px; color:var(--gray4); }
+    .order-status-badge {
+      padding:4px 12px; border-radius:12px;
+      font-size:12px; font-weight:700;
+    }
+    .status-paid      { background:#dcfce7; color:#16a34a; }
+    .status-shipping  { background:#dbeafe; color:#2563eb; }
+    .status-delivered { background:#f3f4f6; color:#374151; }
+    .status-cancelled { background:#fee2e2; color:#dc2626; }
+    .status-pending   { background:#fef3c7; color:#d97706; }
+
+    .order-card-body { padding:20px; }
+    .order-item-row {
+      display:flex; align-items:center; gap:14px;
+      padding:10px 0; border-bottom:1px solid var(--gray2);
+    }
+    .order-item-row:last-child { border-bottom:none; }
+    .order-item-thumb {
+      width:56px; height:56px; border-radius:var(--radius-md);
+      background:var(--gray1); display:flex; align-items:center;
+      justify-content:center; font-size:24px; flex-shrink:0;
+      border:1px solid var(--gray2);
+    }
+    .order-item-info { flex:1; min-width:0; }
+    .order-item-name {
+      font-size:14px; font-weight:600; margin-bottom:3px;
+      overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    }
+    .order-item-meta { font-size:12px; color:var(--gray4); }
+    .order-item-price { font-size:14px; font-weight:700; color:var(--primary); flex-shrink:0; }
+
+    .order-card-foot {
+      padding:14px 20px; border-top:1px solid var(--gray2);
+      display:flex; align-items:center; justify-content:space-between;
+      flex-wrap:wrap; gap:8px;
+    }
+    .order-total { font-size:15px; font-weight:700; }
+    .order-total strong { color:var(--primary); }
+    .order-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .order-action-btn {
+      padding:7px 14px; border-radius:var(--radius-sm);
+      font-size:12px; font-weight:600; cursor:pointer;
+      font-family:inherit; transition:all .2s;
+    }
+    .order-action-btn.outline {
+      border:1.5px solid var(--gray2); background:#fff; color:var(--gray5);
+    }
+    .order-action-btn.outline:hover { border-color:var(--primary); color:var(--primary); }
+    .order-action-btn.red-outline {
+      border:1.5px solid #fecaca; background:#fff0f0; color:var(--primary);
+    }
+
+    /* ── 예약 ── */
+    .reservation-card {
+      border:1.5px solid var(--gray2); border-radius:var(--radius-lg);
+      padding:20px; margin-bottom:14px;
+      display:grid; grid-template-columns:1fr auto; gap:16px;
+      align-items:center; transition:box-shadow .2s;
+    }
+    .reservation-card:hover { box-shadow:var(--shadow); }
+    .reservation-info-grid {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+    }
+    .res-info-item label {
+      font-size:11px; font-weight:700; color:var(--gray3);
+      text-transform:uppercase; display:block; margin-bottom:3px;
+    }
+    .res-info-item span { font-size:14px; font-weight:600; color:var(--text); }
+
+    /* ── 쿠폰 ── */
+    .coupon-stats {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+      margin-bottom:20px;
+    }
+    .coupon-stat-card {
+      background:var(--gray1); border-radius:var(--radius-md);
+      padding:16px; text-align:center;
+    }
+    .coupon-stat-card .stat-val {
+      font-size:24px; font-weight:900; color:var(--primary);
+      display:block; margin-bottom:4px;
+    }
+    .coupon-stat-card .stat-label { font-size:12px; color:var(--gray4); }
+
+    .coupon-code-input {
+      display:flex; gap:10px; margin-bottom:20px;
+    }
+    .coupon-code-input input {
+      flex:1; padding:11px 16px; border:1.5px solid var(--gray2);
+      border-radius:var(--radius-md); font-size:14px;
+      font-family:inherit; outline:none; transition:border-color .2s;
+    }
+    .coupon-code-input input:focus { border-color:var(--primary); }
+
+    .coupon-card {
+      border:2px dashed var(--gray2); border-radius:var(--radius-lg);
+      padding:20px; margin-bottom:12px;
+      display:flex; align-items:center; gap:16px;
+      transition:border-color .2s, background .2s;
+    }
+    .coupon-card:hover { border-color:var(--primary); background:var(--primary-light); }
+    .coupon-icon {
+      width:52px; height:52px; border-radius:50%;
+      background:linear-gradient(135deg,var(--primary),#ff6b6b);
+      color:#fff; font-size:22px;
+      display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    }
+    .coupon-info { flex:1; min-width:0; }
+    .coupon-name { font-size:15px; font-weight:700; margin-bottom:3px; }
+    .coupon-desc { font-size:12px; color:var(--gray4); margin-bottom:4px; }
+    .coupon-expire { font-size:11px; color:var(--gray3); }
+    .coupon-value {
+      font-size:22px; font-weight:900; color:var(--primary);
+      flex-shrink:0; text-align:right;
+    }
+
+    /* ── 포인트 ── */
+    .point-summary {
+      display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+      margin-bottom:24px;
+    }
+    .point-summary-card {
+      border-radius:var(--radius-lg); padding:20px; text-align:center;
+    }
+    .point-summary-card.total-card {
+      background:linear-gradient(135deg,var(--primary),#ff6b6b); color:#fff;
+    }
+    .point-summary-card.earn-card { background:#dcfce7; }
+    .point-summary-card.use-card  { background:#fee2e2; }
+    .point-summary-card .ps-val {
+      font-size:26px; font-weight:900; display:block; margin-bottom:4px;
+    }
+    .point-summary-card.total-card .ps-val { color:#fff; }
+    .point-summary-card.earn-card  .ps-val { color:#16a34a; }
+    .point-summary-card.use-card   .ps-val { color:#dc2626; }
+    .point-summary-card .ps-label { font-size:12px; opacity:.8; }
+
+    .point-history-table { width:100%; border-collapse:collapse; }
+    .point-history-table th {
+      padding:10px 14px; background:var(--gray1);
+      font-size:12px; font-weight:700; color:var(--gray4);
+      text-align:left; border-bottom:2px solid var(--gray2);
+    }
+    .point-history-table td {
+      padding:12px 14px; font-size:13px;
+      border-bottom:1px solid var(--gray2);
+    }
+    .point-earn { color:#16a34a; font-weight:700; }
+    .point-use  { color:#dc2626; font-weight:700; }
+
+    /* ── 차량 ── */
+    .cars-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+      gap:14px;
+    }
+    .car-card {
+      border:1.5px solid var(--gray2); border-radius:var(--radius-lg);
+      padding:20px; text-align:center; position:relative;
+      transition:box-shadow .2s, border-color .2s;
+    }
+    .car-card:hover { box-shadow:var(--shadow); border-color:var(--primary); }
+    .car-card.main-car { border-color:var(--primary); background:var(--primary-light); }
+    .car-main-badge {
+      position:absolute; top:10px; right:10px;
+      padding:3px 8px; border-radius:10px;
+      background:var(--primary); color:#fff; font-size:10px; font-weight:700;
+    }
+    .car-icon { font-size:42px; margin-bottom:10px; }
+    .car-model { font-size:15px; font-weight:700; margin-bottom:4px; }
+    .car-meta { font-size:12px; color:var(--gray4); margin-bottom:14px; }
+    .car-actions { display:flex; gap:8px; justify-content:center; }
+    .car-btn {
+      padding:7px 14px; border-radius:var(--radius-sm); font-size:12px;
+      font-weight:600; cursor:pointer; font-family:inherit; transition:all .2s;
+    }
+    .car-btn-edit {
+      border:1.5px solid var(--gray2); background:#fff; color:var(--gray5);
+    }
+    .car-btn-edit:hover { border-color:var(--primary); color:var(--primary); }
+    .car-btn-del {
+      border:1.5px solid #fecaca; background:#fff0f0; color:var(--primary);
+    }
+
+    /* ── 위시리스트 ── */
+    .wish-grid {
+      display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr));
+      gap:16px;
+    }
+    .wish-item {
+      border:1.5px solid var(--gray2); border-radius:var(--radius-lg);
+      overflow:hidden; transition:box-shadow .2s;
+    }
+    .wish-item:hover { box-shadow:var(--shadow); }
+    .wish-thumb {
+      height:140px; background:var(--gray1);
+      display:flex; align-items:center; justify-content:center;
+      font-size:48px; position:relative;
+    }
+    .wish-remove-btn {
+      position:absolute; top:8px; right:8px;
+      width:28px; height:28px; border-radius:50%;
+      background:rgba(0,0,0,.4); color:#fff;
+      border:none; cursor:pointer; font-size:13px;
+      display:flex; align-items:center; justify-content:center;
+      transition:background .2s;
+    }
+    .wish-remove-btn:hover { background:var(--primary); }
+    .wish-info { padding:12px; }
+    .wish-name {
+      font-size:13px; font-weight:600; margin-bottom:4px;
+      overflow:hidden; text-overflow:ellipsis;
+      display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical;
+    }
+    .wish-price { font-size:14px; font-weight:900; color:var(--primary); }
+    .wish-cart-btn {
+      width:100%; padding:9px; background:var(--primary);
+      color:#fff; border:none; font-size:12px; font-weight:700;
+      cursor:pointer; font-family:inherit; transition:background .2s;
+    }
+    .wish-cart-btn:hover { background:var(--primary-dark); }
+
+    /* ── 리뷰 ── */
+    .review-card {
+      border:1.5px solid var(--gray2); border-radius:var(--radius-lg);
+      padding:20px; margin-bottom:14px;
+    }
+    .review-product { font-size:13px; color:var(--gray4); margin-bottom:8px; }
+    .review-stars { color:#f59e0b; font-size:16px; margin-bottom:8px; }
+    .review-body { font-size:14px; line-height:1.7; color:var(--text); }
+    .review-date { font-size:11px; color:var(--gray3); margin-top:8px; }
+    .review-admin-reply {
+      margin-top:12px; padding:12px 16px;
+      background:var(--gray1); border-radius:var(--radius-md);
+      border-left:3px solid var(--primary); font-size:13px;
+    }
+
+    /* ── 빈 상태 ── */
+    .empty-state {
+      text-align:center; padding:48px 20px; color:var(--gray4);
+    }
+    .empty-state .empty-icon { font-size:48px; margin-bottom:14px; }
+    .empty-state .empty-title { font-size:16px; font-weight:700; margin-bottom:6px; color:var(--gray5); }
+    .empty-state .empty-desc  { font-size:13px; margin-bottom:20px; }
+    .empty-cta-btn {
+      display:inline-block; padding:11px 28px;
+      background:var(--primary); color:#fff; border-radius:var(--radius-md);
+      font-size:14px; font-weight:700; text-decoration:none;
+      transition:background .2s;
+    }
+    .empty-cta-btn:hover { background:var(--primary-dark); }
+
+    /* ── 모달 ── */
+    .modal-overlay {
+      display:none; position:fixed; inset:0; background:rgba(0,0,0,.5);
+      z-index:3000; align-items:center; justify-content:center; padding:20px;
+    }
+    .modal-overlay.open { display:flex; }
+    .modal-box {
+      background:#fff; border-radius:var(--radius-lg);
+      width:100%; max-width:480px; max-height:90vh;
+      overflow-y:auto; box-shadow:var(--shadow-lg);
+      animation:modalIn .2s ease;
+    }
+    @keyframes modalIn {
+      from { opacity:0; transform:scale(.95) translateY(-10px); }
+      to   { opacity:1; transform:scale(1) translateY(0); }
+    }
+    .modal-head {
+      padding:20px 24px; border-bottom:1px solid var(--gray2);
+      display:flex; align-items:center; justify-content:space-between;
+    }
+    .modal-title { font-size:17px; font-weight:700; }
+    .modal-close {
+      width:32px; height:32px; border-radius:50%;
+      border:none; background:var(--gray2); cursor:pointer;
+      font-size:16px; display:flex; align-items:center; justify-content:center;
+    }
+    .modal-body { padding:24px; }
+    .modal-foot {
+      padding:16px 24px; border-top:1px solid var(--gray2);
+      display:flex; gap:10px; justify-content:flex-end;
+    }
+    .modal-btn {
+      padding:10px 24px; border-radius:var(--radius-md); font-size:14px;
+      font-weight:700; cursor:pointer; font-family:inherit; transition:all .2s;
+    }
+    .modal-btn.cancel {
+      border:1.5px solid var(--gray2); background:#fff; color:var(--gray5);
+    }
+    .modal-btn.cancel:hover { background:var(--gray1); }
+    .modal-btn.confirm {
+      background:var(--primary); color:#fff; border:1.5px solid var(--primary);
+    }
+    .modal-btn.confirm:hover { background:var(--primary-dark); }
+
+    .form-field { margin-bottom:14px; }
+    .form-field label {
+      display:block; font-size:12px; font-weight:700;
+      color:var(--gray4); margin-bottom:6px;
+      text-transform:uppercase; letter-spacing:.3px;
+    }
+    .form-field input, .form-field select, .form-field textarea {
+      width:100%; padding:11px 14px; border:1.5px solid var(--gray2);
+      border-radius:var(--radius-md); font-size:14px;
+      font-family:inherit; outline:none; transition:border-color .2s;
+    }
+    .form-field input:focus, .form-field select:focus,
+    .form-field textarea:focus { border-color:var(--primary); }
+    .form-field textarea { resize:vertical; min-height:90px; }
+
+    /* ── 모바일 탭바 ── */
+    .mobile-tab-bar {
+      display:none; position:fixed; bottom:0; left:0; right:0;
+      background:#fff; border-top:1px solid var(--gray2);
+      z-index:900; padding:4px 0 8px;
+      grid-template-columns:repeat(5,1fr);
+    }
+    .mobile-tab-item {
+      display:flex; flex-direction:column; align-items:center; gap:2px;
+      padding:6px 4px; background:none; border:none; cursor:pointer;
+      font-size:10px; color:var(--gray4); font-family:inherit;
+      transition:color .15s;
+    }
+    .mobile-tab-item.active { color:var(--primary); }
+    .mobile-tab-item span:first-child { font-size:20px; }
+
+    /* ── 반응형 ── */
+    @media (max-width:900px) {
+      .mypage-wrap { grid-template-columns:1fr; }
+      .mypage-sidebar { display:none; }
+      .mobile-tab-bar { display:grid; }
+      body { padding-bottom:70px; }
+      .profile-grid { grid-template-columns:1fr; }
+      .reservation-info-grid { grid-template-columns:1fr 1fr; }
+    }
+    @media (max-width:600px) {
+      .coupon-stats, .point-summary { grid-template-columns:1fr 1fr; }
+      .wish-grid { grid-template-columns:repeat(2,1fr); }
+      .order-card-head { flex-direction:column; align-items:flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="tt-header"></div>
+
+<!-- 브레드크럼 -->
+<div class="breadcrumb">
+  <a href="index.html">홈</a>
+  <span>›</span>
+  <strong>마이페이지</strong>
+</div>
+
+<div class="mypage-wrap">
+
+  <!-- ══ 사이드바 ══ -->
+  <aside class="mypage-sidebar">
+    <!-- 프로필 카드 -->
+    <div class="sidebar-profile">
+      <div class="sidebar-avatar" id="sidebarAvatar">U</div>
+      <div class="sidebar-name"  id="sidebarName">회원</div>
+      <div class="sidebar-email" id="sidebarEmail">-</div>
+      <div class="sidebar-grade" id="sidebarGrade">⭐ 일반 회원</div>
+      <div class="sidebar-points">
+        <span style="font-size:12px;color:var(--gray4);">보유 포인트</span>
+        <span class="point-val" id="sidebarPoint">0P</span>
+      </div>
+    </div>
+
+    <!-- 네비 메뉴 -->
+    <nav class="sidebar-nav">
+      <div class="sidebar-nav-section">쇼핑 정보</div>
+      <button class="sidebar-nav-item active" data-tab="orders"    onclick="switchTab(this,'orders')">📦 주문 내역</button>
+      <button class="sidebar-nav-item"        data-tab="reservations" onclick="switchTab(this,'reservations')">🔧 예약 내역</button>
+      <button class="sidebar-nav-item"        data-tab="wishlist"  onclick="switchTab(this,'wishlist')">❤️ 위시리스트</button>
+      <button class="sidebar-nav-item"        data-tab="reviews"   onclick="switchTab(this,'reviews')">✍️ 내 리뷰</button>
+
+      <div class="sidebar-nav-section">혜택</div>
+      <button class="sidebar-nav-item" data-tab="coupons" onclick="switchTab(this,'coupons')">
+        🎟️ 쿠폰함
+        <span class="sidebar-nav-badge" id="sidebarCouponBadge" style="display:none;">0</span>
+      </button>
+      <button class="sidebar-nav-item" data-tab="points" onclick="switchTab(this,'points')">💰 포인트</button>
+
+      <div class="sidebar-nav-section">내 정보</div>
+      <button class="sidebar-nav-item" data-tab="profile" onclick="switchTab(this,'profile')">👤 회원정보 수정</button>
+      <button class="sidebar-nav-item" data-tab="cars"    onclick="switchTab(this,'cars')">🚗 내 차량</button>
+    </nav>
+  </aside>
+
+  <!-- ══ 메인 콘텐츠 ══ -->
+  <main class="mypage-content">
+
+    <!-- 주문 내역 -->
+    <section class="mypage-section active" id="tab-orders">
+      <div class="section-header">
+        <div class="section-title">📦 주문 내역</div>
+      </div>
+      <div class="order-filter-bar">
+        <button class="order-filter-btn active" onclick="filterOrders(this,'all')">전체</button>
+        <button class="order-filter-btn" onclick="filterOrders(this,'paid')">결제완료</button>
+        <button class="order-filter-btn" onclick="filterOrders(this,'shipping')">배송중</button>
+        <button class="order-filter-btn" onclick="filterOrders(this,'delivered')">배송완료</button>
+        <button class="order-filter-btn" onclick="filterOrders(this,'cancelled')">취소/반품</button>
+      </div>
+      <div id="orderList"></div>
+    </section>
+
+    <!-- 예약 내역 -->
+    <section class="mypage-section" id="tab-reservations">
+      <div class="section-header">
+        <div class="section-title">🔧 예약 내역</div>
+        <button class="section-action-btn primary" onclick="location.href='reservation.html'">
+          + 새 예약
+        </button>
+      </div>
+      <div id="reservationList"></div>
+    </section>
+
+    <!-- 위시리스트 -->
+    <section class="mypage-section" id="tab-wishlist">
+      <div class="section-header">
+        <div class="section-title">❤️ 위시리스트</div>
+        <span id="wishCount" style="font-size:14px;color:var(--gray4);"></span>
+      </div>
+      <div class="wish-grid" id="wishGrid"></div>
+    </section>
+
+    <!-- 내 리뷰 -->
+    <section class="mypage-section" id="tab-reviews">
+      <div class="section-header">
+        <div class="section-title">✍️ 내 리뷰</div>
+      </div>
+      <div id="reviewList"></div>
+    </section>
+
+    <!-- 쿠폰함 -->
+    <section class="mypage-section" id="tab-coupons">
+      <div class="section-header">
+        <div class="section-title">🎟️ 쿠폰함</div>
+      </div>
+      <div class="coupon-stats">
+        <div class="coupon-stat-card">
+          <span class="stat-val" id="couponTotal">0</span>
+          <span class="stat-label">보유 쿠폰</span>
+        </div>
+        <div class="coupon-stat-card">
+          <span class="stat-val" id="couponExpireSoon">0</span>
+          <span class="stat-label">7일 내 만료</span>
+        </div>
+        <div class="coupon-stat-card">
+          <span class="stat-val" id="couponDiscount">0</span>
+          <span class="stat-label">최대 할인</span>
+        </div>
+      </div>
+      <div class="coupon-code-input">
+        <input type="text" id="couponCodeInput" placeholder="쿠폰 코드를 입력하세요"
+          onkeydown="if(event.key==='Enter') registerCoupon()">
+        <button class="section-action-btn primary" onclick="registerCoupon()">등록</button>
+      </div>
+      <div id="couponList"></div>
+    </section>
+
+    <!-- 포인트 -->
+    <section class="mypage-section" id="tab-points">
+      <div class="section-header">
+        <div class="section-title">💰 포인트 내역</div>
+      </div>
+      <div class="point-summary">
+        <div class="point-summary-card total-card">
+          <span class="ps-val" id="pointTotal">0P</span>
+          <span class="ps-label">보유 포인트</span>
+        </div>
+        <div class="point-summary-card earn-card">
+          <span class="ps-val" id="pointEarned">0P</span>
+          <span class="ps-label">총 적립</span>
+        </div>
+        <div class="point-summary-card use-card">
+          <span class="ps-val" id="pointUsed">0P</span>
+          <span class="ps-label">총 사용</span>
+        </div>
+      </div>
+      <table class="point-history-table">
+        <thead>
+          <tr>
+            <th>일시</th>
+            <th>내용</th>
+            <th>구분</th>
+            <th style="text-align:right;">포인트</th>
+          </tr>
+        </thead>
+        <tbody id="pointHistoryBody"></tbody>
+      </table>
+    </section>
+
+    <!-- 회원정보 수정 -->
+    <section class="mypage-section" id="tab-profile">
+      <div class="section-header">
+        <div class="section-title">👤 회원정보 수정</div>
+      </div>
+      <div class="profile-grid">
+        <div class="profile-field">
+          <label>이름</label>
+          <input type="text" id="profileName" placeholder="이름">
+        </div>
+        <div class="profile-field">
+          <label>이메일 (변경불가)</label>
+          <input type="email" id="profileEmail" readonly>
+        </div>
+        <div class="profile-field">
+          <label>휴대폰</label>
+          <input type="tel" id="profilePhone" placeholder="010-0000-0000">
+        </div>
+        <div class="profile-field">
+          <label>생년월일</label>
+          <input type="date" id="profileBirth">
+        </div>
+        <div class="profile-field">
+          <label>성별</label>
+          <select id="profileGender">
+            <option value="">선택 안함</option>
+            <option value="male">남성</option>
+            <option value="female">여성</option>
+          </select>
+        </div>
+        <div class="profile-field">
+          <label>현재 비밀번호 (변경 시)</label>
+          <input type="password" id="profilePwCurrent" placeholder="현재 비밀번호">
+        </div>
+        <div class="profile-field">
+          <label>새 비밀번호</label>
+          <input type="password" id="profilePwNew" placeholder="새 비밀번호 (8자 이상)">
+        </div>
+        <div class="profile-field">
+          <label>새 비밀번호 확인</label>
+          <input type="password" id="profilePwConfirm" placeholder="새 비밀번호 재입력">
+        </div>
+        <div class="profile-field full">
+          <label>기본 주소</label>
+          <input type="text" id="profileAddr" placeholder="주소 검색" readonly
+            onclick="searchProfileAddress()" style="cursor:pointer;">
+        </div>
+        <div class="profile-field full">
+          <label>상세 주소</label>
+          <input type="text" id="profileAddrDetail" placeholder="상세 주소">
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:20px;gap:10px;">
+        <button class="section-action-btn" onclick="resetProfile()">초기화</button>
+        <button class="section-action-btn primary" onclick="saveProfile()">저장하기</button>
+      </div>
+    </section>
+
+    <!-- 내 차량 -->
+    <section class="mypage-section" id="tab-cars">
+      <div class="section-header">
+        <div class="section-title">🚗 내 차량</div>
+        <button class="section-action-btn primary" onclick="openCarModal()">+ 차량 추가</button>
+      </div>
+      <div id="carList"></div>
+    </section>
+
+  </main>
+</div>
+
+<!-- ══ 모바일 탭바 ══ -->
+<nav class="mobile-tab-bar">
+  <button class="mobile-tab-item active" id="mTabOrders"  onclick="switchTab(this,'orders')">
+    <span>📦</span><span>주문</span>
+  </button>
+  <button class="mobile-tab-item" id="mTabCoupons"        onclick="switchTab(this,'coupons')">
+    <span>🎟️</span><span>쿠폰</span>
+  </button>
+  <button class="mobile-tab-item" id="mTabWishlist"       onclick="switchTab(this,'wishlist')">
+    <span>❤️</span><span>위시</span>
+  </button>
+  <button class="mobile-tab-item" id="mTabProfile"        onclick="switchTab(this,'profile')">
+    <span>👤</span><span>정보</span>
+  </button>
+  <button class="mobile-tab-item" id="mTabCars"           onclick="switchTab(this,'cars')">
+    <span>🚗</span><span>차량</span>
+  </button>
+</nav>
+<!-- ══ 차량 추가/수정 모달 ══ -->
+<div class="modal-overlay" id="carModal">
+  <div class="modal-box">
+    <div class="modal-head">
+      <div class="modal-title" id="carModalTitle">🚗 차량 추가</div>
+      <button class="modal-close" onclick="closeModal('carModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="carEditIdx" value="-1">
+      <div class="form-field">
+        <label>차량 브랜드</label>
+        <select id="carBrand" onchange="updateCarModels()">
+          <option value="">브랜드 선택</option>
+          <option value="현대">현대</option>
+          <option value="기아">기아</option>
+          <option value="제네시스">제네시스</option>
+          <option value="쉐보레">쉐보레</option>
+          <option value="르노코리아">르노코리아</option>
+          <option value="KGM">KGM(쌍용)</option>
+          <option value="BMW">BMW</option>
+          <option value="벤츠">벤츠</option>
+          <option value="아우디">아우디</option>
+          <option value="폭스바겐">폭스바겐</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>차량 모델</label>
+        <select id="carModel">
+          <option value="">브랜드 먼저 선택</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>직접 입력 (모델)</label>
+        <input type="text" id="carModelDirect" placeholder="모델명 직접 입력 (선택)">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-field">
+          <label>연식</label>
+          <select id="carYear"></select>
+        </div>
+        <div class="form-field">
+          <label>타이어 규격</label>
+          <input type="text" id="carSize" placeholder="예: 225/45R18">
+        </div>
+      </div>
+      <div class="form-field">
+        <label>메모 (선택)</label>
+        <input type="text" id="carMemo" placeholder="예: 겨울용 교체 필요">
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn cancel"  onclick="closeModal('carModal')">취소</button>
+      <button class="modal-btn confirm" onclick="saveCar()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 주문 상세 모달 ══ -->
+<div class="modal-overlay" id="orderDetailModal">
+  <div class="modal-box" style="max-width:560px;">
+    <div class="modal-head">
+      <div class="modal-title">📦 주문 상세</div>
+      <button class="modal-close" onclick="closeModal('orderDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="orderDetailBody"></div>
+    <div class="modal-foot">
+      <button class="modal-btn cancel" onclick="closeModal('orderDetailModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 주문 취소 확인 모달 ══ -->
+<div class="modal-overlay" id="cancelOrderModal">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-head">
+      <div class="modal-title">⚠️ 주문 취소</div>
+      <button class="modal-close" onclick="closeModal('cancelOrderModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;line-height:1.7;color:var(--gray5);">
+        주문을 취소하시겠습니까?<br>취소 후에는 복구가 불가능합니다.
+      </p>
+      <div class="form-field" style="margin-top:14px;">
+        <label>취소 사유</label>
+        <select id="cancelReason">
+          <option value="단순변심">단순 변심</option>
+          <option value="상품불량">상품 불량</option>
+          <option value="오주문">오주문</option>
+          <option value="배송지연">배송 지연</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn cancel"  onclick="closeModal('cancelOrderModal')">돌아가기</button>
+      <button class="modal-btn confirm" onclick="confirmCancelOrder()"
+        style="background:#dc2626;border-color:#dc2626;">취소 확인</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ 예약 취소 모달 ══ -->
+<div class="modal-overlay" id="cancelResModal">
+  <div class="modal-box" style="max-width:400px;">
+    <div class="modal-head">
+      <div class="modal-title">⚠️ 예약 취소</div>
+      <button class="modal-close" onclick="closeModal('cancelResModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:14px;line-height:1.7;color:var(--gray5);">
+        예약을 취소하시겠습니까?
+      </p>
+      <div class="form-field" style="margin-top:14px;">
+        <label>취소 사유</label>
+        <select id="resCanReason">
+          <option value="일정변경">일정 변경</option>
+          <option value="단순변심">단순 변심</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="modal-btn cancel"  onclick="closeModal('cancelResModal')">돌아가기</button>
+      <button class="modal-btn confirm" onclick="confirmCancelRes()"
+        style="background:#dc2626;border-color:#dc2626;">취소 확인</button>
+    </div>
+  </div>
+</div>
+
+<div id="tt-footer"></div>
+<script>
+/* =====================================================
+   mypage.html – JavaScript  (API 연동 버전)
+===================================================== */
+
+/* ── API 헬퍼 ── */
+const API_BASE = '/api';
+function getToken() {
+  return localStorage.getItem('tt_token') || sessionStorage.getItem('tt_token');
+}
+async function apiGet(path) {
+  const token = getToken();
+  const res = await fetch(API_BASE + path, {
+    headers: token ? { 'Authorization': 'Bearer ' + token } : {}
+  });
+  if (res.status === 401) { location.href = 'login.html?redirect=mypage.html'; return null; }
+  return res.json();
+}
+async function apiPost(path, body) {
+  const token = getToken();
+  const res = await fetch(API_BASE + path, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) },
+    body: JSON.stringify(body)
+  });
+  if (res.status === 401) { location.href = 'login.html?redirect=mypage.html'; return null; }
+  return res.json();
+}
+async function apiPut(path, body) {
+  const token = getToken();
+  const res = await fetch(API_BASE + path, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': 'Bearer ' + token } : {}) },
+    body: JSON.stringify(body)
+  });
+  if (res.status === 401) { location.href = 'login.html?redirect=mypage.html'; return null; }
+  return res.json();
+}
+
+/* ── 전역 상태 ── */
+let currentUser   = null;
+let allOrders     = [];
+let allReservations = [];
+let currentOrderFilter = 'all';
+let cancelTargetOrderId = null;
+let cancelTargetResId   = null;
+let editingCarIdx = -1;
+
+/* 차량 모델 데이터 */
+const CAR_MODELS = {
+  '현대': ['아반떼','소나타','그랜저','투싼','싼타페','팰리세이드','코나','아이오닉5','아이오닉6','스타리아','포터'],
+  '기아': ['K3','K5','K8','K9','스포티지','쏘렌토','카니발','모하비','EV6','셀토스','레이','봉고'],
+  '제네시스': ['G70','G80','G90','GV70','GV80','GV60'],
+  '쉐보레': ['말리부','트랙스','트레일블레이저','이쿼녹스','콜로라도'],
+  '르노코리아': ['QM6','XM3','SM6','아르카나'],
+  'KGM': ['티볼리','코란도','렉스턴','토레스','무쏘'],
+  'BMW': ['3시리즈','5시리즈','7시리즈','X3','X5','X6','i4','iX'],
+  '벤츠': ['C클래스','E클래스','S클래스','GLC','GLE','A클래스'],
+  '아우디': ['A4','A6','A8','Q5','Q7','Q8','e-tron'],
+  '폭스바겐': ['골프','파사트','티구안','투아렉'],
+  '기타': ['기타 차량']
+};
+
+/* =====================================================
+   초기화
+===================================================== */
+document.addEventListener('DOMContentLoaded', async () => {
+  const token = localStorage.getItem('tt_token') || sessionStorage.getItem('tt_token');
+  if (!token) {
+    location.href = 'login.html?redirect=mypage.html';
+    return;
+  }
+
+  // 서버에서 내 정보 로드
+  await loadMyInfo();
+  if (!currentUser) {
+    location.href = 'login.html?redirect=mypage.html';
+    return;
+  }
+
+  loadAllData();
+
+  /* URL 탭 파라미터 */
+  const tab = new URLSearchParams(location.search).get('tab');
+  if (tab) switchTab(null, tab);
+
+  /* 연식 옵션 생성 */
+  const yearSel = document.getElementById('carYear');
+  const thisYear = new Date().getFullYear();
+  for (let y = thisYear; y >= 1990; y--) {
+    const opt = document.createElement('option');
+    opt.value = y; opt.textContent = y + '년';
+    yearSel.appendChild(opt);
+  }
+});
+
+/* ── 내 정보 API 로드 ── */
+async function loadMyInfo() {
+  try {
+    const res = await apiGet('/auth/me');
+    if (res?.success && res.data) {
+      currentUser = res.data;
+      // localStorage 동기화 (헤더 반영)
+      localStorage.setItem('tt_user', JSON.stringify(currentUser));
+    } else {
+      currentUser = null;
+    }
+  } catch(e) {
+    console.error('내 정보 로드 실패:', e);
+    currentUser = null;
+  }
+}
+
+/* ── 전체 데이터 로드 ── */
+async function loadAllData() {
+  await loadMyInfo();
+
+  renderSidebarProfile();
+  await loadOrders();
+  await loadReservations();
+  renderWishlist();
+  renderReviews();
+  renderCoupons();
+  renderPoints();
+  renderProfile();
+  renderCars();
+}
+
+/* =====================================================
+   사이드바 프로필
+===================================================== */
+function renderSidebarProfile() {
+  const u = currentUser;
+  if (!u) return;
+
+  document.getElementById('sidebarAvatar').textContent = (u.name || 'U')[0].toUpperCase();
+  document.getElementById('sidebarName').textContent   = u.name  || '회원';
+  document.getElementById('sidebarEmail').textContent  = u.email || '-';
+  document.getElementById('sidebarPoint').textContent  = (u.point || 0).toLocaleString() + 'P';
+
+  /* 등급 계산 */
+  const totalSpent = allOrders
+    .filter(o => o.userId === u.id && o.status !== 'cancelled')
+    .reduce((s, o) => s + (o.totalPrice || 0), 0);
+  let grade = '일반 회원', icon = '⭐';
+  if (totalSpent >= 5000000) { grade = 'VIP'; icon = '💎'; }
+  else if (totalSpent >= 1000000) { grade = '골드'; icon = '🥇'; }
+  else if (totalSpent >= 300000) { grade = '실버'; icon = '🥈'; }
+  document.getElementById('sidebarGrade').textContent = `${icon} ${grade}`;
+
+  /* 쿠폰 배지 */
+  const couponCnt = (u.coupons || []).length;
+  const badge = document.getElementById('sidebarCouponBadge');
+  if (couponCnt > 0) {
+    badge.style.display = 'flex';
+    badge.textContent = couponCnt;
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+/* =====================================================
+   탭 전환
+===================================================== */
+function switchTab(btn, tabId) {
+  /* 사이드바 */
+  document.querySelectorAll('.sidebar-nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.tab === tabId);
+  });
+  /* 모바일 탭바 */
+  document.querySelectorAll('.mobile-tab-item').forEach(el => {
+    el.classList.remove('active');
+  });
+  /* 섹션 */
+  document.querySelectorAll('.mypage-section').forEach(el => {
+    el.classList.toggle('active', el.id === 'tab-' + tabId);
+  });
+  /* URL 업데이트 */
+  history.replaceState(null, '', '?tab=' + tabId);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+/* =====================================================
+   주문 내역
+===================================================== */
+async function loadOrders() {
+  try {
+    const res = await apiGet('/orders/my?limit=50');
+    if (res?.success) {
+      allOrders = (res.data || []).map(o => ({
+        ...o,
+        id:          String(o.id),
+        createdAt:   o.created_at || '',
+        status:      o.status || 'paid',
+        totalPrice:  o.total_amount || 0,
+        items:       (o.items || []).map(i => ({
+          id:        i.product_id,
+          name:      i.product_name || i.name || '-',
+          qty:       i.quantity || i.qty || 1,
+          price:     i.price || 0,
+          salePrice: i.price || 0,
+          size:      i.product_size || i.size || '',
+          emoji:     '🛞',
+        })),
+      }));
+    }
+  } catch(e) { console.error('주문 로드 실패:', e); }
+  renderOrderList();
+  renderSidebarProfile();
+}
+
+function renderOrders() { loadOrders(); }
+
+function filterOrders(btn, filter) {
+  currentOrderFilter = filter;
+  document.querySelectorAll('.order-filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrderList();
+}
+
+function renderOrderList() {
+  const el = document.getElementById('orderList');
+  let filtered = allOrders;
+  if (currentOrderFilter !== 'all') {
+    if (currentOrderFilter === 'cancelled') {
+      filtered = allOrders.filter(o => o.status === 'cancelled' || o.status === 'return_requested');
+    } else {
+      filtered = allOrders.filter(o => o.status === currentOrderFilter);
+    }
+  }
+
+  if (!filtered.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">📦</div>
+        <div class="empty-title">주문 내역이 없습니다</div>
+        <div class="empty-desc">첫 주문을 해보세요!</div>
+        <a href="product-list.html" class="empty-cta-btn">쇼핑하러 가기</a>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = filtered.map(order => {
+    const statusMap = {
+      paid: { label:'결제완료', cls:'status-paid' },
+      pending_payment: { label:'입금대기', cls:'status-pending' },
+      shipping: { label:'배송중', cls:'status-shipping' },
+      delivered: { label:'배송완료', cls:'status-delivered' },
+      cancelled: { label:'취소됨', cls:'status-cancelled' },
+      return_requested: { label:'반품신청', cls:'status-cancelled' }
+    };
+    const s = statusMap[order.status] || { label:order.status, cls:'status-pending' };
+    const itemsHtml = (order.items || []).slice(0, 3).map(item => `
+      <div class="order-item-row">
+        <div class="order-item-thumb">${item.emoji || '🛞'}</div>
+        <div class="order-item-info">
+          <div class="order-item-name">${item.name || '-'}</div>
+          <div class="order-item-meta">수량 ${item.qty || 1}개${item.size ? ' · ' + item.size : ''}</div>
+        </div>
+        <div class="order-item-price">${((item.salePrice || item.price || 0) * (item.qty || 1)).toLocaleString()}원</div>
+      </div>`).join('');
+    const moreHtml = (order.items || []).length > 3
+      ? `<div style="text-align:center;padding:8px;font-size:12px;color:var(--gray4);">외 ${order.items.length - 3}개 상품</div>` : '';
+
+    const canCancel = order.status === 'paid' || order.status === 'pending_payment';
+    const canReturn = order.status === 'delivered';
+
+    return `
+      <div class="order-card">
+        <div class="order-card-head">
+          <div>
+            <div class="order-card-id">${order.id}</div>
+            <div class="order-card-date">${formatDate(order.createdAt)}</div>
+          </div>
+          <span class="order-status-badge ${s.cls}">${s.label}</span>
+        </div>
+        <div class="order-card-body">${itemsHtml}${moreHtml}</div>
+        <div class="order-card-foot">
+          <div class="order-total">총 <strong>${(order.totalPrice || 0).toLocaleString()}원</strong></div>
+          <div class="order-actions">
+            <button class="order-action-btn outline" onclick="openOrderDetail('${order.id}')">상세보기</button>
+            ${canCancel ? `<button class="order-action-btn red-outline" onclick="openCancelOrder('${order.id}')">주문취소</button>` : ''}
+            ${canReturn ? `<button class="order-action-btn red-outline" onclick="requestReturn('${order.id}')">반품신청</button>` : ''}
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* 주문 상세 */
+function openOrderDetail(orderId) {
+  const order = allOrders.find(o => o.id === orderId);
+  if (!order) return;
+
+  const statusMap = {
+    paid:'결제완료', pending_payment:'입금대기', shipping:'배송중',
+    delivered:'배송완료', cancelled:'취소됨', return_requested:'반품신청'
+  };
+
+  const itemsHtml = (order.items || []).map(item => `
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--gray2);">
+      <div style="width:48px;height:48px;background:var(--gray1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;">${item.emoji || '🛞'}</div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;">${item.name}</div>
+        <div style="font-size:12px;color:var(--gray4);">수량 ${item.qty || 1}개</div>
+      </div>
+      <div style="font-size:13px;font-weight:700;color:var(--primary);">${((item.salePrice || item.price || 0) * (item.qty || 1)).toLocaleString()}원</div>
+    </div>`).join('');
+
+  document.getElementById('orderDetailBody').innerHTML = `
+    <div style="margin-bottom:16px;">
+      <div style="font-size:12px;color:var(--gray4);margin-bottom:4px;">주문번호</div>
+      <div style="font-size:14px;font-weight:700;">${order.id}</div>
+    </div>
+    <div style="margin-bottom:16px;">${itemsHtml}</div>
+    <div style="background:var(--gray1);border-radius:var(--radius-md);padding:16px;">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+        <span style="color:var(--gray4);">결제 방법</span>
+        <span style="font-weight:600;">${order.payMethod || '-'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+        <span style="color:var(--gray4);">배송지</span>
+        <span style="font-weight:600;text-align:right;max-width:200px;">${order.address || '-'}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+        <span style="color:var(--gray4);">배송비</span>
+        <span style="font-weight:600;">${(order.deliveryFee || 0) === 0 ? '무료' : (order.deliveryFee).toLocaleString() + '원'}</span>
+      </div>
+      ${order.couponDiscount > 0 ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+        <span style="color:var(--gray4);">쿠폰 할인</span>
+        <span style="font-weight:600;color:#16a34a;">-${order.couponDiscount.toLocaleString()}원</span>
+      </div>` : ''}
+      ${order.pointUsed > 0 ? `
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px;font-size:13px;">
+        <span style="color:var(--gray4);">포인트 사용</span>
+        <span style="font-weight:600;color:#16a34a;">-${order.pointUsed.toLocaleString()}P</span>
+      </div>` : ''}
+      <div style="display:flex;justify-content:space-between;padding-top:8px;border-top:1px solid var(--gray2);font-size:15px;">
+        <span style="font-weight:700;">최종 결제금액</span>
+        <span style="font-weight:900;color:var(--primary);">${(order.totalPrice || 0).toLocaleString()}원</span>
+      </div>
+    </div>
+    <div style="margin-top:12px;padding:10px 14px;background:#dcfce7;border-radius:var(--radius-sm);font-size:13px;color:#16a34a;font-weight:600;">
+      🎁 적립 포인트: +${(order.earnedPoint || 0).toLocaleString()}P
+    </div>
+    <div style="margin-top:8px;text-align:center;">
+      <span style="font-size:12px;color:var(--gray4);">주문상태:</span>
+      <span style="font-size:13px;font-weight:700;margin-left:6px;">${statusMap[order.status] || order.status}</span>
+    </div>`;
+
+  openModal('orderDetailModal');
+}
+
+/* 주문 취소 */
+function openCancelOrder(orderId) {
+  cancelTargetOrderId = orderId;
+  openModal('cancelOrderModal');
+}
+
+async function confirmCancelOrder() {
+  if (!cancelTargetOrderId) return;
+  const reason = document.getElementById('cancelReason').value;
+  try {
+    const res = await apiPut('/orders/' + cancelTargetOrderId + '/status', { status: 'cancelled', memo: reason });
+    if (res?.success || res?.error === undefined) {
+      closeModal('cancelOrderModal');
+      cancelTargetOrderId = null;
+      await loadOrders();
+      if (typeof showToast === 'function') showToast('주문 취소', '주문이 취소되었습니다.', 'success');
+    } else {
+      if (typeof showToast === 'function') showToast('오류', res.error || '취소 처리 중 오류가 발생했습니다.', 'error');
+    }
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('오류', '서버 오류가 발생했습니다.', 'error');
+  }
+}
+
+/* 반품 신청 */
+async function requestReturn(orderId) {
+  try {
+    await apiPut('/orders/' + orderId + '/status', { status: 'return_requested' });
+    await loadOrders();
+    if (typeof showToast === 'function') showToast('반품 신청', '반품 신청이 접수되었습니다.', 'info');
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('오류', '서버 오류가 발생했습니다.', 'error');
+  }
+}
+
+/* =====================================================
+   예약 내역
+===================================================== */
+async function loadReservations() {
+  try {
+    const res = await apiGet('/reservations/my?limit=50');
+    if (res?.success) {
+      allReservations = (res.data || []).map(r => ({
+        ...r,
+        id:        String(r.id),
+        date:      r.reservation_date || r.date || '',
+        time:      r.reservation_time || r.time || '',
+        service:   r.service_type || r.service || '타이어 교체',
+        carNumber: r.vehicle_number || r.carNumber || '',
+        store:     r.store_name || r.store || '',
+        status:    r.status || 'pending',
+        memo:      r.memo || '',
+      }));
+    }
+  } catch(e) { console.error('예약 로드 실패:', e); }
+  renderReservationList();
+}
+
+function renderReservations() { loadReservations(); }
+
+function renderReservationList() {
+  const all = allReservations;
+  all.sort((a, b) => new Date(b.date + ' ' + b.time) - new Date(a.date + ' ' + a.time));
+
+  const el = document.getElementById('reservationList');
+  if (!allReservations.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🔧</div>
+        <div class="empty-title">예약 내역이 없습니다</div>
+        <div class="empty-desc">타이어 장착/교환 예약을 해보세요</div>
+        <a href="reservation.html" class="empty-cta-btn">예약하기</a>
+      </div>`;
+    return;
+  }
+
+  const statusMap = {
+    pending:   { label:'확인중', color:'#d97706' },
+    confirmed: { label:'예약확정', color:'#2563eb' },
+    completed: { label:'완료', color:'#16a34a' },
+    cancelled: { label:'취소됨', color:'#dc2626' }
+  };
+
+  el.innerHTML = allReservations.map(res => {
+    const s = statusMap[res.status] || { label:res.status, color:'#888' };
+    const canCancel = res.status === 'pending' || res.status === 'confirmed';
+    return `
+      <div class="reservation-card">
+        <div>
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+            <span style="font-size:20px;">🔧</span>
+            <div>
+              <div style="font-size:15px;font-weight:700;">${res.serviceName || '타이어 서비스'}</div>
+              <div style="font-size:12px;color:var(--gray4);">${res.id || ''}</div>
+            </div>
+            <span style="margin-left:auto;padding:4px 12px;border-radius:12px;font-size:12px;font-weight:700;background:${s.color}20;color:${s.color};">${s.label}</span>
+          </div>
+          <div class="reservation-info-grid">
+            <div class="res-info-item">
+              <label>예약일시</label>
+              <span>${res.date || '-'} ${res.time || ''}</span>
+            </div>
+            <div class="res-info-item">
+              <label>매장</label>
+              <span>${res.shopName || '-'}</span>
+            </div>
+            <div class="res-info-item">
+              <label>차량</label>
+              <span>${res.carModel || '-'}</span>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:8px;flex-shrink:0;">
+          ${canCancel ? `<button class="section-action-btn" onclick="openCancelRes('${res.id}')" style="font-size:12px;">취소</button>` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openCancelRes(resId) {
+  cancelTargetResId = resId;
+  openModal('cancelResModal');
+}
+
+async function confirmCancelRes() {
+  if (!cancelTargetResId) return;
+  const reason = document.getElementById('resCanReason').value;
+  try {
+    await apiPut('/reservations/' + cancelTargetResId + '/status', { status: 'cancelled', memo: reason });
+    closeModal('cancelResModal');
+    cancelTargetResId = null;
+    await loadReservations();
+    if (typeof showToast === 'function') showToast('예약 취소', '예약이 취소되었습니다.', 'success');
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('오류', '서버 오류가 발생했습니다.', 'error');
+  }
+}
+
+/* =====================================================
+   위시리스트
+===================================================== */
+function renderWishlist() {
+  const wishIds = currentUser?.wishlist || currentUser?.wish_list || [];
+  const el = document.getElementById('wishGrid');
+  document.getElementById('wishCount').textContent = wishIds.length + '개';
+
+  if (!wishIds.length) {
+    el.innerHTML = `
+      <div class="empty-state" style="grid-column:1/-1;">
+        <div class="empty-icon">❤️</div>
+        <div class="empty-title">위시리스트가 비어있습니다</div>
+        <div class="empty-desc">마음에 드는 상품을 찜해보세요</div>
+        <a href="product-list.html" class="empty-cta-btn">상품 둘러보기</a>
+      </div>`;
+    return;
+  }
+
+  // 위시리스트 상품 ID가 있어도 제품 정보가 없으면 빈 표시
+  el.innerHTML = wishIds.length
+    ? `<div class="empty-state"><div class="empty-icon">❤️</div>
+       <div class="empty-title">위시리스트에 ${wishIds.length}개 상품</div>
+       <div class="empty-desc">상품 목록에서 확인하세요</div>
+       <a href="product-list.html" class="empty-cta-btn">상품 보기</a></div>`
+    : '';
+}
+
+function removeWish(productId) {
+  if (!currentUser) return;
+  currentUser.wishlist = (currentUser.wishlist || []).filter(id => id !== productId);
+  renderWishlist();
+  if (typeof showToast === 'function') showToast('찜 해제', '위시리스트에서 제거되었습니다.', 'info');
+}
+
+function addWishToCart(productId) {
+  // 상품 목록 페이지에서 처리
+  location.href = 'product-list.html';
+}
+
+/* =====================================================
+   내 리뷰
+===================================================== */
+function renderReviews() {
+  // 내 리뷰 목록은 별도 API 미구현 - 빈 상태 표시
+  const myReviews = [];
+
+  const el = document.getElementById('reviewList');
+  if (!myReviews.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">✍️</div>
+        <div class="empty-title">작성한 리뷰가 없습니다</div>
+        <div class="empty-desc">구매한 상품에 리뷰를 남겨주세요</div>
+        <a href="product-list.html" class="empty-cta-btn">상품 보러가기</a>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = myReviews.map(r => `
+    <div class="review-card">
+      <div class="review-product">🛞 ${r.productName || '상품'}</div>
+      <div class="review-stars">${'⭐'.repeat(r.rating || 5)}</div>
+      <div class="review-body">${r.body || ''}</div>
+      ${r.tags?.length ? `<div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap;">${r.tags.map(t => `<span style="padding:3px 10px;background:var(--gray1);border-radius:12px;font-size:11px;color:var(--gray4);">${t}</span>`).join('')}</div>` : ''}
+      <div class="review-date">${formatDate(r.createdAt)}</div>
+      ${r.adminReply ? `
+        <div class="review-admin-reply">
+          <div style="font-size:12px;font-weight:700;color:var(--primary);margin-bottom:4px;">💬 판매자 답변</div>
+          <div style="font-size:13px;color:var(--gray5);">${r.adminReply}</div>
+        </div>` : ''}
+    </div>`).join('');
+}
+
+/* =====================================================
+   쿠폰함
+===================================================== */
+function renderCoupons() {
+  const userCoupons = currentUser?.coupons || [];
+  const allCoupons  = [];  // 쿠폰 API 미구현 - 빈 배열 처리
+
+  /* 보유 쿠폰 데이터 조합 */
+  const myCoupons = userCoupons.map(code => {
+    const info = allCoupons.find(c => c.code === code);
+    return info ? { ...info } : { code, name: code, discount: 0, discountType: 'amount', expire: null };
+  });
+
+  const now      = new Date();
+  const in7days  = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  const expireSoon = myCoupons.filter(c => c.expire && new Date(c.expire) <= in7days && new Date(c.expire) >= now).length;
+  const maxDisc    = myCoupons.reduce((max, c) => Math.max(max, c.discount || 0), 0);
+
+  document.getElementById('couponTotal').textContent     = myCoupons.length;
+  document.getElementById('couponExpireSoon').textContent = expireSoon;
+  document.getElementById('couponDiscount').textContent   = maxDisc > 100 ? maxDisc.toLocaleString() + '원' : (maxDisc ? maxDisc + '%' : '-');
+
+  const el = document.getElementById('couponList');
+  if (!myCoupons.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🎟️</div>
+        <div class="empty-title">보유 쿠폰이 없습니다</div>
+        <div class="empty-desc">이벤트 페이지에서 쿠폰을 받아보세요</div>
+        <a href="event.html" class="empty-cta-btn">이벤트 보러가기</a>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = myCoupons.map(c => {
+    const expired = c.expire && new Date(c.expire) < now;
+    const soon    = c.expire && new Date(c.expire) <= in7days && !expired;
+    const discText = c.discountType === 'percent' ? `${c.discount}%` : `${(c.discount || 0).toLocaleString()}원`;
+    return `
+      <div class="coupon-card" style="${expired ? 'opacity:.45;filter:grayscale(1);' : ''}">
+        <div class="coupon-icon">🎟️</div>
+        <div class="coupon-info">
+          <div class="coupon-name">${c.name || c.code}</div>
+          <div class="coupon-desc">${c.desc || '할인 쿠폰'}</div>
+          <div class="coupon-expire">
+            ${expired ? '<span style="color:var(--primary);">만료됨</span>' :
+              soon ? `<span style="color:#d97706;">⚠️ ${c.expire} 만료 (곧 만료)</span>` :
+              c.expire ? `유효기간: ${c.expire}` : '기간 제한 없음'}
+          </div>
+        </div>
+        <div class="coupon-value">${discText} 할인</div>
+      </div>`;
+  }).join('');
+}
+
+async function registerCoupon() {
+  const code = document.getElementById('couponCodeInput').value.trim().toUpperCase();
+  if (!code) { if (typeof showToast === 'function') showToast('오류', '쿠폰 코드를 입력하세요.', 'error'); return; }
+  try {
+    const res = await apiPost('/coupons/register', { code });
+    if (res?.success) {
+      document.getElementById('couponCodeInput').value = '';
+      renderCoupons();
+      if (typeof showToast === 'function') showToast('쿠폰 등록', '쿠폰이 등록되었습니다!', 'success');
+    } else {
+      if (typeof showToast === 'function') showToast('오류', res?.error || '유효하지 않은 쿠폰 코드입니다.', 'error');
+    }
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('오류', '서버 오류가 발생했습니다.', 'error');
+  }
+}
+
+/* =====================================================
+   포인트
+===================================================== */
+function renderPoints() {
+  const u = currentUser;
+  if (!u) return;
+
+  const history = u.pointHistory || [];
+  const earned  = history.filter(h => h.type === 'earn').reduce((s, h) => s + (h.amount || 0), 0);
+  const used    = history.filter(h => h.type === 'use').reduce((s, h) => s + (h.amount || 0), 0);
+
+  document.getElementById('pointTotal').textContent  = (u.point || 0).toLocaleString() + 'P';
+  document.getElementById('pointEarned').textContent = earned.toLocaleString() + 'P';
+  document.getElementById('pointUsed').textContent   = used.toLocaleString() + 'P';
+
+  const tbody = document.getElementById('pointHistoryBody');
+  if (!history.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--gray4);">포인트 내역이 없습니다</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = [...history].reverse().map(h => `
+    <tr>
+      <td>${formatDate(h.date)}</td>
+      <td>${h.desc || '-'}</td>
+      <td><span style="padding:2px 8px;border-radius:10px;font-size:11px;font-weight:700;background:${h.type === 'earn' ? '#dcfce7' : '#fee2e2'};color:${h.type === 'earn' ? '#16a34a' : '#dc2626'};">${h.type === 'earn' ? '적립' : '사용'}</span></td>
+      <td style="text-align:right;" class="${h.type === 'earn' ? 'point-earn' : 'point-use'}">${h.type === 'earn' ? '+' : '-'}${(h.amount || 0).toLocaleString()}P</td>
+    </tr>`).join('');
+}
+
+/* =====================================================
+   회원정보 수정
+===================================================== */
+function renderProfile() {
+  const u = currentUser;
+  if (!u) return;
+  document.getElementById('profileName').value       = u.name  || '';
+  document.getElementById('profileEmail').value      = u.email || '';
+  document.getElementById('profilePhone').value      = u.phone || '';
+  document.getElementById('profileBirth').value      = u.birth || '';
+  document.getElementById('profileGender').value     = u.gender || '';
+  document.getElementById('profileAddr').value       = u.address || '';
+  document.getElementById('profileAddrDetail').value = u.addressDetail || '';
+}
+
+function resetProfile() {
+  renderProfile();
+  ['profilePwCurrent','profilePwNew','profilePwConfirm'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+}
+
+async function saveProfile() {
+  const name    = document.getElementById('profileName').value.trim();
+  const phone   = document.getElementById('profilePhone').value.trim();
+  const pwCur   = document.getElementById('profilePwCurrent').value;
+  const pwNew   = document.getElementById('profilePwNew').value;
+  const pwConf  = document.getElementById('profilePwConfirm').value;
+
+  if (!name) { if (typeof showToast === 'function') showToast('오류', '이름을 입력하세요.', 'error'); return; }
+  if (phone && !/^01[0-9]-?\d{3,4}-?\d{4}$/.test(phone.replace(/-/g,''))) {
+    if (typeof showToast === 'function') showToast('오류', '올바른 휴대폰 번호를 입력하세요.', 'error'); return;
+  }
+  if (pwNew) {
+    if (pwNew.length < 8) { if (typeof showToast === 'function') showToast('오류', '새 비밀번호는 8자 이상이어야 합니다.', 'error'); return; }
+    if (pwNew !== pwConf) { if (typeof showToast === 'function') showToast('오류', '새 비밀번호가 일치하지 않습니다.', 'error'); return; }
+    if (!pwCur) { if (typeof showToast === 'function') showToast('오류', '현재 비밀번호를 입력하세요.', 'error'); return; }
+    if (pwCur !== currentUser.password) { if (typeof showToast === 'function') showToast('오류', '현재 비밀번호가 틀렸습니다.', 'error'); return; }
+  }
+
+  try {
+    const updateData = {
+      name,
+      phone,
+      birth_date: document.getElementById('profileBirth').value,
+      gender:     document.getElementById('profileGender').value,
+      address:    document.getElementById('profileAddr').value,
+      address_detail: document.getElementById('profileAddrDetail').value,
+    };
+    const res = await apiPut('/auth/me', updateData);
+    if (pwNew) {
+      await apiPut('/auth/password', { current_password: pwCur, new_password: pwNew });
+    }
+    await loadMyInfo();
+    renderSidebarProfile();
+    renderProfile();
+    if (typeof showToast === 'function') showToast('저장 완료', '회원정보가 수정되었습니다.', 'success');
+    document.getElementById('profilePwCurrent').value = '';
+    document.getElementById('profilePwNew').value      = '';
+    document.getElementById('profilePwConfirm').value  = '';
+  } catch(e) {
+    if (typeof showToast === 'function') showToast('오류', '저장 중 오류가 발생했습니다.', 'error');
+  }
+}
+
+function searchProfileAddress() {
+  if (typeof daum !== 'undefined' && daum.Postcode) {
+    new daum.Postcode({
+      oncomplete: function (data) {
+        document.getElementById('profileAddr').value = data.roadAddress || data.jibunAddress;
+        document.getElementById('profileAddrDetail').focus();
+      }
+    }).open();
+  } else {
+    const addr = prompt('주소를 입력하세요:');
+    if (addr) document.getElementById('profileAddr').value = addr;
+  }
+}
+
+/* =====================================================
+   내 차량
+===================================================== */
+function renderCars() {
+  const cars = currentUser?.cars || [];
+  const el   = document.getElementById('carList');
+  if (!el) return;
+
+  if (!cars.length) {
+    el.innerHTML = `
+      <div class="empty-state">
+        <div class="empty-icon">🚗</div>
+        <div class="empty-title">등록된 차량이 없습니다</div>
+        <div class="empty-desc">내 차량을 등록하면 맞춤 타이어를 추천받을 수 있어요</div>
+        <button onclick="openCarModal()" class="empty-cta-btn">🚗 차량 추가하기</button>
+      </div>`;
+    /* ❌ openCarModal() 자동 호출 없음 */
+    return;
+  }
+
+  el.innerHTML = `<div class="cars-grid">${cars.map((car, idx) => `
+    <div class="car-card ${idx === 0 ? 'main-car' : ''}">
+      ${idx === 0 ? '<div class="car-main-badge">대표</div>' : ''}
+      <div class="car-icon">🚗</div>
+      <div class="car-model">${car.brand || ''} ${car.model || '차량명 미입력'}</div>
+      <div class="car-meta">${[car.year ? car.year + '년' : '', car.size].filter(Boolean).join(' · ') || '정보 미입력'}</div>
+      ${car.memo ? `<div style="font-size:12px;color:var(--gray4);margin-bottom:10px;">📝 ${car.memo}</div>` : ''}
+      <div class="car-actions">
+        <button class="car-btn car-btn-edit" onclick="editCar(${idx})">✏️ 수정</button>
+        <button class="car-btn car-btn-del"  onclick="deleteCar(${idx})">🗑️ 삭제</button>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function updateCarModels() {
+  const brand = document.getElementById('carBrand').value;
+  const sel   = document.getElementById('carModel');
+  const models = CAR_MODELS[brand] || [];
+  sel.innerHTML = '<option value="">모델 선택</option>' +
+    models.map(m => `<option value="${m}">${m}</option>`).join('');
+}
+
+function openCarModal(idx = -1) {
+  editingCarIdx = idx;
+  document.getElementById('carModalTitle').textContent = idx === -1 ? '🚗 차량 추가' : '🚗 차량 수정';
+  document.getElementById('carEditIdx').value = idx;
+
+  /* 초기화 */
+  ['carBrand','carModel','carModelDirect','carSize','carMemo'].forEach(id => {
+    document.getElementById(id).value = '';
+  });
+  document.getElementById('carYear').value = new Date().getFullYear();
+
+  if (idx !== -1) {
+    const car = currentUser?.cars?.[idx];
+    if (car) {
+      document.getElementById('carBrand').value       = car.brand || '';
+      document.getElementById('carYear').value        = car.year  || new Date().getFullYear();
+      document.getElementById('carSize').value        = car.size  || '';
+      document.getElementById('carMemo').value        = car.memo  || '';
+      updateCarModels();
+      document.getElementById('carModel').value       = car.model || '';
+      document.getElementById('carModelDirect').value = car.modelDirect || '';
+    }
+  }
+  openModal('carModal');
+}
+
+function editCar(idx) { openCarModal(idx); }
+
+function saveCar() {
+  const brand       = document.getElementById('carBrand').value;
+  const model       = document.getElementById('carModelDirect').value.trim() ||
+                      document.getElementById('carModel').value;
+  const year        = document.getElementById('carYear').value;
+  const size        = document.getElementById('carSize').value.trim();
+  const memo        = document.getElementById('carMemo').value.trim();
+  const modelDirect = document.getElementById('carModelDirect').value.trim();
+
+  if (!brand) { if (typeof showToast === 'function') showToast('오류', '브랜드를 선택하세요.', 'error'); return; }
+  if (!model) { if (typeof showToast === 'function') showToast('오류', '차량 모델을 선택하거나 입력하세요.', 'error'); return; }
+
+  const carObj = { brand, model, year: parseInt(year), size, memo, modelDirect };
+
+  // 차량 정보는 currentUser 로컬 객체에만 임시 저장 (API 미구현)
+  if (!currentUser.cars) currentUser.cars = [];
+  const idx = parseInt(document.getElementById('carEditIdx').value);
+  if (idx === -1) { currentUser.cars.push(carObj); }
+  else            { currentUser.cars[idx] = carObj; }
+
+  closeModal('carModal');
+  renderCars();
+  if (typeof showToast === 'function') showToast('저장 완료', `차량이 ${idx === -1 ? '추가' : '수정'}되었습니다.`, 'success');
+}
+
+function deleteCar(idx) {
+  if (!confirm('차량을 삭제하시겠습니까?')) return;
+  if (!currentUser.cars) return;
+  currentUser.cars = currentUser.cars.filter((_, i) => i !== idx);
+  renderCars();
+  if (typeof showToast === 'function') showToast('삭제 완료', '차량이 삭제되었습니다.', 'info');
+}
+
+/* =====================================================
+   모달 유틸
+===================================================== */
+function openModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.add('open');
+}
+function closeModal(id) {
+  const el = document.getElementById(id);
+  if (el) el.classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  }
+});
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+/* =====================================================
+   유틸 함수
+===================================================== */
+function formatDate(dateStr) {
+  if (!dateStr) return '-';
+  const d = new Date(dateStr);
+  if (isNaN(d)) return dateStr;
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+}
+
+/* =====================================================
+   실시간 동기화
+===================================================== */
+// 실시간 동기화는 API 기반으로 대체됨 (TTStore 이벤트 제거)
+// 필요 시 각 섹션 버튼에서 직접 reload 호출
+</script>

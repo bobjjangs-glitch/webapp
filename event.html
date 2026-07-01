@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>이벤트 - TIRETOP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <script src="js/store.js"></script>
+  <script src="components/loader.js" defer></script>
+  <style>
+    :root{
+      --primary:#e02020;--accent:#ff6b00;--green:#22c55e;
+      --dark:#111827;--gray1:#374151;--gray3:#6b7280;--gray5:#e5e7eb;
+      --surface:#f9fafb;--radius-md:12px;--radius-lg:16px;--max-w:1200px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Noto Sans KR',sans-serif;background:#f3f4f6;color:var(--dark);}
+
+    /* 브레드크럼 */
+    .breadcrumb{background:#fff;border-bottom:1px solid var(--gray5);padding:12px 24px;}
+    .breadcrumb-inner{max-width:var(--max-w);margin:0 auto;font-size:13px;color:var(--gray3);}
+    .breadcrumb a{color:var(--gray3);text-decoration:none;}
+    .breadcrumb a:hover{color:var(--primary);}
+
+    /* 히어로 */
+    .ev-hero{
+      background:linear-gradient(135deg,#0f0c29 0%,#302b63 50%,#24243e 100%);
+      padding:64px 24px;text-align:center;position:relative;overflow:hidden;
+    }
+    .ev-hero::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse at 30% 50%,rgba(224,32,32,.2) 0%,transparent 60%),
+                 radial-gradient(ellipse at 70% 50%,rgba(255,107,0,.15) 0%,transparent 60%);
+    }
+    .ev-hero-inner{position:relative;z-index:1;max-width:var(--max-w);margin:0 auto;}
+    .ev-hero-tag{display:inline-block;background:rgba(224,32,32,.2);border:1px solid rgba(224,32,32,.4);color:#ff6b6b;padding:6px 16px;border-radius:20px;font-size:13px;font-weight:700;margin-bottom:16px;}
+    .ev-hero h1{font-size:42px;font-weight:900;color:#fff;margin-bottom:16px;line-height:1.2;}
+    @media(max-width:600px){.ev-hero h1{font-size:28px;}}
+    .ev-hero p{font-size:16px;color:rgba(255,255,255,.7);margin-bottom:32px;line-height:1.7;}
+    .ev-hero-stats{display:flex;gap:32px;justify-content:center;flex-wrap:wrap;}
+    .ev-hero-stat{text-align:center;}
+    .ev-hero-stat-num{font-size:28px;font-weight:900;color:#fff;}
+    .ev-hero-stat-label{font-size:12px;color:rgba(255,255,255,.6);margin-top:4px;}
+
+    /* 진행 중 띠배너 */
+    .ev-ticker{background:var(--primary);color:#fff;padding:10px 0;overflow:hidden;}
+    .ev-ticker-inner{display:flex;animation:ticker 30s linear infinite;white-space:nowrap;}
+    .ev-ticker-item{padding:0 32px;font-size:13px;font-weight:600;flex-shrink:0;}
+    .ev-ticker-item::before{content:'🔥 ';}
+    @keyframes ticker{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+
+    /* 레이아웃 */
+    .ev-wrap{max-width:var(--max-w);margin:0 auto;padding:40px 24px 80px;}
+
+    /* 탭 */
+    .ev-tab-bar{display:flex;gap:0;border-bottom:2px solid var(--gray5);margin-bottom:32px;overflow-x:auto;}
+    .ev-tab-btn{padding:14px 24px;font-size:15px;font-weight:700;background:none;border:none;cursor:pointer;color:var(--gray3);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s;}
+    .ev-tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+    .ev-tab-pane{display:none;}
+    .ev-tab-pane.active{display:block;}
+
+    /* 진행 중 이벤트 */
+    .ev-featured{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:40px;}
+    @media(max-width:800px){.ev-featured{grid-template-columns:1fr;}}
+    .ev-featured-card{border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;position:relative;min-height:260px;display:flex;flex-direction:column;justify-content:flex-end;transition:transform .2s,box-shadow .2s;}
+    .ev-featured-card:hover{transform:translateY(-4px);box-shadow:0 16px 40px rgba(0,0,0,.2);}
+    .ev-featured-card.main{grid-column:1/-1;min-height:340px;}
+    @media(max-width:800px){.ev-featured-card.main{grid-column:1;}}
+    .ev-featured-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:120px;}
+    .ev-featured-overlay{position:absolute;inset:0;background:linear-gradient(to top,rgba(0,0,0,.85) 0%,rgba(0,0,0,.2) 60%,transparent 100%);}
+    .ev-featured-body{position:relative;z-index:1;padding:28px;}
+    .ev-featured-cat{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:10px;}
+    .ev-featured-title{font-size:22px;font-weight:900;color:#fff;margin-bottom:8px;line-height:1.3;}
+    .ev-featured-card.main .ev-featured-title{font-size:28px;}
+    .ev-featured-desc{font-size:13px;color:rgba(255,255,255,.8);margin-bottom:14px;line-height:1.6;}
+    .ev-featured-footer{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+    .ev-timer{display:flex;align-items:center;gap:6px;font-size:13px;color:#fff;}
+    .ev-timer-box{background:rgba(255,255,255,.15);backdrop-filter:blur(4px);padding:4px 8px;border-radius:6px;font-size:14px;font-weight:800;font-family:monospace;min-width:32px;text-align:center;}
+    .ev-timer-sep{font-size:16px;font-weight:900;opacity:.7;}
+    .ev-cta-btn{padding:10px 20px;border-radius:var(--radius-md);font-size:13px;font-weight:700;cursor:pointer;border:none;background:rgba(255,255,255,.95);transition:opacity .2s;}
+    .ev-cta-btn:hover{opacity:.85;}
+
+    /* 이벤트 그리드 */
+    .ev-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px;}
+    @media(max-width:1000px){.ev-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:600px){.ev-grid{grid-template-columns:1fr;}}
+    .ev-card{background:#fff;border:1px solid var(--gray5);border-radius:var(--radius-lg);overflow:hidden;cursor:pointer;transition:transform .2s,box-shadow .2s;}
+    .ev-card:hover{transform:translateY(-4px);box-shadow:0 10px 28px rgba(0,0,0,.1);}
+    .ev-card-thumb{height:180px;display:flex;align-items:center;justify-content:center;font-size:72px;position:relative;}
+    .ev-card-status{position:absolute;top:12px;right:12px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .ev-card-status.ongoing{background:#f0fdf4;color:var(--green);}
+    .ev-card-status.upcoming{background:#eff6ff;color:#2563eb;}
+    .ev-card-status.ended{background:var(--surface);color:var(--gray3);}
+    .ev-card-dday{position:absolute;top:12px;left:12px;background:var(--primary);color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;}
+    .ev-card-body{padding:18px;}
+    .ev-card-cat{font-size:11px;font-weight:700;color:var(--primary);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;}
+    .ev-card-title{font-size:16px;font-weight:800;margin-bottom:6px;line-height:1.4;}
+    .ev-card-desc{font-size:13px;color:var(--gray3);line-height:1.6;margin-bottom:12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
+    .ev-card-period{font-size:12px;color:var(--gray3);display:flex;align-items:center;gap:4px;}
+    .ev-card-period::before{content:'📅';}
+    .ev-card-footer{padding:0 18px 18px;display:flex;gap:8px;}
+    .ev-card-btn{flex:1;height:38px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;border:none;transition:all .2s;}
+    .ev-card-btn.primary{background:var(--primary);color:#fff;}
+    .ev-card-btn.primary:hover{opacity:.9;}
+    .ev-card-btn.outline{background:#fff;border:1.5px solid var(--gray5);color:var(--gray1);}
+    .ev-card-btn.outline:hover{border-color:var(--primary);color:var(--primary);}
+    .ev-card-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+    /* 필터 바 */
+    .ev-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+    .ev-filter-chip{padding:8px 18px;border:1.5px solid var(--gray5);border-radius:20px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .ev-filter-chip:hover{border-color:var(--primary);}
+    .ev-filter-chip.active{border-color:var(--primary);background:var(--primary);color:#fff;}
+
+    /* 이벤트 없음 */
+    .ev-empty{text-align:center;padding:60px 24px;background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray5);}
+    .ev-empty-icon{font-size:64px;margin-bottom:16px;}
+    .ev-empty h3{font-size:18px;font-weight:800;margin-bottom:8px;}
+    .ev-empty p{font-size:14px;color:var(--gray3);}
+
+    /* 쿠폰 섹션 */
+    .coupon-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+    @media(max-width:900px){.coupon-grid{grid-template-columns:repeat(2,1fr);}}
+    @media(max-width:560px){.coupon-grid{grid-template-columns:1fr;}}
+    .coupon-card{background:#fff;border:2px dashed var(--gray5);border-radius:var(--radius-lg);padding:20px;position:relative;overflow:hidden;transition:border-color .2s;}
+    .coupon-card:hover{border-color:var(--primary);}
+    .coupon-card.downloaded{border-color:var(--green);background:#f0fdf4;}
+    .coupon-card::before{content:'';position:absolute;left:-12px;top:50%;transform:translateY(-50%);width:24px;height:24px;background:#f3f4f6;border-radius:50%;border-right:2px dashed var(--gray5);}
+    .coupon-card::after{content:'';position:absolute;right:-12px;top:50%;transform:translateY(-50%);width:24px;height:24px;background:#f3f4f6;border-radius:50%;border-left:2px dashed var(--gray5);}
+    .coupon-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;margin-bottom:10px;}
+    .coupon-discount{font-size:32px;font-weight:900;color:var(--primary);margin-bottom:4px;}
+    .coupon-name{font-size:14px;font-weight:700;margin-bottom:6px;}
+    .coupon-cond{font-size:12px;color:var(--gray3);margin-bottom:12px;}
+    .coupon-expire{font-size:11px;color:var(--gray3);}
+    .coupon-dl-btn{width:100%;height:38px;border:none;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-top:12px;transition:all .2s;}
+    .coupon-dl-btn.can{background:var(--primary);color:#fff;}
+    .coupon-dl-btn.can:hover{opacity:.9;}
+    .coupon-dl-btn.done{background:var(--green);color:#fff;cursor:default;}
+    .coupon-dl-btn.expired{background:var(--surface);color:var(--gray3);cursor:not-allowed;}
+
+    /* 럭키드로우 */
+    .lucky-wrap{text-align:center;padding:48px 24px;}
+    .lucky-wheel-wrap{width:280px;height:280px;margin:0 auto 32px;position:relative;}
+    .lucky-wheel{width:100%;height:100%;border-radius:50%;position:relative;overflow:hidden;cursor:pointer;transition:transform .1s;box-shadow:0 8px 32px rgba(0,0,0,.2);}
+    .lucky-wheel:hover{transform:scale(1.02);}
+    .lucky-btn{margin-top:24px;padding:16px 48px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 4px 20px rgba(224,32,32,.4);transition:all .2s;}
+    .lucky-btn:hover{transform:translateY(-2px);box-shadow:0 6px 28px rgba(224,32,32,.5);}
+    .lucky-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .lucky-result{margin-top:24px;padding:20px;background:#fff;border-radius:var(--radius-lg);border:2px solid var(--primary);display:none;}
+    .lucky-result.show{display:block;}
+    .lucky-result-icon{font-size:48px;margin-bottom:12px;}
+    .lucky-result-title{font-size:20px;font-weight:900;margin-bottom:8px;}
+    .lucky-result-desc{font-size:14px;color:var(--gray3);}
+
+    /* 응모 섹션 */
+    .apply-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray5);padding:32px;text-align:center;max-width:560px;margin:0 auto;}
+    .apply-icon{font-size:56px;margin-bottom:16px;}
+    .apply-title{font-size:22px;font-weight:900;margin-bottom:8px;}
+    .apply-desc{font-size:14px;color:var(--gray3);line-height:1.7;margin-bottom:24px;}
+    .apply-steps{display:flex;justify-content:center;gap:32px;margin-bottom:28px;flex-wrap:wrap;}
+    .apply-step{text-align:center;}
+    .apply-step-num{width:32px;height:32px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;margin:0 auto 8px;}
+    .apply-step-label{font-size:12px;color:var(--gray3);}
+    .apply-btn{padding:14px 40px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:15px;font-weight:800;cursor:pointer;transition:all .2s;}
+    .apply-btn:hover{opacity:.9;transform:translateY(-1px);}
+    .apply-btn:disabled{opacity:.5;cursor:not-allowed;}
+    .apply-count{margin-top:12px;font-size:13px;color:var(--gray3);}
+
+    /* 이벤트 상세 모달 */
+    .admin-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:1000;align-items:flex-start;justify-content:center;padding:20px;overflow-y:auto;}
+    .admin-modal-overlay.open{display:flex;}
+    .admin-modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:680px;margin:auto;}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--gray5);}
+    .modal-header h3{font-size:18px;font-weight:800;}
+    .modal-close{background:none;border:none;font-size:22px;cursor:pointer;color:var(--gray3);}
+    .modal-body{padding:24px;}
+    .modal-footer{display:flex;gap:12px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--gray5);}
+    .btn{padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+    .btn-primary{background:var(--primary);color:#fff;}
+    .btn-outline{background:#fff;border:1.5px solid var(--gray5);color:var(--gray1);}
+    .ev-detail-hero{height:220px;border-radius:var(--radius-md);display:flex;align-items:center;justify-content:center;font-size:96px;margin-bottom:20px;}
+    .ev-detail-info{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;}
+    .ev-detail-info-box{background:var(--surface);border-radius:10px;padding:14px;}
+    .ev-detail-info-label{font-size:11px;color:var(--gray3);margin-bottom:4px;}
+    .ev-detail-info-val{font-size:14px;font-weight:700;}
+
+    /* 공유 버튼 */
+    .share-btns{display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;}
+    .share-btn{padding:8px 16px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;border:1.5px solid var(--gray5);background:#fff;transition:all .2s;}
+    .share-btn:hover{border-color:var(--primary);color:var(--primary);}
+
+    /* 카운트다운 배너 */
+    .countdown-banner{background:linear-gradient(135deg,var(--primary),#ff6b00);color:#fff;border-radius:var(--radius-lg);padding:24px;text-align:center;margin-bottom:32px;}
+    .countdown-title{font-size:16px;font-weight:700;margin-bottom:16px;opacity:.9;}
+    .countdown-boxes{display:flex;justify-content:center;gap:12px;flex-wrap:wrap;}
+    .countdown-box{text-align:center;background:rgba(255,255,255,.15);backdrop-filter:blur(4px);border-radius:10px;padding:12px 18px;min-width:64px;}
+    .countdown-num{font-size:32px;font-weight:900;font-family:monospace;line-height:1;}
+    .countdown-label{font-size:11px;opacity:.8;margin-top:4px;}
+    .countdown-sep{font-size:32px;font-weight:900;align-self:flex-start;padding-top:8px;opacity:.6;}
+  </style>
+</head>
+<body>
+<div id="tt-header"></div>
+
+<!-- 브레드크럼 -->
+<div class="breadcrumb">
+  <div class="breadcrumb-inner">
+    <a href="index.html">홈</a> › <span>이벤트</span>
+  </div>
+</div>
+
+<!-- 히어로 -->
+<div class="ev-hero">
+  <div class="ev-hero-inner">
+    <div class="ev-hero-tag">🎉 TIRETOP EVENT</div>
+    <h1 id="heroTitle">특별한 혜택을<br>지금 만나보세요</h1>
+    <p id="heroDesc">진행 중인 이벤트에 참여하고 다양한 혜택을 받아보세요</p>
+    <div class="ev-hero-stats">
+      <div class="ev-hero-stat">
+        <div class="ev-hero-stat-num" id="heroOngoing">0</div>
+        <div class="ev-hero-stat-label">진행 중 이벤트</div>
+      </div>
+      <div class="ev-hero-stat">
+        <div class="ev-hero-stat-num" id="heroCoupons">0</div>
+        <div class="ev-hero-stat-label">다운로드 가능 쿠폰</div>
+      </div>
+      <div class="ev-hero-stat">
+        <div class="ev-hero-stat-num" id="heroUpcoming">0</div>
+        <div class="ev-hero-stat-label">예정 이벤트</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 티커 -->
+<div class="ev-ticker">
+  <div class="ev-ticker-inner" id="evTicker"></div>
+</div>
+
+<!-- 메인 컨텐츠 -->
+<div class="ev-wrap">
+
+  <!-- 탭 -->
+  <div class="ev-tab-bar">
+    <button class="ev-tab-btn active" onclick="switchEvTab(this,'tab-ongoing')">🔥 진행 중</button>
+    <button class="ev-tab-btn" onclick="switchEvTab(this,'tab-upcoming')">📅 예정</button>
+    <button class="ev-tab-btn" onclick="switchEvTab(this,'tab-ended')">✅ 종료</button>
+    <button class="ev-tab-btn" onclick="switchEvTab(this,'tab-coupon')">🎟️ 쿠폰 받기</button>
+    <button class="ev-tab-btn" onclick="switchEvTab(this,'tab-lucky')">🎰 럭키드로우</button>
+    <button class="ev-tab-btn" onclick="switchEvTab(this,'tab-apply')">🏆 경품 응모</button>
+  </div>
+
+  <!-- 진행 중 탭 -->
+  <div class="ev-tab-pane active" id="tab-ongoing">
+    <div id="countdownBannerWrap"></div>
+    <div class="ev-featured" id="evFeatured"></div>
+    <div class="ev-filter-bar" id="ongoingFilterBar"></div>
+    <div class="ev-grid" id="ongoingGrid"></div>
+    <div class="ev-empty" id="ongoingEmpty" style="display:none;">
+      <div class="ev-empty-icon">📭</div>
+      <h3>진행 중인 이벤트가 없습니다</h3>
+      <p>곧 새로운 이벤트가 시작됩니다. 기대해 주세요!</p>
+    </div>
+  </div>
+
+  <!-- 예정 탭 -->
+  <div class="ev-tab-pane" id="tab-upcoming">
+    <div class="ev-filter-bar" id="upcomingFilterBar"></div>
+    <div class="ev-grid" id="upcomingGrid"></div>
+    <div class="ev-empty" id="upcomingEmpty" style="display:none;">
+      <div class="ev-empty-icon">📅</div>
+      <h3>예정된 이벤트가 없습니다</h3>
+      <p>새로운 이벤트 소식을 기다려 주세요!</p>
+    </div>
+  </div>
+
+  <!-- 종료 탭 -->
+  <div class="ev-tab-pane" id="tab-ended">
+    <div class="ev-grid" id="endedGrid"></div>
+    <div class="ev-empty" id="endedEmpty" style="display:none;">
+      <div class="ev-empty-icon">✅</div>
+      <h3>종료된 이벤트가 없습니다</h3>
+      <p></p>
+    </div>
+  </div>
+
+  <!-- 쿠폰 탭 -->
+  <div class="ev-tab-pane" id="tab-coupon">
+    <div style="text-align:center;margin-bottom:32px;">
+      <h2 style="font-size:24px;font-weight:900;margin-bottom:8px;">🎟️ 쿠폰 받기</h2>
+      <p style="color:var(--gray3);font-size:14px;">원하는 쿠폰을 클릭해 바로 다운로드하세요</p>
+    </div>
+    <div class="coupon-grid" id="couponGrid"></div>
+    <div class="ev-empty" id="couponEmpty" style="display:none;">
+      <div class="ev-empty-icon">🎟️</div>
+      <h3>다운로드 가능한 쿠폰이 없습니다</h3>
+      <p>다음 쿠폰 이벤트를 기대해 주세요!</p>
+    </div>
+  </div>
+
+  <!-- 럭키드로우 탭 -->
+  <div class="ev-tab-pane" id="tab-lucky">
+    <div class="lucky-wrap">
+      <h2 style="font-size:28px;font-weight:900;margin-bottom:8px;">🎰 럭키드로우</h2>
+      <p style="color:var(--gray3);font-size:14px;margin-bottom:32px;">하루 1번 룰렛을 돌려 경품을 받아가세요!</p>
+      <div class="lucky-wheel-wrap">
+        <canvas id="luckyCanvas" width="280" height="280" onclick="spinWheel()" style="cursor:pointer;border-radius:50%;display:block;"></canvas>
+        <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:40px;height:40px;background:#fff;border-radius:50%;border:3px solid var(--dark);z-index:2;display:flex;align-items:center;justify-content:center;font-size:18px;pointer-events:none;">🎯</div>
+        <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);font-size:28px;z-index:3;pointer-events:none;">▼</div>
+      </div>
+      <button class="lucky-btn" id="luckyBtn" onclick="spinWheel()">🎰 룰렛 돌리기</button>
+      <p style="font-size:12px;color:var(--gray3);margin-top:8px;" id="luckyStatus">하루 1번 참여 가능합니다</p>
+      <div class="lucky-result" id="luckyResult">
+        <div class="lucky-result-icon" id="luckyResultIcon">🎁</div>
+        <div class="lucky-result-title" id="luckyResultTitle">축하합니다!</div>
+        <div class="lucky-result-desc" id="luckyResultDesc"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 경품 응모 탭 -->
+  <div class="ev-tab-pane" id="tab-apply">
+    <div class="apply-card">
+      <div class="apply-icon">🏆</div>
+      <div class="apply-title">경품 이벤트 응모</div>
+      <div class="apply-desc" id="applyDesc">
+        매월 추첨을 통해 푸짐한 경품을 드립니다.<br>
+        지금 바로 응모하고 당첨의 행운을 잡으세요!
+      </div>
+      <div class="apply-steps">
+        <div class="apply-step">
+          <div class="apply-step-num">1</div>
+          <div class="apply-step-label">로그인</div>
+        </div>
+        <div class="apply-step">
+          <div class="apply-step-num">2</div>
+          <div class="apply-step-label">응모 버튼 클릭</div>
+        </div>
+        <div class="apply-step">
+          <div class="apply-step-num">3</div>
+          <div class="apply-step-label">당첨 발표 확인</div>
+        </div>
+      </div>
+      <button class="apply-btn" id="applyBtn" onclick="doApply()">🏆 지금 응모하기</button>
+      <div class="apply-count" id="applyCount"></div>
+    </div>
+
+    <!-- 당첨자 발표 -->
+    <div style="margin-top:40px;">
+      <h3 style="font-size:20px;font-weight:900;margin-bottom:20px;text-align:center;">🎉 당첨자 발표</h3>
+      <div id="winnerList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- 이벤트 상세 모달 -->
+<div class="admin-modal-overlay" id="evDetailModal">
+  <div class="admin-modal">
+    <div class="modal-header">
+      <h3 id="evDetailTitle">이벤트 상세</h3>
+      <button class="modal-close" onclick="closeModal('evDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="evDetailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('evDetailModal')">닫기</button>
+      <button class="btn btn-primary" id="evDetailJoinBtn" onclick="joinEvent()">🎁 이벤트 참여</button>
+    </div>
+  </div>
+</div>
+
+<div id="tt-footer"></div>
+
+<script>
+// ───────────────────────────────────────────
+// 전역 변수
+// ───────────────────────────────────────────
+let allEvents      = [];
+let allCoupons     = [];
+let myDownloaded   = [];
+let myApplied      = false;
+let luckyUsed      = false;
+let luckyAngle     = 0;
+let isSpinning     = false;
+let currentEvId    = null;
+let countdownTimers= {};
+
+// 룰렛 상품 목록
+const WHEEL_PRIZES = [
+  { label:'500P',    color:'#e02020', emoji:'💰', type:'point',  val:500  },
+  { label:'꽝',      color:'#6b7280', emoji:'😢', type:'none',   val:0    },
+  { label:'1,000P',  color:'#ff6b00', emoji:'💎', type:'point',  val:1000 },
+  { label:'꽝',      color:'#9ca3af', emoji:'😢', type:'none',   val:0    },
+  { label:'5%쿠폰',  color:'#2563eb', emoji:'🎟️', type:'coupon', val:5    },
+  { label:'꽝',      color:'#6b7280', emoji:'😢', type:'none',   val:0    },
+  { label:'3,000P',  color:'#22c55e', emoji:'🎁', type:'point',  val:3000 },
+  { label:'꽝',      color:'#9ca3af', emoji:'😢', type:'none',   val:0    },
+];
+
+// ───────────────────────────────────────────
+// 초기화
+// ───────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  drawWheel(0);
+  checkLucky();
+  checkApply();
+});
+
+// ───────────────────────────────────────────
+// 데이터 로드
+// ───────────────────────────────────────────
+function loadData() {
+  allEvents  = TTStore.get('tt_events')  || [];
+  allCoupons = TTStore.get('tt_coupons') || [];
+
+  const user = TTStore.getCurrentUser();
+  myDownloaded = user?.coupons     || [];
+  myApplied    = user?.eventApplied || false;
+
+  updateHeroStats();
+  renderTicker();
+  renderOngoing();
+  renderUpcoming();
+  renderEnded();
+  renderCoupons();
+  renderWinners();
+}
+
+// ───────────────────────────────────────────
+// 히어로 통계
+// ───────────────────────────────────────────
+function updateHeroStats() {
+  const today    = new Date().toISOString().slice(0,10);
+  const ongoing  = allEvents.filter(e => e.status === 'ongoing' ||
+    (e.startDate <= today && e.endDate >= today && e.status !== 'ended')).length;
+  const upcoming = allEvents.filter(e => e.startDate > today).length;
+  const coupons  = allCoupons.filter(c => c.active && (!c.endDate || c.endDate >= today)).length;
+
+  document.getElementById('heroOngoing').textContent  = ongoing;
+  document.getElementById('heroCoupons').textContent  = coupons;
+  document.getElementById('heroUpcoming').textContent = upcoming;
+}
+
+// ───────────────────────────────────────────
+// 티커 배너
+// ───────────────────────────────────────────
+function renderTicker() {
+  const today   = new Date().toISOString().slice(0,10);
+  const ongoing = allEvents.filter(e => e.status === 'ongoing' ||
+    (e.startDate <= today && e.endDate >= today));
+  const items   = ongoing.length
+    ? ongoing.map(e => e.title)
+    : ['지금 이벤트에 참여하세요!', '다양한 쿠폰을 받아보세요!', '럭키드로우에 도전하세요!'];
+
+  // 두 배 반복으로 무한 루프
+  const doubled = [...items, ...items];
+  const el = document.getElementById('evTicker');
+  el.innerHTML = doubled.map(t => `<span class="ev-ticker-item">${t}</span>`).join('');
+}
+
+// ───────────────────────────────────────────
+// 이벤트 상태 계산
+// ───────────────────────────────────────────
+function getEvStatus(ev) {
+  const today = new Date().toISOString().slice(0,10);
+  if (ev.status === 'ended' || ev.endDate < today) return 'ended';
+  if (ev.startDate > today)                         return 'upcoming';
+  return 'ongoing';
+}
+
+function getDday(ev) {
+  const today = new Date();
+  const end   = new Date(ev.endDate);
+  const diff  = Math.ceil((end - today) / (1000*60*60*24));
+  if (diff < 0)  return '종료';
+  if (diff === 0) return 'D-DAY';
+  return `D-${diff}`;
+}
+
+// ───────────────────────────────────────────
+// 진행 중 이벤트
+// ───────────────────────────────────────────
+function renderOngoing() {
+  const today   = new Date().toISOString().slice(0,10);
+  const list    = allEvents.filter(e => getEvStatus(e) === 'ongoing');
+  const featured= list.slice(0, 3);
+  const rest    = list.slice(3);
+
+  // 카운트다운 배너 (가장 빨리 끝나는 이벤트)
+  const urgentEv = list.sort((a,b) => a.endDate > b.endDate ? 1 : -1)[0];
+  const cbWrap   = document.getElementById('countdownBannerWrap');
+  if (urgentEv) {
+    cbWrap.innerHTML = `
+      <div class="countdown-banner">
+        <div class="countdown-title">⏰ "${urgentEv.title}" 이벤트 종료까지</div>
+        <div class="countdown-boxes">
+          <div class="countdown-box"><div class="countdown-num" id="cd_d">00</div><div class="countdown-label">일</div></div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-box"><div class="countdown-num" id="cd_h">00</div><div class="countdown-label">시간</div></div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-box"><div class="countdown-num" id="cd_m">00</div><div class="countdown-label">분</div></div>
+          <div class="countdown-sep">:</div>
+          <div class="countdown-box"><div class="countdown-num" id="cd_s">00</div><div class="countdown-label">초</div></div>
+        </div>
+      </div>`;
+    startCountdown(urgentEv.endDate);
+  } else {
+    cbWrap.innerHTML = '';
+  }
+
+  // 피처드 카드
+  const featuredEl = document.getElementById('evFeatured');
+  if (!list.length) {
+    featuredEl.innerHTML = '';
+  } else {
+    featuredEl.innerHTML = featured.map((e, i) => buildFeaturedCard(e, i === 0)).join('');
+  }
+
+  // 카테고리 필터 칩
+  const cats = [...new Set(list.map(e => e.category||e.type||'일반'))];
+  document.getElementById('ongoingFilterBar').innerHTML =
+    `<button class="ev-filter-chip active" onclick="filterOngoing('',this)">전체</button>` +
+    cats.map(c => `<button class="ev-filter-chip" onclick="filterOngoing('${c}',this)">${c}</button>`).join('');
+
+  renderOngoingGrid(rest, '');
+
+  document.getElementById('ongoingEmpty').style.display = list.length ? 'none' : 'block';
+  featuredEl.style.display = list.length ? 'grid' : 'none';
+}
+
+function buildFeaturedCard(e, isMain) {
+  const bg     = e.gradient || `linear-gradient(135deg,${e.color||'#1e1e2e'},${e.color2||'#302b63'})`;
+  const catCol = e.catColor || 'rgba(255,255,255,.2)';
+  const dday   = getDday(e);
+  return `
+    <div class="ev-featured-card ${isMain?'main':''}" onclick="openEvDetail(${e.id})"
+         style="background:${bg};">
+      <div class="ev-featured-bg">${e.emoji||'🎉'}</div>
+      <div class="ev-featured-overlay"></div>
+      <div class="ev-featured-body">
+        <span class="ev-featured-cat" style="background:${catCol};color:#fff;">${e.category||e.type||'이벤트'}</span>
+        <div class="ev-featured-title">${e.title}</div>
+        <div class="ev-featured-desc">${e.description||''}</div>
+        <div class="ev-featured-footer">
+          <div class="ev-timer" id="timer_${e.id}">
+            <span>⏰</span>
+            <span class="ev-timer-box" id="t_d_${e.id}">--</span>
+            <span class="ev-timer-sep">:</span>
+            <span class="ev-timer-box" id="t_h_${e.id}">--</span>
+            <span class="ev-timer-sep">:</span>
+            <span class="ev-timer-box" id="t_m_${e.id}">--</span>
+            <span class="ev-timer-sep">:</span>
+            <span class="ev-timer-box" id="t_s_${e.id}">--</span>
+          </div>
+          <button class="ev-cta-btn" style="color:${e.color||'var(--primary)'};"
+                  onclick="event.stopPropagation();openEvDetail(${e.id})">
+            자세히 보기 →
+          </button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function renderOngoingGrid(list, catFilter) {
+  const filtered = catFilter
+    ? list.filter(e => (e.category||e.type||'일반') === catFilter)
+    : list;
+  const el = document.getElementById('ongoingGrid');
+  el.innerHTML = filtered.map(e => buildEvCard(e)).join('');
+}
+
+function filterOngoing(cat, el) {
+  document.querySelectorAll('#ongoingFilterBar .ev-filter-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  const today = new Date().toISOString().slice(0,10);
+  const list  = allEvents.filter(e => getEvStatus(e) === 'ongoing').slice(3);
+  renderOngoingGrid(list, cat);
+}
+
+// ───────────────────────────────────────────
+// 예정 이벤트
+// ───────────────────────────────────────────
+function renderUpcoming() {
+  const list = allEvents.filter(e => getEvStatus(e) === 'upcoming');
+  const el   = document.getElementById('upcomingGrid');
+  el.innerHTML = list.map(e => buildEvCard(e)).join('');
+  document.getElementById('upcomingEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+// ───────────────────────────────────────────
+// 종료 이벤트
+// ───────────────────────────────────────────
+function renderEnded() {
+  const list = allEvents.filter(e => getEvStatus(e) === 'ended');
+  const el   = document.getElementById('endedGrid');
+  el.innerHTML = list.map(e => buildEvCard(e)).join('');
+  document.getElementById('endedEmpty').style.display = list.length ? 'none' : 'block';
+}
+
+// ───────────────────────────────────────────
+// 이벤트 카드 빌드
+// ───────────────────────────────────────────
+function buildEvCard(e) {
+  const status  = getEvStatus(e);
+  const dday    = getDday(e);
+  const bg      = e.gradient || `linear-gradient(135deg,${e.color||'#667eea'},${e.color2||'#764ba2'})`;
+  const statusLabel = { ongoing:'진행 중', upcoming:'예정', ended:'종료' }[status];
+  const statusClass = status;
+  const isEnded = status === 'ended';
+
+  return `
+    <div class="ev-card" onclick="openEvDetail(${e.id})">
+      <div class="ev-card-thumb" style="background:${bg};">
+        <span>${e.emoji||'🎉'}</span>
+        <span class="ev-card-status ${statusClass}">${statusLabel}</span>
+        ${!isEnded ? `<span class="ev-card-dday">${dday}</span>` : ''}
+      </div>
+      <div class="ev-card-body">
+        <div class="ev-card-cat">${e.category||e.type||'이벤트'}</div>
+        <div class="ev-card-title">${e.title}</div>
+        <div class="ev-card-desc">${e.description||''}</div>
+        <div class="ev-card-period">${e.startDate||''} ~ ${e.endDate||''}</div>
+      </div>
+      <div class="ev-card-footer">
+        <button class="ev-card-btn ${isEnded?'outline':'primary'}"
+                onclick="event.stopPropagation();openEvDetail(${e.id})"
+                ${isEnded?'disabled':''}>
+          ${isEnded?'종료됨':'자세히 보기'}
+        </button>
+        ${!isEnded ? `<button class="ev-card-btn outline"
+                onclick="event.stopPropagation();shareEvent(${e.id})">공유</button>` : ''}
+      </div>
+    </div>`;
+}
+
+// ───────────────────────────────────────────
+// 카운트다운
+// ───────────────────────────────────────────
+function startCountdown(endDateStr) {
+  const endDate = new Date(endDateStr + 'T23:59:59');
+  const tick = () => {
+    const now  = new Date();
+    const diff = endDate - now;
+    if (diff <= 0) {
+      ['cd_d','cd_h','cd_m','cd_s'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = '00';
+      });
+      return;
+    }
+    const d = Math.floor(diff / (1000*60*60*24));
+    const h = Math.floor((diff % (1000*60*60*24)) / (1000*60*60));
+    const m = Math.floor((diff % (1000*60*60)) / (1000*60));
+    const s = Math.floor((diff % (1000*60)) / 1000);
+
+    const set = (id, v) => { const el=document.getElementById(id); if(el) el.textContent=String(v).padStart(2,'0'); };
+    set('cd_d', d); set('cd_h', h); set('cd_m', m); set('cd_s', s);
+
+    // 피처드 카드 타이머도 업데이트
+    allEvents.filter(e => getEvStatus(e) === 'ongoing').slice(0,3).forEach(e => {
+      const ed = new Date(e.endDate + 'T23:59:59');
+      const df = ed - new Date();
+      if (df > 0) {
+        const dd = Math.floor(df/(1000*60*60*24));
+        const dh = Math.floor((df%(1000*60*60*24))/(1000*60*60));
+        const dm = Math.floor((df%(1000*60*60))/(1000*60));
+        const ds = Math.floor((df%(1000*60))/1000);
+        const s2 = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=String(v).padStart(2,'0'); };
+        s2(`t_d_${e.id}`,dd); s2(`t_h_${e.id}`,dh); s2(`t_m_${e.id}`,dm); s2(`t_s_${e.id}`,ds);
+      }
+    });
+  };
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ───────────────────────────────────────────
+// 쿠폰 렌더링
+// ───────────────────────────────────────────
+function renderCoupons() {
+  const today = new Date().toISOString().slice(0,10);
+  const list  = allCoupons.filter(c => c.active);
+  const el    = document.getElementById('couponGrid');
+  const empty = document.getElementById('couponEmpty');
+
+  if (!list.length) {
+    el.innerHTML = '';
+    empty.style.display = 'block';
+    return;
+  }
+  empty.style.display = 'none';
+
+  el.innerHTML = list.map(c => {
+    const isExpired   = c.endDate && c.endDate < today;
+    const isDownloaded= myDownloaded.includes(c.code);
+    const bgColors    = {percent:'#fff5f5', fixed:'#eff6ff', free:'#f0fdf4', point:'#fefce8'};
+    const typeLabels  = {percent:'%할인', fixed:'정액할인', free:'무료배송', point:'포인트'};
+    const bg          = bgColors[c.type] || '#f9fafb';
+    const discTxt     = c.type==='percent' ? c.value+'%' : c.type==='fixed' ? c.value.toLocaleString()+'원' : c.type==='free' ? '무료배송' : c.value+'P';
+
+    return `
+      <div class="coupon-card ${isDownloaded?'downloaded':''}">
+        <span class="coupon-badge" style="background:${bg};color:var(--primary);">${typeLabels[c.type]||'할인'}</span>
+        <div class="coupon-discount">${discTxt}</div>
+        <div class="coupon-name">${c.name}</div>
+        <div class="coupon-cond">${c.minOrder ? c.minOrder.toLocaleString()+'원 이상 구매 시' : '조건 없음'}</div>
+        <div class="coupon-expire">유효기간: ${c.startDate||'즉시'} ~ ${c.endDate||'기간 없음'}</div>
+        <button class="coupon-dl-btn ${isExpired?'expired':isDownloaded?'done':'can'}"
+                onclick="downloadCoupon('${c.code}')"
+                ${(isExpired||isDownloaded)?'disabled':''}>
+          ${isExpired?'기간 만료':isDownloaded?'✓ 다운로드 완료':'🎟️ 쿠폰 받기'}
+        </button>
+      </div>`;
+  }).join('');
+}
+
+// ───────────────────────────────────────────
+// 쿠폰 다운로드
+// ───────────────────────────────────────────
+function downloadCoupon(code) {
+  if (!TTStore.isLoggedIn()) {
+    showToast('로그인 필요', '로그인 후 쿠폰을 받을 수 있습니다.', 'info');
+    setTimeout(() => location.href = 'login.html?redirect=event.html', 800);
+    return;
+  }
+  if (myDownloaded.includes(code)) { showToast('알림', '이미 다운로드한 쿠폰입니다.', 'info'); return; }
+
+  const users = TTStore.get('tt_users') || [];
+  const user  = TTStore.getCurrentUser();
+  const uIdx  = users.findIndex(u => u.id === user.id);
+  if (uIdx < 0) return;
+
+  users[uIdx].coupons = [...(users[uIdx].coupons||[]), code];
+  TTStore.set('tt_users', users);
+  TTStore._saveSession({ ...users[uIdx] }, !!localStorage.getItem('tt_session'));
+  myDownloaded = users[uIdx].coupons;
+
+  renderCoupons();
+  showToast('쿠폰 다운로드', '쿠폰이 마이페이지에 저장되었습니다! 🎟️', 'success');
+}
+
+// ───────────────────────────────────────────
+// 이벤트 상세 모달
+// ───────────────────────────────────────────
+function openEvDetail(id) {
+  const e    = allEvents.find(ev => ev.id === id);
+  if (!e) return;
+  currentEvId = id;
+  const status  = getEvStatus(e);
+  const bg      = e.gradient || `linear-gradient(135deg,${e.color||'#667eea'},${e.color2||'#764ba2'})`;
+  const dday    = getDday(e);
+  const isEnded = status === 'ended';
+
+  document.getElementById('evDetailTitle').textContent = e.title;
+  document.getElementById('evDetailBody').innerHTML = `
+    <div class="ev-detail-hero" style="background:${bg};">${e.emoji||'🎉'}</div>
+    <h3 style="font-size:20px;font-weight:900;margin-bottom:8px;">${e.title}</h3>
+    <p style="font-size:14px;color:var(--gray3);line-height:1.7;margin-bottom:16px;">${e.description||''}</p>
+    <div class="ev-detail-info">
+      <div class="ev-detail-info-box">
+        <div class="ev-detail-info-label">이벤트 기간</div>
+        <div class="ev-detail-info-val">${e.startDate||'-'} ~ ${e.endDate||'-'}</div>
+      </div>
+      <div class="ev-detail-info-box">
+        <div class="ev-detail-info-label">D-DAY</div>
+        <div class="ev-detail-info-val" style="color:${isEnded?'var(--gray3)':'var(--primary)'};">${dday}</div>
+      </div>
+      <div class="ev-detail-info-box">
+        <div class="ev-detail-info-label">카테고리</div>
+        <div class="ev-detail-info-val">${e.category||e.type||'이벤트'}</div>
+      </div>
+      <div class="ev-detail-info-box">
+        <div class="ev-detail-info-label">상태</div>
+        <div class="ev-detail-info-val" style="color:${isEnded?'var(--gray3)':status==='upcoming'?'#2563eb':'var(--green)'};">${isEnded?'종료':status==='upcoming'?'예정':'진행 중'}</div>
+      </div>
+    </div>
+    ${e.detail ? `<div style="background:var(--surface);border-radius:10px;padding:16px;font-size:14px;line-height:1.8;color:var(--gray1);">${e.detail}</div>` : ''}
+    <div class="share-btns">
+      <button class="share-btn" onclick="shareKakao()">💛 카카오톡 공유</button>
+      <button class="share-btn" onclick="copyLink()">🔗 링크 복사</button>
+    </div>`;
+
+  const joinBtn = document.getElementById('evDetailJoinBtn');
+  joinBtn.disabled = isEnded;
+  joinBtn.textContent = isEnded ? '종료된 이벤트' : '🎁 이벤트 참여';
+
+  document.getElementById('evDetailModal').classList.add('open');
+}
+
+function joinEvent() {
+  if (!currentEvId) return;
+  if (!TTStore.isLoggedIn()) {
+    showToast('로그인 필요', '로그인 후 이벤트에 참여할 수 있습니다.', 'info');
+    setTimeout(() => location.href = 'login.html?redirect=event.html', 800);
+    return;
+  }
+  closeModal('evDetailModal');
+  showToast('이벤트 참여', '이벤트에 참여되었습니다! 🎉', 'success');
+}
+
+// ───────────────────────────────────────────
+// 공유
+// ───────────────────────────────────────────
+function shareEvent(id) {
+  const e = allEvents.find(ev => ev.id === id);
+  if (!e) return;
+  const url = location.origin + location.pathname + '?ev=' + id;
+  if (navigator.share) {
+    navigator.share({ title: e.title, text: e.description||'', url });
+  } else {
+    navigator.clipboard.writeText(url).then(() => {
+      showToast('공유', '링크가 복사되었습니다!', 'success');
+    });
+  }
+}
+
+function shareKakao() { showToast('공유', '카카오톡 공유 기능은 SDK 연동 후 사용 가능합니다.', 'info'); }
+function copyLink()   {
+  navigator.clipboard.writeText(location.href)
+    .then(() => showToast('복사 완료', '링크가 클립보드에 복사되었습니다.', 'success'))
+    .catch(() => showToast('오류', '복사에 실패했습니다.', 'error'));
+}
+
+// ───────────────────────────────────────────
+// 럭키드로우 (캔버스 룰렛)
+// ───────────────────────────────────────────
+function drawWheel(rotation) {
+  const canvas  = document.getElementById('luckyCanvas');
+  if (!canvas) return;
+  const ctx     = canvas.getContext('2d');
+  const cx      = canvas.width  / 2;
+  const cy      = canvas.height / 2;
+  const r       = cx - 4;
+  const seg     = WHEEL_PRIZES.length;
+  const arc     = (Math.PI * 2) / seg;
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  WHEEL_PRIZES.forEach((prize, i) => {
+    const startAngle = rotation + i * arc;
+    const endAngle   = startAngle + arc;
+
+    // 부채꼴
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.arc(cx, cy, r, startAngle, endAngle);
+    ctx.closePath();
+    ctx.fillStyle = prize.color;
+    ctx.fill();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth   = 2;
+    ctx.stroke();
+
+    // 텍스트
+    ctx.save();
+    ctx.translate(cx, cy);
+    ctx.rotate(startAngle + arc / 2);
+    ctx.textAlign    = 'right';
+    ctx.fillStyle    = '#fff';
+    ctx.font         = 'bold 13px Noto Sans KR, sans-serif';
+    ctx.shadowColor  = 'rgba(0,0,0,.3)';
+    ctx.shadowBlur   = 4;
+    ctx.fillText(prize.label, r - 12, 5);
+    ctx.restore();
+  });
+
+  // 중앙 원
+  ctx.beginPath();
+  ctx.arc(cx, cy, 24, 0, Math.PI*2);
+  ctx.fillStyle = '#fff';
+  ctx.fill();
+  ctx.strokeStyle = '#e5e7eb';
+  ctx.lineWidth   = 2;
+  ctx.stroke();
+}
+
+function spinWheel() {
+  if (isSpinning || luckyUsed) return;
+  if (!TTStore.isLoggedIn()) {
+    showToast('로그인 필요', '로그인 후 럭키드로우에 참여할 수 있습니다.', 'info');
+    return;
+  }
+
+  isSpinning = true;
+  document.getElementById('luckyBtn').disabled = true;
+  document.getElementById('luckyResult').classList.remove('show');
+
+  // 당첨 인덱스 결정 (가중치: 꽝 60%, 나머지 40%)
+  const rand    = Math.random();
+  const prizeIdx= rand < 0.6
+    ? WHEEL_PRIZES.findIndex((p,i) => p.type==='none' && i > 0)
+    : Math.floor(Math.random() * WHEEL_PRIZES.filter(p => p.type!=='none').length) * 2;
+
+  const seg     = WHEEL_PRIZES.length;
+  const arc     = (Math.PI * 2) / seg;
+  const targetAngle = -(prizeIdx * arc + arc/2) - Math.PI/2;
+  const spins   = 5 + Math.floor(Math.random()*3);
+  const total   = spins * Math.PI * 2 + ((targetAngle - luckyAngle) % (Math.PI*2));
+
+  let start     = null;
+  const duration= 4000;
+
+  const animate = (ts) => {
+    if (!start) start = ts;
+    const elapsed = ts - start;
+    const progress= Math.min(elapsed / duration, 1);
+    // ease out cubic
+    const eased   = 1 - Math.pow(1 - progress, 3);
+    const current = luckyAngle + total * eased;
+
+    drawWheel(current);
+
+    if (progress < 1) {
+      requestAnimationFrame(animate);
+    } else {
+      luckyAngle  = current % (Math.PI * 2);
+      isSpinning  = false;
+      luckyUsed   = true;
+
+      // 저장
+      const today = new Date().toISOString().slice(0,10);
+      localStorage.setItem('tt_lucky_date', today);
+
+      // 결과 표시
+      const prize = WHEEL_PRIZES[prizeIdx];
+      showLuckyResult(prize);
+    }
+  };
+  requestAnimationFrame(animate);
+}
+
+function showLuckyResult(prize) {
+  const resultEl = document.getElementById('luckyResult');
+  document.getElementById('luckyResultIcon').textContent  = prize.emoji;
+  document.getElementById('luckyBtn').disabled = true;
+  document.getElementById('luckyStatus').textContent = '오늘의 럭키드로우를 이미 사용하셨습니다.';
+
+  if (prize.type === 'none') {
+    document.getElementById('luckyResultTitle').textContent = '아쉽네요! 꽝입니다 😢';
+    document.getElementById('luckyResultDesc').textContent  = '내일 다시 도전해 보세요!';
+  } else if (prize.type === 'point') {
+    document.getElementById('luckyResultTitle').textContent = `🎉 ${prize.val.toLocaleString()}P 당첨!`;
+    document.getElementById('luckyResultDesc').textContent  = `${prize.val.toLocaleString()} 포인트가 마이페이지에 적립되었습니다.`;
+    // 포인트 지급
+    if (TTStore.isLoggedIn()) {
+      const users = TTStore.get('tt_users') || [];
+      const user  = TTStore.getCurrentUser();
+      const uIdx  = users.findIndex(u => u.id === user.id);
+      if (uIdx > -1) {
+        users[uIdx].point = (users[uIdx].point||0) + prize.val;
+        TTStore.set('tt_users', users);
+        TTStore._saveSession({ ...users[uIdx] }, !!localStorage.getItem('tt_session'));
+      }
+    }
+  } else if (prize.type === 'coupon') {
+    document.getElementById('luckyResultTitle').textContent = `🎟️ ${prize.val}% 할인 쿠폰 당첨!`;
+    document.getElementById('luckyResultDesc').textContent  = `쿠폰이 마이페이지에 저장되었습니다. 쇼핑 시 사용하세요!`;
+    // 쿠폰 지급
+    if (TTStore.isLoggedIn()) {
+      const code  = 'LUCKY' + prize.val + Date.now().toString().slice(-4);
+      const users = TTStore.get('tt_users') || [];
+      const user  = TTStore.getCurrentUser();
+      const uIdx  = users.findIndex(u => u.id === user.id);
+      if (uIdx > -1) {
+        users[uIdx].coupons = [...(users[uIdx].coupons||[]), code];
+        TTStore.set('tt_users', users);
+        TTStore._saveSession({ ...users[uIdx] }, !!localStorage.getItem('tt_session'));
+        // 쿠폰 DB에도 추가
+        const newCoupon = { id:Date.now(), code, name:`럭키드로우 ${prize.val}% 쿠폰`, type:'percent', value:prize.val, minOrder:10000, active:true, endDate: new Date(Date.now()+7*24*60*60*1000).toISOString().slice(0,10) };
+        TTStore.push('tt_coupons', newCoupon);
+      }
+    }
+  }
+  resultEl.classList.add('show');
+  showToast('럭키드로우', prize.type==='none' ? '아쉽지만 꽝입니다...' : `${prize.label} 당첨! 🎉`, prize.type==='none'?'info':'success');
+}
+
+function checkLucky() {
+  const today   = new Date().toISOString().slice(0,10);
+  const lastDate= localStorage.getItem('tt_lucky_date');
+  luckyUsed     = lastDate === today;
+  const btn     = document.getElementById('luckyBtn');
+  const status  = document.getElementById('luckyStatus');
+  if (luckyUsed) {
+    if (btn)    btn.disabled = true;
+    if (status) status.textContent = '오늘의 럭키드로우를 이미 사용하셨습니다. 내일 다시 도전하세요!';
+  }
+}
+
+// ───────────────────────────────────────────
+// 경품 응모
+// ───────────────────────────────────────────
+function checkApply() {
+  const user = TTStore.getCurrentUser();
+  myApplied  = user?.eventApplied || false;
+  const btn  = document.getElementById('applyBtn');
+  const cnt  = document.getElementById('applyCount');
+
+  // 전체 응모자 수
+  const allUsers   = TTStore.get('tt_users') || [];
+  const appliedCnt = allUsers.filter(u => u.eventApplied).length;
+  if (cnt) cnt.textContent = `현재 ${appliedCnt.toLocaleString()}명 응모 중`;
+
+  if (myApplied) {
+    if (btn) { btn.disabled = true; btn.textContent = '✅ 응모 완료'; }
+  }
+}
+
+function doApply() {
+  if (!TTStore.isLoggedIn()) {
+    showToast('로그인 필요', '로그인 후 응모할 수 있습니다.', 'info');
+    setTimeout(() => location.href = 'login.html?redirect=event.html', 800);
+    return;
+  }
+  if (myApplied) { showToast('알림', '이미 응모하셨습니다.', 'info'); return; }
+
+  const users = TTStore.get('tt_users') || [];
+  const user  = TTStore.getCurrentUser();
+  const uIdx  = users.findIndex(u => u.id === user.id);
+  if (uIdx < 0) return;
+
+  users[uIdx].eventApplied = true;
+  TTStore.set('tt_users', users);
+  TTStore._saveSession({ ...users[uIdx] }, !!localStorage.getItem('tt_session'));
+  myApplied = true;
+
+  const btn = document.getElementById('applyBtn');
+  if (btn)  { btn.disabled = true; btn.textContent = '✅ 응모 완료'; }
+
+  checkApply();
+  showToast('응모 완료', '이벤트 응모가 완료되었습니다! 당첨을 기대해 주세요 🏆', 'success');
+}
+
+// ───────────────────────────────────────────
+// 당첨자 발표
+// ───────────────────────────────────────────
+function renderWinners() {
+  const winners = TTStore.get('tt_winners') || [];
+  const el      = document.getElementById('winnerList');
+  if (!winners.length) {
+    el.innerHTML = `
+      <div class="ev-empty" style="padding:32px;">
+        <div class="ev-empty-icon">🏆</div>
+        <h3>아직 당첨자 발표가 없습니다</h3>
+        <p>이벤트 종료 후 당첨자를 발표합니다</p>
+      </div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray5);overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead><tr style="background:var(--surface);">
+          <th style="padding:12px 16px;text-align:left;font-size:13px;">회차</th>
+          <th style="padding:12px 16px;text-align:left;font-size:13px;">당첨자</th>
+          <th style="padding:12px 16px;text-align:left;font-size:13px;">경품</th>
+          <th style="padding:12px 16px;text-align:left;font-size:13px;">발표일</th>
+        </tr></thead>
+        <tbody>${winners.map(w => `
+          <tr style="border-top:1px solid var(--gray5);">
+            <td style="padding:12px 16px;font-size:14px;">${w.round||'-'}</td>
+            <td style="padding:12px 16px;font-size:14px;font-weight:700;">${maskName(w.name||'')}</td>
+            <td style="padding:12px 16px;font-size:14px;">${w.prize||'-'}</td>
+            <td style="padding:12px 16px;font-size:13px;color:var(--gray3);">${w.date||'-'}</td>
+          </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
+}
+
+// ───────────────────────────────────────────
+// 탭 전환
+// ───────────────────────────────────────────
+function switchEvTab(btn, tabId) {
+  document.querySelectorAll('.ev-tab-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.ev-tab-pane').forEach(p => p.classList.remove('active'));
+  document.getElementById(tabId)?.classList.add('active');
+}
+
+// ───────────────────────────────────────────
+// 공통 유틸
+// ───────────────────────────────────────────
+function maskName(name) {
+  if (!name || name.length < 2) return name || '익명';
+  return name[0] + '*'.repeat(Math.max(1, name.length - 1));
+}
+
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.admin-modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+document.querySelectorAll('.admin-modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// 실시간 동기화
+window.addEventListener('tt_store_update', e => {
+  if (e.detail?.key === 'tt_events'  ) loadData();
+  if (e.detail?.key === 'tt_coupons' ) renderCoupons();
+  if (e.detail?.key === 'tt_users'   ) checkApply();
+  if (e.detail?.key === 'tt_winners' ) renderWinners();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>회원가입 – TIRETOP</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/common.css">
+<script src="components/loader.js" defer></script>
+<style>
+body { background: #f3f4f6; }
+/* signup은 loader.js 헤더가 삽입되므로 콘텐츠 영역 패딩 조정 */
+.signup-wrap { padding-top: 48px; }
+.signup-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 40px 16px; }
+.signup-card { background: #fff; border-radius: 20px; box-shadow: 0 8px 32px rgba(0,0,0,.12); width: 100%; max-width: 480px; padding: 40px; }
+.signup-logo { text-align: center; margin-bottom: 28px; }
+.signup-logo .logo-text { font-size: 26px; font-weight: 900; color: #111; }
+.signup-logo .logo-text span { color: #e02020; }
+.signup-title { font-size: 20px; font-weight: 800; color: #111; margin-bottom: 6px; text-align: center; }
+.signup-sub { font-size: 13px; color: #6b7280; text-align: center; margin-bottom: 28px; }
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 13px; font-weight: 700; color: #374151; margin-bottom: 6px; display: block; }
+.form-label .req { color: #e02020; margin-left: 2px; }
+.form-control { width: 100%; height: 48px; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 0 14px; font-size: 14px; font-family: inherit; transition: border .2s; outline: none; box-sizing: border-box; }
+.form-control:focus { border-color: #e02020; }
+.form-control.error { border-color: #ef4444; }
+.form-hint { font-size: 11px; color: #9ca3af; margin-top: 4px; }
+.form-error { font-size: 12px; color: #ef4444; margin-top: 4px; display: none; }
+.form-error.show { display: block; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.check-row { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.check-row input[type=checkbox] { width: 16px; height: 16px; accent-color: #e02020; cursor: pointer; }
+.check-row label { font-size: 13px; color: #374151; cursor: pointer; }
+.check-row a { color: #e02020; text-decoration: underline; }
+.btn-signup { width: 100%; height: 52px; background: #e02020; color: #fff; font-size: 16px; font-weight: 800; border: none; border-radius: 12px; cursor: pointer; transition: all .2s; font-family: inherit; margin-top: 8px; }
+.btn-signup:hover { background: #c01010; }
+.btn-signup:disabled { background: #9ca3af; cursor: not-allowed; }
+.divider { text-align: center; color: #9ca3af; font-size: 13px; margin: 20px 0; position: relative; }
+.divider::before, .divider::after { content:''; position: absolute; top: 50%; width: 38%; height: 1px; background: #e5e7eb; }
+.divider::before { left: 0; }
+.divider::after { right: 0; }
+.login-link { text-align: center; font-size: 14px; color: #6b7280; margin-top: 16px; }
+.login-link a { color: #e02020; font-weight: 700; }
+.alert { padding: 12px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; margin-bottom: 16px; display: none; }
+.alert.show { display: block; }
+.alert-error { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; }
+.alert-success { background: #f0fdf4; color: #16a34a; border: 1px solid #bbf7d0; }
+</style>
+</head>
+<body>
+
+<div class="signup-wrap">
+  <div class="signup-card">
+    <div class="signup-logo">
+      <div class="logo-text">TIRE<span>TOP</span></div>
+    </div>
+    <h2 class="signup-title">회원가입</h2>
+    <p class="signup-sub">타이어탑 회원이 되시면 다양한 혜택을 누리실 수 있습니다</p>
+
+    <div id="alertBox" class="alert alert-error"></div>
+
+    <form id="signupForm" onsubmit="handleSignup(event)">
+      <div class="form-group">
+        <label class="form-label">이름 <span class="req">*</span></label>
+        <input type="text" id="name" class="form-control" placeholder="실명을 입력하세요" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">이메일 <span class="req">*</span></label>
+        <input type="email" id="email" class="form-control" placeholder="example@email.com" required>
+      </div>
+      <div class="row2">
+        <div class="form-group">
+          <label class="form-label">비밀번호 <span class="req">*</span></label>
+          <input type="password" id="password" class="form-control" placeholder="6자 이상" required minlength="6">
+        </div>
+        <div class="form-group">
+          <label class="form-label">비밀번호 확인 <span class="req">*</span></label>
+          <input type="password" id="passwordConfirm" class="form-control" placeholder="다시 입력" required>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">휴대폰</label>
+        <input type="tel" id="phone" class="form-control" placeholder="010-0000-0000">
+        <div class="form-hint">선택사항 · 예약/배송 알림 수신</div>
+      </div>
+      <div class="row2">
+        <div class="form-group">
+          <label class="form-label">생년월일</label>
+          <input type="date" id="birthDate" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">성별</label>
+          <select id="gender" class="form-control">
+            <option value="">선택 안함</option>
+            <option value="M">남성</option>
+            <option value="F">여성</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="border-top:1px solid #e5e7eb;padding-top:16px;margin-top:8px;">
+        <div class="check-row">
+          <input type="checkbox" id="agreeAll">
+          <label for="agreeAll" style="font-weight:700;color:#111;">전체 동의</label>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="agreeTerms" required>
+          <label for="agreeTerms">[필수] <a href="#">이용약관</a> 동의</label>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="agreePrivacy" required>
+          <label for="agreePrivacy">[필수] <a href="#">개인정보처리방침</a> 동의</label>
+        </div>
+        <div class="check-row">
+          <input type="checkbox" id="agreeMarketing">
+          <label for="agreeMarketing">[선택] 마케팅 정보 수신 동의</label>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-signup" id="signupBtn">
+        <span id="btnText">회원가입</span>
+      </button>
+    </form>
+
+    <div class="login-link">
+      이미 회원이신가요? <a href="/login.html">로그인</a>
+    </div>
+  </div>
+</div>
+
+<div id="tt-footer"></div>
+<script src="js/store.js"></script>
+<script>
+// 전체 동의 토글
+document.getElementById('agreeAll').addEventListener('change', function() {
+  ['agreeTerms','agreePrivacy','agreeMarketing'].forEach(id => {
+    document.getElementById(id).checked = this.checked;
+  });
+});
+
+async function handleSignup(e) {
+  e.preventDefault();
+  const alertBox = document.getElementById('alertBox');
+  alertBox.className = 'alert alert-error';
+  alertBox.style.display = 'none';
+
+  const name     = document.getElementById('name').value.trim();
+  const email    = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  const confirm  = document.getElementById('passwordConfirm').value;
+  const phone    = document.getElementById('phone').value.trim();
+  const birthDate= document.getElementById('birthDate').value;
+  const gender   = document.getElementById('gender').value;
+  const marketing= document.getElementById('agreeMarketing').checked;
+
+  if (password !== confirm) {
+    alertBox.textContent = '비밀번호가 일치하지 않습니다.';
+    alertBox.classList.add('show');
+    return;
+  }
+  if (!document.getElementById('agreeTerms').checked || !document.getElementById('agreePrivacy').checked) {
+    alertBox.textContent = '필수 약관에 동의해주세요.';
+    alertBox.classList.add('show');
+    return;
+  }
+
+  const btn  = document.getElementById('signupBtn');
+  const txt  = document.getElementById('btnText');
+  btn.disabled = true;
+  txt.textContent = '처리 중...';
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, password, phone: phone||null,
+        birth_date: birthDate||null, gender: gender||null, marketing_agree: marketing })
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      // 토큰 저장
+      localStorage.setItem('tt_token', data.data.token);
+      localStorage.setItem('tt_user',  JSON.stringify(data.data.user));
+      // 성공 메시지
+      alertBox.className = 'alert alert-success show';
+      alertBox.textContent = '🎉 회원가입 완료! 메인 페이지로 이동합니다.';
+      setTimeout(() => { location.href = '/index.html'; }, 1200);
+    } else {
+      alertBox.className = 'alert alert-error show';
+      alertBox.textContent = data.message || '회원가입에 실패했습니다.';
+      btn.disabled = false;
+      txt.textContent = '회원가입';
+    }
+  } catch(err) {
+    alertBox.className = 'alert alert-error show';
+    alertBox.textContent = '서버 통신 오류가 발생했습니다.';
+    btn.disabled = false;
+    txt.textContent = '회원가입';
+  }
+}
+</script>
+</body>
+</html>

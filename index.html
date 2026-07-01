@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TIRETOP - 현장 추가금 0원 보장 타이어 전문몰</title>
+<meta name="description" content="현장 추가금 0원 보장. 전국 2,800개 제휴 장착점. 타이어 전문몰">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/common.css">
+<script src="data/products.js"></script>
+<style>
+:root {
+  --primary: #e02020;
+  --primary-dark: #c01010;
+  --primary-light: #fff0f0;
+  --dark: #111827;
+  --gray1: #374151;
+  --gray3: #6b7280;
+  --gray5: #e5e7eb;
+  --gray6: #f9fafb;
+  --accent: #f59e0b;
+  --green: #22c55e;
+  --white: #fff;
+  --bg: #f3f4f6;
+  --shadow-sm: 0 1px 4px rgba(0,0,0,.08);
+  --shadow-md: 0 4px 20px rgba(0,0,0,.12);
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --max-w: 1280px;
+  --transition: .2s ease;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Noto Sans KR', sans-serif; background: var(--bg); color: var(--dark); }
+a { text-decoration: none; color: inherit; }
+
+/* ===== TOP HEADER AREA ===== */
+.site-top { background: var(--white); border-bottom: 1px solid var(--gray5); }
+.top-announce {
+  background: var(--primary); color: #fff;
+  text-align: center; padding: 9px 16px;
+  font-size: 13px; font-weight: 700;
+  position: relative;
+}
+.top-announce .close-btn {
+  position: absolute; right: 16px; top: 50%; transform: translateY(-50%);
+  background: none; border: none; color: #fff; cursor: pointer; font-size: 16px;
+}
+.top-util {
+  display: flex; justify-content: flex-end;
+  max-width: var(--max-w); margin: 0 auto; padding: 0 24px;
+  height: 34px; align-items: center; gap: 0;
+  border-bottom: 1px solid var(--gray5);
+}
+.top-util a {
+  font-size: 12px; color: var(--gray3); padding: 0 12px;
+  border-left: 1px solid var(--gray5); line-height: 34px;
+  white-space: nowrap; transition: color .15s;
+}
+.top-util a:first-child { border-left: none; }
+.top-util a:hover { color: var(--primary); }
+
+/* ===== MAIN HEADER ===== */
+.hd-main {
+  max-width: var(--max-w); margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; height: 64px; gap: 0;
+}
+.hd-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 22px; font-weight: 900; color: var(--dark);
+  text-decoration: none; flex-shrink: 0; margin-right: 40px;
+}
+.hd-logo .logo-wheel {
+  width: 32px; height: 32px; background: var(--dark);
+  border-radius: 50%; display: flex; align-items: center; justify-content: center;
+}
+.hd-logo .logo-wheel svg { width: 18px; height: 18px; }
+.hd-logo span { color: var(--primary); }
+
+/* GNB */
+.hd-gnb { display: flex; align-items: center; gap: 0; flex: 0 0 auto; }
+.hd-gnb a {
+  display: block; padding: 0 18px; height: 64px; line-height: 64px;
+  font-size: 15px; font-weight: 700; color: var(--gray3);
+  border-bottom: 3px solid transparent; transition: all .15s; white-space: nowrap;
+}
+.hd-gnb a:hover, .hd-gnb a.active { color: var(--dark); }
+.hd-gnb a.gnb-tire { color: var(--dark); border-bottom-color: var(--primary); }
+
+/* 검색창 */
+.hd-search {
+  flex: 1; display: flex; align-items: center; margin: 0 24px; max-width: 400px;
+}
+.hd-search-inner {
+  display: flex; align-items: center; width: 100%;
+  background: var(--bg); border: 1.5px solid var(--gray5);
+  border-radius: 28px; padding: 0 6px 0 18px; transition: all .2s;
+}
+.hd-search-inner:focus-within {
+  border-color: var(--primary); background: var(--white);
+  box-shadow: 0 0 0 3px rgba(224,32,32,.1);
+}
+.hd-search-inner input {
+  border: none; background: transparent; outline: none;
+  font-size: 13px; padding: 10px 0; flex: 1; font-family: inherit;
+}
+.hd-search-btn {
+  width: 34px; height: 34px; border-radius: 50%; background: var(--primary);
+  border: none; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: background .15s;
+}
+.hd-search-btn:hover { background: var(--primary-dark); }
+.hd-search-btn svg { width: 15px; height: 15px; stroke: #fff; fill: none; stroke-width: 2.5; stroke-linecap: round; }
+
+/* 헤더 아이콘 */
+.hd-icons {
+  display: flex; align-items: center; gap: 2px; flex-shrink: 0; margin-left: auto;
+}
+.hd-icon-btn {
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 2px; padding: 6px 10px; border-radius: var(--radius-md);
+  cursor: pointer; transition: background .15s; min-width: 52px;
+  border: none; background: none; position: relative; color: var(--gray3);
+}
+.hd-icon-btn:hover { background: var(--bg); }
+.hd-icon-btn svg { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.hd-icon-btn .lbl { font-size: 10px; font-weight: 600; color: var(--gray3); }
+.hd-badge {
+  position: absolute; top: 3px; right: 6px;
+  min-width: 16px; height: 16px; padding: 0 4px;
+  background: var(--primary); color: #fff; font-size: 9px; font-weight: 900;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--white);
+}
+
+/* ===== GNB 타이어 드롭다운 ===== */
+.gnb-tire-wrap {
+  position: relative;
+}
+.gnb-tire-wrap > a {
+  display: block; padding: 0 18px; height: 64px; line-height: 64px;
+  font-size: 15px; font-weight: 700; color: var(--gray3);
+  border-bottom: 3px solid transparent; transition: all .15s; white-space: nowrap;
+  text-decoration: none;
+}
+.gnb-tire-wrap > a:hover,
+.gnb-tire-wrap:hover > a { color: var(--dark); border-bottom-color: var(--primary); }
+.gnb-tire-wrap > a.gnb-active { color: var(--dark); border-bottom-color: var(--primary); }
+
+/* 드롭다운 패널 */
+.gnb-tire-drop {
+  display: none;
+  position: absolute; top: 100%; left: 50%; transform: translateX(-50%);
+  background: var(--white); border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.14); border: 1px solid var(--gray5);
+  padding: 8px 0; min-width: 180px; z-index: 2000;
+}
+.gnb-tire-wrap:hover .gnb-tire-drop { display: block; }
+.gnb-tire-drop a {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 20px; font-size: 14px; font-weight: 600; color: var(--gray1);
+  text-decoration: none; transition: background .12s, color .12s;
+  border-bottom: none !important;
+  line-height: 1.2; height: auto;
+}
+.gnb-tire-drop a:hover { background: var(--gray6); color: var(--primary); }
+.gnb-tire-drop a .drop-icon { font-size: 17px; width: 22px; text-align: center; flex-shrink: 0; }
+.gnb-tire-drop-divider { height: 1px; background: var(--gray5); margin: 6px 10px; }
+
+/* ===== HEADER STICKY WRAP ===== */
+.hd-sticky {
+  position: sticky; top: 0; z-index: 1000;
+  background: var(--white); box-shadow: 0 2px 8px rgba(0,0,0,.08);
+}
+
+/* ===== HERO ===== */
+.hero {
+  background: linear-gradient(135deg, #0d0d1a 0%, #1a1a2e 60%, #16213e 100%);
+  min-height: 440px; display: flex; align-items: center;
+  position: relative; overflow: hidden;
+}
+.hero-inner {
+  max-width: var(--max-w); margin: 0 auto; padding: 60px 24px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; width: 100%;
+}
+.hero-badge {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(224,32,32,.2); color: #ff6b6b;
+  padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 800;
+  margin-bottom: 20px; border: 1px solid rgba(224,32,32,.3);
+}
+.hero-title {
+  font-size: clamp(28px, 4vw, 52px); font-weight: 900;
+  color: #fff; line-height: 1.15; margin-bottom: 16px;
+}
+.hero-title em { color: var(--primary); font-style: normal; }
+.hero-desc { font-size: 14px; color: rgba(255,255,255,.65); margin-bottom: 32px; line-height: 1.8; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-hero-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 14px 28px; background: var(--primary); color: #fff;
+  border: none; border-radius: var(--radius-md);
+  font-size: 15px; font-weight: 800; cursor: pointer; text-decoration: none;
+  transition: background var(--transition);
+}
+.btn-hero-primary:hover { background: var(--primary-dark); }
+.btn-hero-sec {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 14px 28px; background: rgba(255,255,255,.1); color: #fff;
+  border: 1.5px solid rgba(255,255,255,.25); border-radius: var(--radius-md);
+  font-size: 15px; font-weight: 700; cursor: pointer; text-decoration: none;
+  transition: background var(--transition);
+}
+.btn-hero-sec:hover { background: rgba(255,255,255,.2); }
+.hero-visual {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 160px; opacity: .15; user-select: none;
+}
+.hero-stats {
+  display: flex; gap: 24px; margin-top: 32px; flex-wrap: wrap;
+}
+.hero-stat { text-align: left; }
+.hero-stat .num { font-size: 22px; font-weight: 900; color: #fff; }
+.hero-stat .label { font-size: 11px; color: rgba(255,255,255,.5); margin-top: 2px; }
+
+/* ===== TRUST BAR ===== */
+.trust-bar {
+  background: var(--white); border-bottom: 1px solid var(--gray5); padding: 16px 0;
+}
+.trust-inner {
+  max-width: var(--max-w); margin: 0 auto; padding: 0 24px;
+  display: flex; align-items: center; justify-content: center;
+  gap: 0; flex-wrap: wrap;
+}
+.trust-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 28px; border-right: 1px solid var(--gray5);
+}
+.trust-item:last-child { border-right: none; }
+.trust-icon { font-size: 22px; }
+.trust-text strong { display: block; font-size: 12px; font-weight: 800; color: var(--dark); }
+.trust-text span { font-size: 11px; color: var(--gray3); }
+
+/* ===== 차량번호 검색 ===== */
+.car-search-sec {
+  background: linear-gradient(135deg, #1a1a2e, #2a2a4e);
+  padding: 40px 0;
+}
+.car-search-inner {
+  max-width: 680px; margin: 0 auto; padding: 0 24px; text-align: center;
+}
+.car-search-inner h2 { font-size: 22px; font-weight: 900; color: #fff; margin-bottom: 8px; }
+.car-search-inner p { font-size: 13px; color: rgba(255,255,255,.6); margin-bottom: 24px; }
+.car-search-form {
+  display: flex; gap: 10px; background: #fff;
+  border-radius: var(--radius-xl); padding: 6px 6px 6px 20px;
+  box-shadow: 0 8px 32px rgba(0,0,0,.3);
+}
+.car-search-form input {
+  flex: 1; border: none; outline: none;
+  font-size: 15px; font-weight: 700; font-family: inherit; color: var(--dark);
+  background: transparent;
+}
+.car-search-form input::placeholder { color: var(--gray3); font-weight: 400; }
+.car-search-submit {
+  padding: 12px 24px; background: var(--primary); color: #fff;
+  border: none; border-radius: 20px; font-size: 14px; font-weight: 800;
+  cursor: pointer; white-space: nowrap; transition: background .15s;
+}
+.car-search-submit:hover { background: var(--primary-dark); }
+
+/* ===== 추천/베스트 섹션 ===== */
+.rec-sec { padding: 48px 0; background: var(--white); }
+.sec-inner { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+.sec-head {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+}
+.sec-title { font-size: 22px; font-weight: 900; color: var(--dark); }
+.sec-title span { color: var(--primary); }
+.sec-sub { font-size: 13px; color: var(--gray3); margin-top: 4px; }
+.sec-more {
+  font-size: 13px; color: var(--gray3); font-weight: 600;
+  text-decoration: none; display: flex; align-items: center; gap: 4px;
+  transition: color .15s;
+}
+.sec-more:hover { color: var(--primary); }
+
+/* ===== 추천탭 ===== */
+.rec-tabs {
+  display: flex; gap: 0; border-bottom: 2px solid var(--gray5);
+  margin-bottom: 28px; overflow-x: auto; scrollbar-width: none;
+}
+.rec-tabs::-webkit-scrollbar { display: none; }
+.rec-tab {
+  padding: 12px 20px; font-size: 13px; font-weight: 700;
+  color: var(--gray3); cursor: pointer; white-space: nowrap;
+  border-bottom: 3px solid transparent; margin-bottom: -2px;
+  transition: all .15s; background: none; border-top: none; border-left: none; border-right: none;
+}
+.rec-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+.rec-tab:hover { color: var(--dark); }
+
+/* ===== 상품 그리드 4열 ===== */
+.prod-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px;
+}
+
+/* ===== 상품 카드 (T Station 스타일) ===== */
+.prod-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  overflow: hidden; cursor: pointer;
+  border: 1px solid var(--gray5);
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  text-decoration: none; color: inherit; display: flex; flex-direction: column;
+}
+.prod-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-md);
+  border-color: rgba(224,32,32,.2);
+}
+.prod-img-wrap {
+  position: relative; background: var(--gray6); aspect-ratio: 1/1;
+  display: flex; align-items: center; justify-content: center;
+  overflow: hidden;
+}
+.prod-img-wrap img {
+  width: 90%; height: 90%; object-fit: contain;
+  transition: transform .3s ease;
+}
+.prod-card:hover .prod-img-wrap img { transform: scale(1.05); }
+.prod-img-placeholder { font-size: 80px; opacity: .4; }
+.prod-badge-wrap {
+  position: absolute; top: 10px; left: 10px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.prod-badge {
+  padding: 3px 8px; border-radius: 4px;
+  font-size: 10px; font-weight: 900; line-height: 1.4;
+}
+.badge-sale { background: var(--primary); color: #fff; }
+.badge-best { background: #1d4ed8; color: #fff; }
+.badge-new { background: var(--green); color: #fff; }
+.badge-hot { background: #f59e0b; color: #fff; }
+.prod-wish-btn {
+  position: absolute; top: 10px; right: 10px;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: var(--white); border: 1px solid var(--gray5);
+  cursor: pointer; font-size: 15px;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: var(--shadow-sm); transition: all .2s;
+}
+.prod-wish-btn:hover { background: #fff5f5; border-color: var(--primary); }
+
+.prod-body { padding: 14px 16px 8px; flex: 1; }
+.prod-brand-name {
+  font-size: 10px; font-weight: 800; color: var(--gray3);
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
+}
+.prod-title {
+  font-size: 14px; font-weight: 700; color: var(--dark);
+  line-height: 1.45; margin-bottom: 6px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.prod-size-tag { font-size: 11px; color: var(--gray3); margin-bottom: 8px; font-weight: 600; }
+.prod-rating {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 12px; margin-bottom: 10px;
+}
+.prod-stars { color: var(--accent); }
+.prod-review-cnt { color: var(--gray3); }
+
+.prod-price-area {
+  display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; margin-bottom: 6px;
+}
+.prod-discount-pct { font-size: 15px; font-weight: 900; color: var(--primary); }
+.prod-price { font-size: 17px; font-weight: 900; color: var(--dark); }
+.prod-orig-price { font-size: 12px; color: var(--gray3); text-decoration: line-through; }
+.prod-tags { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 10px; }
+.prod-tag {
+  font-size: 10px; padding: 2px 7px; border-radius: 20px;
+  background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; font-weight: 600;
+}
+.prod-tag.tag-season { background: #f0fdf4; color: #15803d; border-color: #bbf7d0; }
+
+.prod-footer {
+  padding: 10px 16px 12px;
+  border-top: 1px solid var(--gray5);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.prod-ship { font-size: 11px; color: #15803d; font-weight: 700; }
+.prod-cart-btn {
+  padding: 7px 14px; background: var(--primary); color: #fff;
+  border: none; border-radius: 8px; font-size: 11px; font-weight: 800;
+  cursor: pointer; transition: background .15s;
+}
+.prod-cart-btn:hover { background: var(--primary-dark); }
+
+/* ===== 브랜드 섹션 ===== */
+.brand-sec { padding: 48px 0; background: var(--bg); }
+.brand-grid {
+  display: grid; grid-template-columns: repeat(8, 1fr); gap: 12px;
+}
+.brand-card {
+  background: var(--white); border: 1.5px solid var(--gray5);
+  border-radius: var(--radius-md); padding: 16px 10px;
+  text-align: center; cursor: pointer;
+  transition: all .2s; text-decoration: none;
+}
+.brand-card:hover { border-color: var(--primary); box-shadow: var(--shadow-sm); }
+.brand-card .brand-logo { font-size: 13px; font-weight: 900; color: var(--dark); margin-bottom: 4px; }
+.brand-card .brand-sub { font-size: 10px; color: var(--gray3); }
+
+/* ===== 전체 상품 섹션 ===== */
+.all-prod-sec { padding: 48px 0; background: var(--white); }
+
+/* 필터 바 */
+.filter-bar {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 20px; flex-wrap: wrap;
+}
+.filter-tag {
+  padding: 7px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+  border: 1.5px solid var(--gray5); background: var(--white);
+  cursor: pointer; transition: all .15s; color: var(--gray3);
+}
+.filter-tag:hover { border-color: var(--primary); color: var(--primary); }
+.filter-tag.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+.filter-dropdowns { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
+.filter-select {
+  padding: 8px 32px 8px 12px; border-radius: 8px;
+  border: 1.5px solid var(--gray5); background: var(--white);
+  font-size: 13px; font-weight: 600; color: var(--dark);
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  font-family: inherit; transition: border-color .15s;
+}
+.filter-select:focus { outline: none; border-color: var(--primary); }
+
+.filter-bottom {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 10px;
+}
+.filter-bottom-left { display: flex; align-items: center; gap: 8px; }
+.filter-count { font-size: 13px; color: var(--gray3); }
+.filter-count strong { color: var(--primary); font-weight: 900; }
+
+.sort-select {
+  padding: 7px 28px 7px 12px; border-radius: 8px;
+  border: 1.5px solid var(--gray5); background: var(--white);
+  font-size: 13px; font-weight: 600; color: var(--dark);
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  font-family: inherit;
+}
+.sort-select:focus { outline: none; }
+
+/* 더보기 버튼 */
+.load-more-wrap { text-align: center; margin-top: 36px; }
+.load-more-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 14px 40px; border: 2px solid var(--gray5);
+  border-radius: 28px; font-size: 14px; font-weight: 700;
+  color: var(--gray3); cursor: pointer; background: var(--white);
+  transition: all .2s;
+}
+.load-more-btn:hover { border-color: var(--primary); color: var(--primary); }
+
+/* ===== 프로모 배너 ===== */
+.promo-sec { padding: 48px 0; background: var(--bg); }
+.promo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.promo-card {
+  border-radius: var(--radius-lg); overflow: hidden;
+  cursor: pointer; position: relative; height: 180px;
+  display: flex; align-items: flex-end; padding: 24px;
+  text-decoration: none;
+}
+.promo-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,.65) 0%, transparent 65%);
+}
+.promo-p1 { background: linear-gradient(135deg, #0d0d1a, #1a1a3e); }
+.promo-p2 { background: linear-gradient(135deg, #1a0500, #3d1000); }
+.promo-p3 { background: linear-gradient(135deg, #001505, #002e10); }
+.promo-txt { position: relative; z-index: 1; color: #fff; }
+.promo-sub { font-size: 11px; opacity: .75; margin-bottom: 4px; font-weight: 600; }
+.promo-title { font-size: 18px; font-weight: 900; line-height: 1.2; }
+.promo-deco {
+  position: absolute; right: 20px; top: 50%;
+  transform: translateY(-50%); font-size: 56px; opacity: .25;
+}
+
+/* ===== 리뷰 섹션 ===== */
+.review-sec { padding: 48px 0; background: var(--gray6); }
+.review-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.review-card {
+  background: var(--white); border-radius: var(--radius-lg);
+  padding: 22px; box-shadow: var(--shadow-sm);
+  border: 1px solid var(--gray5);
+}
+.review-card-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
+}
+.rv-stars { color: var(--accent); font-size: 14px; }
+.rv-date { font-size: 11px; color: var(--gray3); }
+.rv-text { font-size: 13px; color: var(--gray1); line-height: 1.75; margin-bottom: 14px; }
+.rv-prod {
+  font-size: 11px; color: var(--gray3);
+  padding: 4px 10px; background: var(--gray6);
+  border-radius: 20px; display: inline-block; border: 1px solid var(--gray5);
+}
+.rv-author { font-size: 12px; color: var(--gray3); margin-top: 10px; font-weight: 600; }
+
+/* ===== FOOTER ===== */
+footer {
+  background: #1a1a1a; color: #888; padding: 48px 0 24px;
+}
+.footer-inner { max-width: var(--max-w); margin: 0 auto; padding: 0 24px; }
+.footer-top {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+  gap: 40px; padding-bottom: 32px; border-bottom: 1px solid #2a2a2a; margin-bottom: 24px;
+}
+.footer-logo { font-size: 20px; font-weight: 900; color: #fff; margin-bottom: 12px; }
+.footer-logo span { color: var(--primary); }
+.footer-desc { font-size: 12px; color: #555; line-height: 1.9; margin-bottom: 16px; }
+.footer-contact { font-size: 12px; color: #666; line-height: 1.9; }
+.footer-contact strong { color: #fff; }
+.footer-col-title { font-size: 12px; font-weight: 700; color: #fff; margin-bottom: 14px; letter-spacing: .5px; }
+.footer-col ul { list-style: none; }
+.footer-col ul li { margin-bottom: 8px; }
+.footer-col ul li a { font-size: 12px; color: #666; text-decoration: none; transition: color .15s; }
+.footer-col ul li a:hover { color: var(--primary); }
+.footer-bottom {
+  display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+.footer-copy { font-size: 11px; color: #444; }
+.footer-sns { display: flex; gap: 8px; }
+.sns-btn {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: #2a2a2a; display: flex; align-items: center; justify-content: center;
+  font-size: 14px; text-decoration: none; transition: background .15s;
+}
+.sns-btn:hover { background: var(--primary); }
+
+/* 로딩 스피너 */
+.loading-state { grid-column: 1/-1; text-align: center; padding: 60px 20px; color: var(--gray3); }
+.loading-state .spinner { font-size: 36px; display: block; margin-bottom: 12px; animation: spin 1.5s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* 토스트 */
+#tt-toast {
+  position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+  background: #1a1a1a; color: #fff; padding: 12px 24px;
+  border-radius: 8px; font-size: 13px; font-weight: 600;
+  z-index: 99999; opacity: 0; transition: opacity .3s;
+  white-space: nowrap; pointer-events: none;
+}
+
+/* Responsive */
+@media(max-width: 1024px) {
+  .prod-grid { grid-template-columns: repeat(3, 1fr); }
+  .brand-grid { grid-template-columns: repeat(4, 1fr); }
+  .footer-top { grid-template-columns: 1fr 1fr; gap: 28px; }
+}
+@media(max-width: 768px) {
+  .hd-gnb { display: none; }
+  .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .promo-grid { grid-template-columns: 1fr; }
+  .review-grid { grid-template-columns: 1fr; }
+  .brand-grid { grid-template-columns: repeat(4, 1fr); }
+  .hero-inner { grid-template-columns: 1fr; }
+  .hero-visual { display: none; }
+  .trust-item { padding: 8px 16px; }
+  .footer-top { grid-template-columns: 1fr; gap: 20px; }
+}
+@media(max-width: 480px) {
+  .prod-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .brand-grid { grid-template-columns: repeat(3, 1fr); }
+  .filter-dropdowns { gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== STICKY HEADER ===== -->
+<div class="hd-sticky">
+  <div class="site-top">
+    <div class="top-announce" id="topAnnounce">
+      🎉 <strong>타이어 4개 구매 시 장착공임 무료</strong> + 신규가입 쿠폰팩 27,000원 증정!
+      <button class="close-btn" onclick="document.getElementById('topAnnounce').style.display='none'">✕</button>
+    </div>
+    <div class="top-util">
+      <a href="cs.html">고객센터</a>
+      <a href="cs.html#faq">FAQ</a>
+      <a href="event.html">이벤트</a>
+      <a href="mypage.html#orders">주문조회</a>
+    </div>
+  </div>
+
+  <div style="background:var(--white); border-bottom:1px solid var(--gray5);">
+    <div class="hd-main">
+      <!-- 로고 -->
+      <a href="index.html" class="hd-logo">
+        <div class="logo-wheel">
+          <svg viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="9" stroke="#fff" stroke-width="2"/>
+            <circle cx="12" cy="12" r="3" fill="#e02020"/>
+          </svg>
+        </div>
+        TIRE<span>TOP</span>
+      </a>
+
+      <!-- GNB -->
+      <nav class="hd-gnb">
+        <a href="index.html" class="gnb-tire">홈</a>
+        <div class="gnb-tire-wrap">
+          <a href="product-list.html?cat=tire" class="gnb-active">타이어 ▾</a>
+          <div class="gnb-tire-drop">
+            <a href="product-list.html?cat=tire"><span class="drop-icon">🛞</span> 전체 타이어</a>
+            <a href="product-list.html?cat=tire&season=사계절"><span class="drop-icon">☀️</span> 사계절</a>
+            <a href="product-list.html?cat=tire&season=겨울"><span class="drop-icon">❄️</span> 겨울용</a>
+            <div class="gnb-tire-drop-divider"></div>
+            <a href="product-list.html?cat=tire&vehicle=고성능"><span class="drop-icon">🏎️</span> 고성능</a>
+            <a href="product-list.html?cat=tire&vehicle=SUV"><span class="drop-icon">🚙</span> SUV</a>
+            <a href="product-list.html?cat=tire&vehicle=트럭"><span class="drop-icon">🚚</span> 화물</a>
+          </div>
+        </div>
+        <a href="store.html">매장찾기</a>
+        <a href="event.html">기획전</a>
+        <a href="cs.html">고객센터</a>
+      </nav>
+
+      <!-- 검색창 -->
+      <div class="hd-search">
+        <div class="hd-search-inner">
+          <input type="text" id="hdSearch" placeholder="타이어 브랜드, 규격 검색..." onkeydown="if(event.key==='Enter')doSearch()">
+          <button class="hd-search-btn" onclick="doSearch()">
+            <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><line x1="16.5" y1="16.5" x2="22" y2="22"/></svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- 아이콘 -->
+      <div class="hd-icons">
+        <button class="hd-icon-btn" onclick="goWish()">
+          <svg viewBox="0 0 24 24"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+          <span class="lbl">찜</span>
+        </button>
+        <button class="hd-icon-btn" onclick="goCart()" style="position:relative">
+          <span class="hd-badge" id="cartBadge" style="display:none">0</span>
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 002 1.61h9.72a2 2 0 002-1.61L23 6H6"/></svg>
+          <span class="lbl">장바구니</span>
+        </button>
+        <button class="hd-icon-btn" onclick="goMypage()">
+          <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          <span class="lbl" id="userLabel">로그인</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== HERO ===== -->
+<section class="hero">
+  <div class="hero-inner">
+    <div class="hero-content">
+      <div class="hero-badge">🏆 No.1 타이어 전문몰</div>
+      <h1 class="hero-title">현장 추가금<br><em>0원 보장</em></h1>
+      <p class="hero-desc">온라인 결제가 현장 가격 그대로<br>전국 2,800개 이상 제휴 장착점 연계</p>
+      <div class="hero-actions">
+        <a href="product-list.html?cat=tire" class="btn-hero-primary">🛞 타이어 보러가기</a>
+        <a href="store.html" class="btn-hero-sec">매장찾기</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat">
+          <div class="num">2,800+</div>
+          <div class="label">전국 제휴 장착점</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">4.8★</div>
+          <div class="label">고객 만족도</div>
+        </div>
+        <div class="hero-stat">
+          <div class="num">최대 52%</div>
+          <div class="label">할인 혜택</div>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">🛞</div>
+  </div>
+</section>
+
+<!-- ===== TRUST BAR ===== -->
+<div class="trust-bar">
+  <div class="trust-inner">
+    <div class="trust-item">
+      <span class="trust-icon">🏆</span>
+      <div class="trust-text"><strong>추가금 0원 보장</strong><span>온라인가 = 현장가</span></div>
+    </div>
+    <div class="trust-item">
+      <span class="trust-icon">🚚</span>
+      <div class="trust-text"><strong>무료 당일·익일배송</strong><span>오늘 주문 → 내일 장착</span></div>
+    </div>
+    <div class="trust-item">
+      <span class="trust-icon">🔄</span>
+      <div class="trust-text"><strong>30일 교환 보장</strong><span>품질 100% 보증</span></div>
+    </div>
+    <div class="trust-item">
+      <span class="trust-icon">🤖</span>
+      <div class="trust-text"><strong>24시간 AI 상담</strong><span>언제든 빠른 답변</span></div>
+    </div>
+    <div class="trust-item">
+      <span class="trust-icon">🏪</span>
+      <div class="trust-text"><strong>2,800개 장착점</strong><span>전국 방문 장착</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== 차량번호 검색 ===== -->
+<section class="car-search-sec">
+  <div class="car-search-inner">
+    <h2>🔍 내 차에 맞는 타이어 찾기</h2>
+    <p>차량번호를 입력하면 딱 맞는 타이어 규격을 알려드립니다</p>
+    <div class="car-search-form">
+      <input type="text" id="carNumInput" placeholder="예) 12가 3456" maxlength="10">
+      <button class="car-search-submit" onclick="searchByVehicle()">🚗 타이어 찾기</button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 추천/베스트 섹션 ===== -->
+<section class="rec-sec">
+  <div class="sec-inner">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">내 차가 만족할 <span>타이어</span></h2>
+        <p class="sec-sub">지금 가장 인기 있는 타이어를 확인하세요</p>
+      </div>
+      <a href="product-list.html?cat=tire" class="sec-more">전체보기 →</a>
+    </div>
+
+    <!-- 탭 -->
+    <div class="rec-tabs">
+      <button class="rec-tab active" onclick="switchRecTab(this,'best')">추천/베스트</button>
+      <button class="rec-tab" onclick="switchRecTab(this,'new')">신상품</button>
+      <button class="rec-tab" onclick="switchRecTab(this,'sale')">특가/할인</button>
+      <button class="rec-tab" onclick="switchRecTab(this,'hankook')">한국타이어</button>
+      <button class="rec-tab" onclick="switchRecTab(this,'kumho')">금호타이어</button>
+      <button class="rec-tab" onclick="switchRecTab(this,'nexen')">넥센타이어</button>
+    </div>
+
+    <!-- 상품 4열 그리드 -->
+    <div class="prod-grid" id="recGrid">
+      <div class="loading-state"><span class="spinner">⏳</span><p>상품을 불러오는 중...</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 브랜드 섹션 ===== -->
+<section class="brand-sec">
+  <div class="sec-inner">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">브랜드별 <span>타이어</span></h2>
+        <p class="sec-sub">국내외 프리미엄 브랜드를 한 곳에서</p>
+      </div>
+    </div>
+    <div class="brand-grid">
+      <a href="product-list.html?brand=hankook" class="brand-card">
+        <div class="brand-logo">HANKOOK</div>
+        <div class="brand-sub">한국타이어</div>
+      </a>
+      <a href="product-list.html?brand=kumho" class="brand-card">
+        <div class="brand-logo">KUMHO</div>
+        <div class="brand-sub">금호타이어</div>
+      </a>
+      <a href="product-list.html?brand=nexen" class="brand-card">
+        <div class="brand-logo">NEXEN</div>
+        <div class="brand-sub">넥센타이어</div>
+      </a>
+      <a href="product-list.html?brand=michelin" class="brand-card">
+        <div class="brand-logo">MICHELIN</div>
+        <div class="brand-sub">미쉐린</div>
+      </a>
+      <a href="product-list.html?brand=bridgestone" class="brand-card">
+        <div class="brand-logo">BRIDGESTONE</div>
+        <div class="brand-sub">브리지스톤</div>
+      </a>
+      <a href="product-list.html?brand=continental" class="brand-card">
+        <div class="brand-logo">CONTINENTAL</div>
+        <div class="brand-sub">콘티넨탈</div>
+      </a>
+      <a href="product-list.html?brand=pirelli" class="brand-card">
+        <div class="brand-logo">PIRELLI</div>
+        <div class="brand-sub">피렐리</div>
+      </a>
+      <a href="product-list.html?brand=goodyear" class="brand-card">
+        <div class="brand-logo">GOODYEAR</div>
+        <div class="brand-sub">굿이어</div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 전체 상품 ===== -->
+<section class="all-prod-sec">
+  <div class="sec-inner">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">전체 <span>타이어</span></h2>
+        <p class="sec-sub">원하는 조건으로 필터링하세요</p>
+      </div>
+    </div>
+
+    <!-- 브랜드 필터 -->
+    <div class="filter-bar" id="brandFilter">
+      <span class="filter-tag active" onclick="filterBrand(this,'all')">전체</span>
+      <span class="filter-tag" onclick="filterBrand(this,'hankook')">한국타이어</span>
+      <span class="filter-tag" onclick="filterBrand(this,'kumho')">금호타이어</span>
+      <span class="filter-tag" onclick="filterBrand(this,'nexen')">넥센타이어</span>
+      <span class="filter-tag" onclick="filterBrand(this,'michelin')">미쉐린</span>
+      <span class="filter-tag" onclick="filterBrand(this,'bridgestone')">브리지스톤</span>
+      <span class="filter-tag" onclick="filterBrand(this,'continental')">콘티넨탈</span>
+      <span class="filter-tag" onclick="filterBrand(this,'pirelli')">피렐리</span>
+      <span class="filter-tag" onclick="filterBrand(this,'goodyear')">굿이어</span>
+    </div>
+
+    <!-- 상세 필터 -->
+    <div class="filter-dropdowns">
+      <select class="filter-select" id="filterSeason" onchange="applyFilters()">
+        <option value="">계절 · 전체</option>
+        <option value="사계절">사계절</option>
+        <option value="겨울용">겨울용</option>
+        <option value="여름용">여름용</option>
+      </select>
+      <select class="filter-select" id="filterVehicle" onchange="applyFilters()">
+        <option value="">차종 · 전체</option>
+        <option value="승용차">승용차</option>
+        <option value="SUV">SUV·RV</option>
+        <option value="화물">화물·상용</option>
+      </select>
+      <select class="filter-select" id="filterGrade" onchange="applyFilters()">
+        <option value="">등급 · 전체</option>
+        <option value="고급형">고급형</option>
+        <option value="중급형">중급형</option>
+        <option value="표준형">표준형</option>
+      </select>
+      <select class="filter-select" id="filterPrice" onchange="applyFilters()">
+        <option value="">가격 · 전체</option>
+        <option value="0-80000">8만원 이하</option>
+        <option value="80000-120000">8~12만원</option>
+        <option value="120000-200000">12~20만원</option>
+        <option value="200000-999999">20만원 이상</option>
+      </select>
+    </div>
+
+    <!-- 정렬 및 결과 수 -->
+    <div class="filter-bottom">
+      <div class="filter-bottom-left">
+        <span class="filter-count">총 <strong id="prodCount">0</strong>개 상품</span>
+      </div>
+      <select class="sort-select" id="sortSelect" onchange="applyFilters()">
+        <option value="popular">판매 인기순</option>
+        <option value="review">리뷰 많은순</option>
+        <option value="price_asc">낮은 가격순</option>
+        <option value="price_desc">높은 가격순</option>
+        <option value="discount">할인율순</option>
+      </select>
+    </div>
+
+    <!-- 전체 상품 그리드 -->
+    <div class="prod-grid" id="allGrid">
+      <div class="loading-state"><span class="spinner">⏳</span><p>상품을 불러오는 중...</p></div>
+    </div>
+
+    <!-- 더보기 -->
+    <div class="load-more-wrap">
+      <button class="load-more-btn" id="loadMoreBtn" onclick="loadMore()">
+        상품 더보기 <span id="remainCount"></span> →
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 프로모 배너 ===== -->
+<section class="promo-sec">
+  <div class="sec-inner">
+    <div class="promo-grid">
+      <a href="product-list.html?cat=tire&type=new" class="promo-card promo-p1">
+        <div class="promo-txt">
+          <p class="promo-sub">2026 신상 입고</p>
+          <p class="promo-title">최신형<br>타이어 출시</p>
+        </div>
+        <span class="promo-deco">🛞</span>
+      </a>
+      <a href="event.html" class="promo-card promo-p2">
+        <div class="promo-txt">
+          <p class="promo-sub">최대 52% 할인</p>
+          <p class="promo-title">여름 특가<br>타이어 세일</p>
+        </div>
+        <span class="promo-deco">🔥</span>
+      </a>
+      <a href="store.html" class="promo-card promo-p3">
+        <div class="promo-txt">
+          <p class="promo-sub">전국 2,800개 장착점</p>
+          <p class="promo-title">장착공임<br>무료 이벤트</p>
+        </div>
+        <span class="promo-deco">🏪</span>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 리뷰 섹션 ===== -->
+<section class="review-sec">
+  <div class="sec-inner">
+    <div class="sec-head">
+      <div>
+        <h2 class="sec-title">실제 고객 <span>후기</span></h2>
+        <p class="sec-sub">구매한 고객의 솔직한 리뷰를 확인하세요</p>
+      </div>
+    </div>
+    <div class="review-grid">
+      <div class="review-card">
+        <div class="review-card-head">
+          <span class="rv-stars">★★★★★</span>
+          <span class="rv-date">2025.06.15</span>
+        </div>
+        <p class="rv-text">주행 소음이 정말 조용해졌어요. 빗길 제동력도 이전 타이어보다 훨씬 안정적입니다. 장착점 예약도 쉽고 현장에서 추가금 없이 딱 결제한 금액만 나왔어요!</p>
+        <span class="rv-prod">한국타이어 벤투스 S2 AS · 225/45R17</span>
+        <div class="rv-author">김 *** · 현대 쏘나타 DN8</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-head">
+          <span class="rv-stars">★★★★★</span>
+          <span class="rv-date">2025.06.10</span>
+        </div>
+        <p class="rv-text">가격이 오프라인보다 20% 이상 저렴하고, 퀄리티는 전혀 차이 없습니다. 배송도 빨라서 주문하고 이틀 만에 장착했어요. 재구매 의사 100%!</p>
+        <span class="rv-prod">금호 솔루스 TA21 · 205/55R16</span>
+        <div class="rv-author">박 *** · 기아 K5</div>
+      </div>
+      <div class="review-card">
+        <div class="review-card-head">
+          <span class="rv-stars">★★★★☆</span>
+          <span class="rv-date">2025.06.05</span>
+        </div>
+        <p class="rv-text">넥센 타이어 처음 써봤는데 가성비가 정말 뛰어나네요. 승차감도 부드럽고 연비도 좋아진 것 같습니다. 다음에도 여기서 구매할 예정입니다.</p>
+        <span class="rv-prod">넥센 N'FERA SU1 · 215/55R17</span>
+        <div class="rv-author">이 *** · 쉐보레 말리부</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">TIRE<span>TOP</span></div>
+        <p class="footer-desc">
+          2천만 자차 보유자가 타이어 교체로<br>
+          스트레스 받지 않는 그날까지,<br>
+          타이어탑이 함께합니다.
+        </p>
+        <div class="footer-contact">
+          <div><strong>고객센터</strong> 1660-2103</div>
+          <div>평일 09:00~18:00 / 토 09:00~12:00</div>
+          <div>일·공휴일 휴무</div>
+        </div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">타이어 서비스</div>
+        <ul>
+          <li><a href="product-list.html?cat=tire&type=all">사계절 타이어</a></li>
+          <li><a href="product-list.html?cat=tire&type=winter">겨울용 타이어</a></li>
+          <li><a href="product-list.html?cat=tire&type=sport">고성능 타이어</a></li>
+          <li><a href="product-list.html?cat=tire&type=suv">SUV 타이어</a></li>
+          <li><a href="event.html">타이어 보관 서비스</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">고객지원</div>
+        <ul>
+          <li><a href="cs.html">공지사항</a></li>
+          <li><a href="cs.html#faq">자주 묻는 질문</a></li>
+          <li><a href="cs.html">1:1 문의</a></li>
+          <li><a href="store.html">매장 찾기</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">회사정보</div>
+        <ul>
+          <li><a href="#">회사소개</a></li>
+          <li><a href="#">이용약관</a></li>
+          <li><a href="#">개인정보처리방침</a></li>
+          <li><a href="#">채용정보</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Dealer Tire Co., Ltd. All rights reserved.</div>
+      <div class="footer-sns">
+        <a href="#" class="sns-btn">📘</a>
+        <a href="#" class="sns-btn">📸</a>
+        <a href="#" class="sns-btn">▶️</a>
+        <a href="#" class="sns-btn">💬</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- 토스트 -->
+<div id="tt-toast"></div>
+
+<script>
+/* ==========================================
+   INDEX PAGE SCRIPT
+========================================== */
+
+// 장바구니 카운트 뱃지
+function updateCartBadge() {
+  try {
+    const cart = JSON.parse(localStorage.getItem('tt_cart') || '[]');
+    const badge = document.getElementById('cartBadge');
+    if (badge) {
+      const count = cart.reduce((s, i) => s + (i.qty || 1), 0);
+      badge.style.display = count > 0 ? 'flex' : 'none';
+      badge.textContent = count;
+    }
+  } catch(e) {}
+}
+
+// 상품 카드 HTML 생성
+function makeCard(p) {
+  const discPct = p.discount ? `<span class="prod-badge badge-sale">-${p.discount}%</span>` : '';
+  const bestBadge = p.rating >= 4.7 ? `<span class="prod-badge badge-best">BEST</span>` : '';
+  const stars = '★'.repeat(Math.round(p.rating || 0)) + '☆'.repeat(5 - Math.round(p.rating || 0));
+  const origPrice = p.originalPrice ? `<span class="prod-orig-price">${p.originalPrice.toLocaleString()}원</span>` : '';
+  const discountText = p.discount ? `<span class="prod-discount-pct">${p.discount}%</span>` : '';
+  const tags = (p.tags || []).map(t =>
+    `<span class="prod-tag${t.includes('사계절') || t.includes('겨울') ? ' tag-season' : ''}">${t}</span>`
+  ).join('');
+
+  const imgHtml = p.image
+    ? `<img src="${p.image}" alt="${p.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='block'">`
+      + `<span class="prod-img-placeholder" style="display:none">🛞</span>`
+    : `<span class="prod-img-placeholder">🛞</span>`;
+
+  return `
+    <a class="prod-card" href="product-detail.html?id=${p.id}" onclick="event.stopPropagation()">
+      <div class="prod-img-wrap">
+        ${imgHtml}
+        <div class="prod-badge-wrap">${discPct}${bestBadge}</div>
+        <button class="prod-wish-btn" onclick="event.preventDefault();addWish(${JSON.stringify(p.id)})">🤍</button>
+      </div>
+      <div class="prod-body">
+        <div class="prod-brand-name">${p.brand || ''}</div>
+        <div class="prod-title">${p.name || ''}</div>
+        ${p.size ? `<div class="prod-size-tag">${p.size}</div>` : ''}
+        <div class="prod-rating">
+          <span class="prod-stars">${stars.slice(0,5)}</span>
+          <span style="font-size:12px;font-weight:700;color:#374151">${(p.rating||0).toFixed(1)}</span>
+          <span class="prod-review-cnt">(${(p.reviewCount||0).toLocaleString()})</span>
+        </div>
+        <div class="prod-price-area">
+          ${discountText}
+          <span class="prod-price">${(p.price||0).toLocaleString()}원</span>
+          ${origPrice}
+        </div>
+        ${tags ? `<div class="prod-tags">${tags}</div>` : ''}
+      </div>
+      <div class="prod-footer">
+        <span class="prod-ship">🚚 무료배송</span>
+        <button class="prod-cart-btn" onclick="event.preventDefault();addCart(${JSON.stringify(p.id)})">장바구니</button>
+      </div>
+    </a>`;
+}
+
+// 데이터 정렬
+function sortProducts(list, sort) {
+  const l = [...list];
+  switch(sort) {
+    case 'review':    return l.sort((a,b) => (b.reviewCount||0) - (a.reviewCount||0));
+    case 'price_asc': return l.sort((a,b) => (a.price||0) - (b.price||0));
+    case 'price_desc':return l.sort((a,b) => (b.price||0) - (a.price||0));
+    case 'discount':  return l.sort((a,b) => (b.discount||0) - (a.discount||0));
+    default:          return l.sort((a,b) => (b.rating||0) - (a.rating||0));
+  }
+}
+
+// ── 추천 섹션 ──
+let recCurrentTab = 'best';
+function switchRecTab(el, tab) {
+  document.querySelectorAll('.rec-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  recCurrentTab = tab;
+  renderRecGrid(tab);
+}
+
+function renderRecGrid(tab) {
+  const grid = document.getElementById('recGrid');
+  grid.innerHTML = '';
+  let products = [];
+
+  if (typeof TT_PRODUCTS !== 'undefined' && TT_PRODUCTS.tire) {
+    products = TT_PRODUCTS.tire;
+  } else {
+    grid.innerHTML = '<div class="loading-state"><span>😕</span><p>상품 데이터를 불러오지 못했습니다</p></div>';
+    return;
+  }
+
+  let filtered = [...products];
+  if (tab === 'new') filtered = filtered.slice(0, 16);
+  else if (tab === 'sale') filtered = filtered.filter(p => p.discount >= 40).slice(0, 16);
+  else if (['hankook','kumho','nexen'].includes(tab))
+    filtered = filtered.filter(p => p.brandKey === tab).slice(0, 8);
+  else filtered = sortProducts(filtered, 'popular').slice(0, 8);
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div class="loading-state"><p>해당 상품이 없습니다</p></div>';
+    return;
+  }
+  grid.innerHTML = filtered.map(makeCard).join('');
+}
+
+// ── 전체 상품 ──
+let allProducts = [];
+let allFiltered = [];
+let displayCount = 16;
+let currentBrand = 'all';
+
+function filterBrand(el, brand) {
+  document.querySelectorAll('#brandFilter .filter-tag').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  currentBrand = brand;
+  displayCount = 16;
+  applyFilters();
+}
+
+function filterCat(type) {
+  document.querySelectorAll('.cat-nav-item').forEach(t => t.classList.remove('active'));
+  event.currentTarget.classList.add('active');
+  // 카테고리 필터 적용
+  applyFilters();
+}
+
+function applyFilters() {
+  if (!allProducts.length) return;
+  const season = document.getElementById('filterSeason').value;
+  const vehicle = document.getElementById('filterVehicle').value;
+  const grade = document.getElementById('filterGrade').value;
+  const priceRange = document.getElementById('filterPrice').value;
+  const sort = document.getElementById('sortSelect').value;
+
+  let result = [...allProducts];
+  if (currentBrand !== 'all') result = result.filter(p => p.brandKey === currentBrand);
+  if (season) result = result.filter(p => p.season && p.season.includes(season));
+  if (vehicle) result = result.filter(p => p.vehicleType && p.vehicleType.includes(vehicle));
+  if (grade) result = result.filter(p => p.grade && p.grade.includes(grade));
+  if (priceRange) {
+    const [min, max] = priceRange.split('-').map(Number);
+    result = result.filter(p => p.price >= min && p.price <= max);
+  }
+
+  allFiltered = sortProducts(result, sort);
+  document.getElementById('prodCount').textContent = allFiltered.length;
+
+  const toShow = allFiltered.slice(0, displayCount);
+  const grid = document.getElementById('allGrid');
+  grid.innerHTML = toShow.length ? toShow.map(makeCard).join('') : '<div class="loading-state"><p>조건에 맞는 상품이 없습니다</p></div>';
+
+  const remaining = allFiltered.length - displayCount;
+  const btn = document.getElementById('loadMoreBtn');
+  const rem = document.getElementById('remainCount');
+  if (remaining > 0) {
+    btn.style.display = 'inline-flex';
+    rem.textContent = `(+${remaining})`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+
+function loadMore() {
+  displayCount += 16;
+  applyFilters();
+}
+
+// 찜, 장바구니
+function addWish(id) {
+  showToast('❤️ 찜 목록에 추가되었습니다');
+}
+function addCart(id) {
+  try {
+    const cart = JSON.parse(localStorage.getItem('tt_cart') || '[]');
+    const idx = cart.findIndex(i => i.id === id);
+    if (idx >= 0) cart[idx].qty = (cart[idx].qty || 1) + 1;
+    else cart.push({ id, qty: 1 });
+    localStorage.setItem('tt_cart', JSON.stringify(cart));
+    updateCartBadge();
+    showToast('🛒 장바구니에 담았습니다');
+  } catch(e) { showToast('🛒 장바구니에 담았습니다'); }
+}
+function goWish() { window.location.href = 'mypage.html#wishlist'; }
+function goCart() { window.location.href = 'cart.html'; }
+function goMypage() { window.location.href = 'mypage.html'; }
+function doSearch() {
+  const q = document.getElementById('hdSearch').value.trim();
+  if (q) window.location.href = 'product-list.html?q=' + encodeURIComponent(q);
+}
+function searchByVehicle() {
+  const num = document.getElementById('carNumInput').value.trim();
+  if (!num) { showToast('🚗 차량번호를 입력해주세요'); return; }
+  showToast('🔍 차량 정보를 조회 중입니다...');
+}
+
+// 토스트
+function showToast(msg) {
+  const el = document.getElementById('tt-toast');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.opacity = 1;
+  setTimeout(() => { el.style.opacity = 0; }, 2500);
+}
+
+// 초기화
+document.addEventListener('DOMContentLoaded', function() {
+  updateCartBadge();
+
+  if (typeof TT_PRODUCTS !== 'undefined' && TT_PRODUCTS.tire) {
+    allProducts = TT_PRODUCTS.tire;
+  } else {
+    // 샘플 데이터 fallback
+    allProducts = [
+      { id:'s1', brand:'한국타이어', brandKey:'hankook', name:'벤투스 S2 AS', size:'225/45R17', price:98000, originalPrice:185000, discount:47, rating:4.8, reviewCount:1247, tags:['승용차','사계절용','고급형'], season:'사계절', vehicleType:'승용차', grade:'고급형' },
+      { id:'s2', brand:'금호타이어', brandKey:'kumho', name:'솔루스 TA21', size:'205/55R16', price:72000, originalPrice:135000, discount:47, rating:4.7, reviewCount:892, tags:['승용차','사계절용'], season:'사계절', vehicleType:'승용차', grade:'중급형' },
+      { id:'s3', brand:'넥센타이어', brandKey:'nexen', name:'N\'FERA SU1', size:'215/55R17', price:68000, originalPrice:120000, discount:43, rating:4.6, reviewCount:634, tags:['승용차','여름용'], season:'여름용', vehicleType:'승용차', grade:'표준형' },
+      { id:'s4', brand:'미쉐린', brandKey:'michelin', name:'파일럿 스포츠 4S', size:'245/45R18', price:185000, originalPrice:298000, discount:38, rating:4.9, reviewCount:2103, tags:['승용차','고성능'], season:'여름용', vehicleType:'승용차', grade:'고급형' },
+      { id:'s5', brand:'한국타이어', brandKey:'hankook', name:'다이나프로 HP3', size:'235/55R18', price:112000, originalPrice:198000, discount:43, rating:4.7, reviewCount:756, tags:['SUV','사계절용','고급형'], season:'사계절', vehicleType:'SUV', grade:'고급형' },
+      { id:'s6', brand:'브리지스톤', brandKey:'bridgestone', name:'투란자 T005', size:'225/50R17', price:142000, originalPrice:228000, discount:38, rating:4.8, reviewCount:934, tags:['승용차','여름용','고급형'], season:'여름용', vehicleType:'승용차', grade:'고급형' },
+      { id:'s7', brand:'콘티넨탈', brandKey:'continental', name:'콘티프로콘택트', size:'205/55R16', price:128000, originalPrice:198000, discount:35, rating:4.7, reviewCount:743, tags:['승용차','여름용','고급형'], season:'여름용', vehicleType:'승용차', grade:'고급형' },
+      { id:'s8', brand:'금호타이어', brandKey:'kumho', name:'윈터크래프트 WP72', size:'215/55R17', price:95000, originalPrice:162000, discount:41, rating:4.6, reviewCount:387, tags:['승용차','겨울용'], season:'겨울용', vehicleType:'승용차', grade:'중급형' },
+    ];
+  }
+
+  renderRecGrid('best');
+  applyFilters();
+});
+</script>
+</body>
+</html>

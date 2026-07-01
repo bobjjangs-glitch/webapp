@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>이벤트 관리 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .event-card{
+      background:var(--bg-card);border:1px solid var(--border);
+      border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
+      transition:all var(--transition);
+    }
+    .event-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+    .event-card.inactive{opacity:.55;}
+    .event-thumb{width:100%;height:140px;object-fit:cover;display:block;background:var(--surface);}
+    .event-body{padding:14px 16px;}
+    .event-body h4{font-size:14px;font-weight:700;margin-bottom:4px;}
+    .event-body .sub{font-size:12px;color:var(--text-muted);margin-bottom:8px;}
+    .event-footer{
+      display:flex;align-items:center;justify-content:space-between;
+      padding:10px 16px;border-top:1px solid var(--border);
+    }
+    .ev-badge{
+      display:inline-flex;align-items:center;padding:3px 10px;
+      border-radius:20px;font-size:11px;font-weight:700;
+    }
+    .ev-badge.active  {background:rgba(5,150,105,.12);color:#065f46;}
+    .ev-badge.warning {background:rgba(245,158,11,.12);color:#92400e;}
+    .ev-badge.info    {background:rgba(37,99,235,.12);color:#1e40af;}
+    .ev-badge.expired {background:var(--gray-100);color:var(--gray-600);}
+    .img-preview{
+      width:100%;max-height:150px;object-fit:cover;border-radius:10px;
+      border:1px solid var(--border);display:none;margin-top:8px;
+    }
+    .img-preview.show{display:block;}
+  </style>
+</head>
+<body>
+<div id="adminMain">
+
+  <div class="page-header">
+    <div><h2>이벤트 관리</h2><p>이벤트를 등록하고 노출 상태를 관리합니다.</p></div>
+    <button class="btn btn-primary" onclick="openEventModal()">➕ 이벤트 등록</button>
+  </div>
+
+  <div class="stats-grid" id="eventStats" style="margin-bottom:24px;"></div>
+
+  <div class="filter-bar">
+    <input class="filter-search" type="text" id="evSearch"
+           placeholder="🔍 이벤트명 검색..." oninput="renderEvents()">
+    <select id="evStatusFilter" onchange="renderEvents()">
+      <option value="">전체</option>
+      <option value="true">활성</option>
+      <option value="false">비활성</option>
+    </select>
+    <div class="spacer"></div>
+    <span id="evCount" style="font-size:13px;color:var(--text-muted);"></span>
+  </div>
+
+  <div id="eventGrid"
+       style="display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;"></div>
+
+</div>
+
+<!-- 이벤트 모달 -->
+<div class="admin-modal-overlay" id="eventModal">
+  <div class="admin-modal lg">
+    <div class="modal-header">
+      <h3 id="eventModalTitle">이벤트 등록</h3>
+      <button class="modal-close" onclick="closeModal('eventModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">이벤트명 *</label>
+        <input class="form-control" id="evTitle" placeholder="예: 봄맞이 타이어 특가전">
+      </div>
+      <div class="form-group">
+        <label class="form-label">부제목</label>
+        <input class="form-control" id="evSubtitle" placeholder="예: 최대 30% 할인">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">시작일</label>
+          <input class="form-control" type="date" id="evStart">
+        </div>
+        <div class="form-group">
+          <label class="form-label">종료일</label>
+          <input class="form-control" type="date" id="evEnd">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">배지 텍스트</label>
+          <input class="form-control" id="evBadge" placeholder="예: 진행중">
+        </div>
+        <div class="form-group">
+          <label class="form-label">배지 색상</label>
+          <select class="form-control" id="evBadgeType">
+            <option value="active">초록 (진행중)</option>
+            <option value="warning">노랑 (마감임박)</option>
+            <option value="info">파랑 (상시)</option>
+            <option value="expired">회색 (종료)</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">배너 이미지 URL</label>
+        <input class="form-control" id="evImg" placeholder="https://example.com/banner.jpg"
+               oninput="previewEvImg(this.value)">
+        <img id="evImgPreview" class="img-preview" alt="미리보기">
+      </div>
+      <div class="form-group">
+        <label class="form-label">이벤트 설명</label>
+        <textarea class="form-control" id="evDesc" style="min-height:80px;"
+                  placeholder="이벤트 상세 내용을 입력하세요"></textarea>
+      </div>
+      <div class="form-group">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="evActive" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          활성 (메인 페이지 노출)
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('eventModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveEvent()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+let EVENTS = [];
+let editingEventId = null;
+const BADGE_COLOR = { active:'#059669', warning:'#d97706', info:'#2563eb', expired:'#6b7280' };
+
+function renderEventStats() {
+  const el = document.getElementById('eventStats');
+  if (!el) return;
+  const total   = EVENTS.length;
+  const active  = EVENTS.filter(e=>e.active).length;
+  const views   = EVENTS.reduce((s,e)=>s+(e.viewCount||0),0);
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">🎉</div><div class="stat-info"><div class="stat-label">전체 이벤트</div><div class="stat-value">${total}개</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-label">활성</div><div class="stat-value">${active}개</div></div></div>
+    <div class="stat-card"><div class="stat-icon orange">👁️</div><div class="stat-info"><div class="stat-label">총 조회수</div><div class="stat-value">${views.toLocaleString()}</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">⏸️</div><div class="stat-info"><div class="stat-label">비활성</div><div class="stat-value">${total-active}개</div></div></div>`;
+}
+
+function getFilteredEvents() {
+  const q      = document.getElementById('evSearch').value.toLowerCase();
+  const status = document.getElementById('evStatusFilter').value;
+  return EVENTS.filter(e => {
+    if (status && String(e.active) !== status) return false;
+    if (q && !e.title.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderEvents() {
+  const list  = getFilteredEvents();
+  const cntEl = document.getElementById('evCount');
+  if (cntEl) cntEl.textContent = `총 ${list.length}개`;
+  const grid  = document.getElementById('eventGrid');
+  grid.innerHTML = list.map(ev => `
+    <div class="event-card ${ev.active?'':'inactive'}">
+      <img class="event-thumb" src="${ev.img}"
+           onerror="this.src='https://placehold.co/800x400/e2e8f0/94a3b8?text=이미지없음'"
+           alt="${ev.title}">
+      <div class="event-body">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+          <span class="ev-badge ${ev.badgeType}">${ev.badge}</span>
+          ${!ev.active?'<span class="badge badge-gray">비활성</span>':''}
+        </div>
+        <h4>${ev.title}</h4>
+        <p class="sub">${ev.subtitle}</p>
+        <div style="font-size:12px;color:var(--text-muted);">
+          📅 ${ev.start} ~ ${ev.end}
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">
+          👁 ${(ev.viewCount||0).toLocaleString()}회 조회
+        </div>
+      </div>
+      <div class="event-footer">
+        <label class="toggle-switch" style="transform:scale(0.85);">
+          <input type="checkbox" ${ev.active?'checked':''} onchange="toggleEvent(${ev.id},this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+        <div style="display:flex;gap:6px;">
+          <button class="btn btn-xs btn-outline" onclick="openEventModal(${ev.id})">✏️ 수정</button>
+          <button class="btn btn-xs btn-danger"  onclick="deleteEvent(${ev.id})">🗑️</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function toggleEvent(id, active) {
+  TTStore.update('tt_events', id, { active });
+  /* API에서 로드 */
+  renderEventStats(); renderEvents();
+  adminToast(`이벤트가 ${active?'활성':'비활성'}화 되었습니다.`,'info');
+}
+
+function openEventModal(id = null) {
+  editingEventId = id;
+  document.getElementById('eventModalTitle').textContent = id ? '이벤트 수정' : '이벤트 등록';
+  if (id) {
+    const ev = EVENTS.find(x=>x.id===id);
+    if (!ev) return;
+    document.getElementById('evTitle').value     = ev.title;
+    document.getElementById('evSubtitle').value  = ev.subtitle||'';
+    document.getElementById('evStart').value     = ev.start;
+    document.getElementById('evEnd').value       = ev.end;
+    document.getElementById('evBadge').value     = ev.badge;
+    document.getElementById('evBadgeType').value = ev.badgeType;
+    document.getElementById('evImg').value       = ev.img||'';
+    document.getElementById('evDesc').value      = ev.description||'';
+    document.getElementById('evActive').checked  = ev.active;
+    previewEvImg(ev.img);
+  } else {
+    ['evTitle','evSubtitle','evStart','evEnd','evBadge','evImg','evDesc']
+      .forEach(f=>{ const el=document.getElementById(f); if(el) el.value=''; });
+    document.getElementById('evBadgeType').value = 'active';
+    document.getElementById('evActive').checked  = true;
+    document.getElementById('evImgPreview').classList.remove('show');
+  }
+  document.getElementById('eventModal').classList.add('open');
+  setTimeout(()=>document.getElementById('evTitle').focus(),100);
+}
+
+function previewEvImg(url) {
+  const img = document.getElementById('evImgPreview');
+  if (!url) { img.classList.remove('show'); return; }
+  img.src     = url;
+  img.onload  = () => img.classList.add('show');
+  img.onerror = () => img.classList.remove('show');
+}
+
+function saveEvent() {
+  const title = document.getElementById('evTitle').value.trim();
+  if (!title) { adminToast('이벤트명을 입력하세요.','error'); return; }
+  const data = {
+    id:          editingEventId || Date.now(),
+    title,
+    subtitle:    document.getElementById('evSubtitle').value.trim(),
+    start:       document.getElementById('evStart').value,
+    end:         document.getElementById('evEnd').value,
+    badge:       document.getElementById('evBadge').value.trim() || '진행중',
+    badgeType:   document.getElementById('evBadgeType').value,
+    img:         document.getElementById('evImg').value.trim() || `https://placehold.co/800x400/e31e24/fff?text=${encodeURIComponent(title)}`,
+    description: document.getElementById('evDesc').value.trim(),
+    active:      document.getElementById('evActive').checked,
+    viewCount:   editingEventId ? (EVENTS.find(e=>e.id===editingEventId)?.viewCount||0) : 0,
+  };
+  TTStore.adminSaveEvent(data);
+  /* API에서 로드 */
+  adminToast(editingEventId?'이벤트가 수정되었습니다.':'이벤트가 등록되었습니다.','success');
+  closeModal('eventModal');
+  renderEventStats(); renderEvents();
+}
+
+function deleteEvent(id) {
+  const ev = EVENTS.find(x=>x.id===id);
+  if (!ev||!confirm(`"${ev.title}"을(를) 삭제하시겠습니까?`)) return;
+  TTStore.remove('tt_events', id);
+  /* API에서 로드 */
+  renderEventStats(); renderEvents();
+  adminToast('이벤트가 삭제되었습니다.','info');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.getElementById('eventModal').addEventListener('click', function(e) {
+  if (e.target===this) closeModal('eventModal');
+});
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal('eventModal'); });
+window.addEventListener('tt_store_update', e => {
+  if (e.detail.key==='tt_events') { EVENTS=TTStore.get('tt_events')||[]; renderEventStats(); renderEvents(); }
+});
+
+async function loadEvents() {
+  try {
+    const res = await AdminAPI.getEvents();
+    if (res?.success) {
+      EVENTS = res.data || [];
+      if (typeof renderEventStats === 'function') renderEventStats();
+      if (typeof renderEvents    === 'function') renderEvents();
+    }
+  } catch(e) { console.error('이벤트 로드 실패', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadEvents();
+});</script>
+</body>
+</html>

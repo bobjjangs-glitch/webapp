@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>고객센터 - TIRETOP</title>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/common.css">
+  <script src="js/store.js"></script>
+  <script src="components/loader.js" defer></script>
+  <style>
+    :root{
+      --primary:#e02020;--accent:#ff6b00;--green:#22c55e;
+      --dark:#111827;--gray1:#374151;--gray3:#6b7280;--gray5:#e5e7eb;
+      --surface:#f9fafb;--radius-md:12px;--radius-lg:16px;--max-w:1200px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'Noto Sans KR',sans-serif;background:#f3f4f6;color:var(--dark);}
+
+    /* 브레드크럼 */
+    .breadcrumb{background:#fff;border-bottom:1px solid var(--gray5);padding:12px 24px;}
+    .breadcrumb-inner{max-width:var(--max-w);margin:0 auto;font-size:13px;color:var(--gray3);}
+    .breadcrumb a{color:var(--gray3);text-decoration:none;}
+    .breadcrumb a:hover{color:var(--primary);}
+
+    /* 히어로 */
+    .cs-hero{
+      background:linear-gradient(135deg,#0f2027 0%,#203a43 50%,#2c5364 100%);
+      padding:56px 24px;text-align:center;position:relative;overflow:hidden;
+    }
+    .cs-hero::before{
+      content:'';position:absolute;inset:0;
+      background:radial-gradient(ellipse at 50% 100%,rgba(34,197,94,.15) 0%,transparent 70%);
+    }
+    .cs-hero-inner{position:relative;z-index:1;max-width:700px;margin:0 auto;}
+    .cs-hero h1{font-size:36px;font-weight:900;color:#fff;margin-bottom:12px;}
+    @media(max-width:600px){.cs-hero h1{font-size:26px;}}
+    .cs-hero p{font-size:15px;color:rgba(255,255,255,.7);margin-bottom:32px;line-height:1.7;}
+    .cs-search-wrap{display:flex;gap:0;max-width:520px;margin:0 auto 24px;}
+    .cs-search-input{flex:1;padding:14px 20px;border:none;border-radius:var(--radius-md) 0 0 var(--radius-md);font-size:15px;font-family:inherit;outline:none;}
+    .cs-search-btn{padding:14px 24px;background:var(--primary);color:#fff;border:none;border-radius:0 var(--radius-md) var(--radius-md) 0;font-size:15px;font-weight:700;cursor:pointer;}
+    .cs-search-btn:hover{opacity:.9;}
+    .cs-quick-links{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;}
+    .cs-quick-link{padding:7px 16px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.9);border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .cs-quick-link:hover{background:rgba(255,255,255,.2);}
+
+    /* 연락처 카드 */
+    .cs-contact-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;max-width:var(--max-w);margin:-32px auto 0;padding:0 24px;position:relative;z-index:2;}
+    @media(max-width:900px){.cs-contact-row{grid-template-columns:1fr;margin-top:-24px;}}
+    .cs-contact-card{background:#fff;border-radius:var(--radius-lg);border:1px solid var(--gray5);padding:24px;text-align:center;box-shadow:0 4px 20px rgba(0,0,0,.08);}
+    .cs-contact-icon{font-size:36px;margin-bottom:12px;}
+    .cs-contact-title{font-size:16px;font-weight:800;margin-bottom:6px;}
+    .cs-contact-info{font-size:22px;font-weight:900;color:var(--primary);margin-bottom:4px;}
+    .cs-contact-sub{font-size:12px;color:var(--gray3);line-height:1.5;}
+    .cs-contact-btn{margin-top:14px;padding:10px 24px;border:1.5px solid var(--primary);border-radius:var(--radius-md);background:#fff;color:var(--primary);font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;}
+    .cs-contact-btn:hover{background:var(--primary);color:#fff;}
+
+    /* 메인 레이아웃 */
+    .cs-wrap{max-width:var(--max-w);margin:0 auto;padding:48px 24px 80px;}
+
+    /* 탭 */
+    .cs-tab-bar{display:flex;gap:0;border-bottom:2px solid var(--gray5);margin-bottom:32px;overflow-x:auto;}
+    .cs-tab-btn{padding:14px 24px;font-size:15px;font-weight:700;background:none;border:none;cursor:pointer;color:var(--gray3);border-bottom:3px solid transparent;margin-bottom:-2px;white-space:nowrap;transition:all .2s;}
+    .cs-tab-btn.active{color:var(--primary);border-bottom-color:var(--primary);}
+    .cs-tab-pane{display:none;}
+    .cs-tab-pane.active{display:block;}
+
+    /* FAQ */
+    .faq-search{display:flex;gap:8px;margin-bottom:24px;}
+    .faq-search input{flex:1;padding:12px 16px;border:1.5px solid var(--gray5);border-radius:var(--radius-md);font-size:14px;font-family:inherit;}
+    .faq-search input:focus{outline:none;border-color:var(--primary);}
+    .faq-cat-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px;}
+    .faq-cat-chip{padding:8px 18px;border:1.5px solid var(--gray5);border-radius:20px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .faq-cat-chip:hover{border-color:var(--primary);}
+    .faq-cat-chip.active{border-color:var(--primary);background:var(--primary);color:#fff;}
+    .faq-list{display:flex;flex-direction:column;gap:8px;}
+    .faq-item{background:#fff;border:1px solid var(--gray5);border-radius:var(--radius-md);overflow:hidden;transition:box-shadow .2s;}
+    .faq-item:hover{box-shadow:0 2px 12px rgba(0,0,0,.08);}
+    .faq-item.open{border-color:var(--primary);}
+    .faq-q{display:flex;align-items:center;gap:12px;padding:18px 20px;cursor:pointer;user-select:none;}
+    .faq-q-icon{width:28px;height:28px;background:var(--primary);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0;}
+    .faq-q-text{flex:1;font-size:15px;font-weight:700;line-height:1.4;}
+    .faq-q-cat{font-size:11px;color:var(--gray3);margin-right:8px;flex-shrink:0;}
+    .faq-arrow{font-size:18px;color:var(--gray3);transition:transform .3s;flex-shrink:0;}
+    .faq-item.open .faq-arrow{transform:rotate(180deg);color:var(--primary);}
+    .faq-a{display:none;padding:0 20px 18px 60px;font-size:14px;line-height:1.8;color:var(--gray1);border-top:1px solid var(--gray5);}
+    .faq-item.open .faq-a{display:block;}
+    .faq-helpful{display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--gray5);font-size:13px;color:var(--gray3);}
+    .faq-helpful-btn{padding:4px 12px;border:1px solid var(--gray5);border-radius:6px;background:#fff;cursor:pointer;font-size:12px;transition:all .2s;}
+    .faq-helpful-btn:hover{border-color:var(--primary);color:var(--primary);}
+    .faq-empty{text-align:center;padding:48px;color:var(--gray3);}
+    .faq-empty-icon{font-size:48px;margin-bottom:12px;}
+
+    /* 공지사항 */
+    .notice-filter{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
+    .notice-filter-btn{padding:7px 16px;border:1.5px solid var(--gray5);border-radius:20px;background:#fff;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .notice-filter-btn.active{border-color:var(--primary);background:var(--primary);color:#fff;}
+    .notice-list{background:#fff;border:1px solid var(--gray5);border-radius:var(--radius-lg);overflow:hidden;}
+    .notice-item{display:flex;align-items:center;gap:16px;padding:18px 20px;border-bottom:1px solid var(--gray5);cursor:pointer;transition:background .15s;}
+    .notice-item:last-child{border-bottom:none;}
+    .notice-item:hover{background:var(--surface);}
+    .notice-pin{width:20px;height:20px;background:var(--primary);color:#fff;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;flex-shrink:0;}
+    .notice-pin.off{background:transparent;}
+    .notice-cat-badge{padding:3px 8px;border-radius:4px;font-size:11px;font-weight:700;flex-shrink:0;}
+    .notice-title{flex:1;font-size:14px;font-weight:600;line-height:1.4;}
+    .notice-title .new-badge{display:inline-block;background:var(--primary);color:#fff;border-radius:4px;padding:1px 6px;font-size:10px;font-weight:700;margin-left:6px;vertical-align:middle;}
+    .notice-date{font-size:12px;color:var(--gray3);flex-shrink:0;}
+    .notice-detail{display:none;padding:20px 20px 24px;background:var(--surface);border-top:1px solid var(--gray5);}
+    .notice-detail.show{display:block;}
+    .notice-detail-body{font-size:14px;line-height:1.9;color:var(--gray1);}
+    .notice-empty{text-align:center;padding:48px;color:var(--gray3);}
+
+    /* 1:1 문의 */
+    .inquiry-form-card{background:#fff;border:1px solid var(--gray5);border-radius:var(--radius-lg);padding:28px;margin-bottom:24px;}
+    .inquiry-form-title{font-size:18px;font-weight:800;margin-bottom:20px;display:flex;align-items:center;gap:8px;}
+    .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px;}
+    .form-row.full{grid-template-columns:1fr;}
+    .form-group{display:flex;flex-direction:column;gap:6px;}
+    .form-group label{font-size:13px;font-weight:600;color:var(--gray1);}
+    .form-group input,.form-group select,.form-group textarea{padding:10px 14px;border:1.5px solid var(--gray5);border-radius:8px;font-size:14px;font-family:inherit;transition:border-color .2s;}
+    .form-group input:focus,.form-group select:focus,.form-group textarea:focus{outline:none;border-color:var(--primary);}
+    .form-group textarea{resize:vertical;min-height:120px;}
+    .char-count{text-align:right;font-size:12px;color:var(--gray3);margin-top:4px;}
+    .file-upload-area{border:2px dashed var(--gray5);border-radius:var(--radius-md);padding:24px;text-align:center;cursor:pointer;transition:all .2s;}
+    .file-upload-area:hover{border-color:var(--primary);background:#fff5f5;}
+    .file-upload-icon{font-size:32px;margin-bottom:8px;}
+    .file-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px;}
+    .file-item{display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--surface);border:1px solid var(--gray5);border-radius:6px;font-size:12px;}
+    .file-remove{background:none;border:none;cursor:pointer;color:var(--gray3);font-size:14px;padding:0;}
+    .submit-btn{width:100%;height:52px;background:var(--primary);color:#fff;border:none;border-radius:var(--radius-md);font-size:16px;font-weight:800;cursor:pointer;transition:opacity .2s;margin-top:8px;}
+    .submit-btn:hover{opacity:.9;}
+    .submit-btn:disabled{opacity:.5;cursor:not-allowed;}
+
+    /* 내 문의 내역 */
+    .my-inquiry-card{background:#fff;border:1px solid var(--gray5);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;}
+    .my-inq-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+    .my-inq-status{padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;flex-shrink:0;}
+    .my-inq-status.waiting{background:#fff7ed;color:var(--accent);}
+    .my-inq-status.answered{background:#f0fdf4;color:var(--green);}
+    .my-inq-status.closed{background:var(--surface);color:var(--gray3);}
+    .my-inq-title{font-size:15px;font-weight:700;}
+    .my-inq-meta{font-size:12px;color:var(--gray3);}
+    .my-inq-body{font-size:14px;line-height:1.7;color:var(--gray1);padding:14px;background:var(--surface);border-radius:8px;margin-bottom:12px;}
+    .my-inq-reply{background:#fffbeb;border-left:3px solid var(--accent);padding:14px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.7;}
+    .my-inq-reply strong{color:var(--accent);display:block;margin-bottom:4px;}
+    .my-inq-empty{text-align:center;padding:48px;color:var(--gray3);}
+
+    /* 챗봇 */
+    .chatbot-wrap{max-width:560px;margin:0 auto;}
+    .chatbot-card{background:#fff;border:1px solid var(--gray5);border-radius:var(--radius-lg);overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,.1);}
+    .chatbot-head{background:linear-gradient(135deg,var(--primary),var(--accent));padding:20px 24px;display:flex;align-items:center;gap:14px;}
+    .chatbot-avatar{width:44px;height:44px;background:rgba(255,255,255,.2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:22px;}
+    .chatbot-info h3{font-size:16px;font-weight:800;color:#fff;}
+    .chatbot-info p{font-size:12px;color:rgba(255,255,255,.8);}
+    .chatbot-status{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:4px;}
+    .chatbot-messages{height:360px;overflow-y:auto;padding:20px;display:flex;flex-direction:column;gap:12px;}
+    .chat-msg{max-width:80%;display:flex;flex-direction:column;gap:4px;}
+    .chat-msg.bot{align-self:flex-start;}
+    .chat-msg.user{align-self:flex-end;}
+    .chat-bubble{padding:12px 16px;border-radius:16px;font-size:14px;line-height:1.6;}
+    .chat-msg.bot .chat-bubble{background:var(--surface);border:1px solid var(--gray5);border-radius:4px 16px 16px 16px;color:var(--dark);}
+    .chat-msg.user .chat-bubble{background:var(--primary);color:#fff;border-radius:16px 4px 16px 16px;}
+    .chat-time{font-size:11px;color:var(--gray3);}
+    .chatbot-quick{padding:12px 20px;border-top:1px solid var(--gray5);display:flex;flex-wrap:wrap;gap:6px;}
+    .chatbot-quick-btn{padding:6px 14px;border:1.5px solid var(--primary);border-radius:20px;background:#fff;color:var(--primary);font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;}
+    .chatbot-quick-btn:hover{background:var(--primary);color:#fff;}
+    .chatbot-input-row{display:flex;gap:0;border-top:1px solid var(--gray5);}
+    .chatbot-input{flex:1;padding:14px 16px;border:none;font-size:14px;font-family:inherit;outline:none;}
+    .chatbot-send{padding:14px 20px;background:var(--primary);color:#fff;border:none;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s;}
+    .chatbot-send:hover{opacity:.9;}
+    .chat-typing{display:flex;gap:4px;align-items:center;padding:8px 0;}
+    .chat-dot{width:8px;height:8px;background:var(--gray3);border-radius:50%;animation:bounce .8s infinite;}
+    .chat-dot:nth-child(2){animation-delay:.15s;}
+    .chat-dot:nth-child(3){animation-delay:.3s;}
+    @keyframes bounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-8px);}}
+
+    /* 모달 */
+    .admin-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:1000;align-items:center;justify-content:center;padding:20px;}
+    .admin-modal-overlay.open{display:flex;}
+    .admin-modal{background:#fff;border-radius:var(--radius-lg);width:100%;max-width:600px;max-height:90vh;overflow-y:auto;}
+    .modal-header{display:flex;justify-content:space-between;align-items:center;padding:20px 24px;border-bottom:1px solid var(--gray5);}
+    .modal-header h3{font-size:17px;font-weight:800;}
+    .modal-close{background:none;border:none;font-size:20px;cursor:pointer;color:var(--gray3);}
+    .modal-body{padding:24px;}
+    .modal-footer{display:flex;gap:12px;justify-content:flex-end;padding:16px 24px;border-top:1px solid var(--gray5);}
+    .btn{padding:10px 20px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;border:none;}
+    .btn-primary{background:var(--primary);color:#fff;}
+    .btn-outline{background:#fff;border:1.5px solid var(--gray5);color:var(--gray1);}
+  </style>
+</head>
+<body>
+<div id="tt-header"></div>
+
+<!-- 브레드크럼 -->
+<div class="breadcrumb">
+  <div class="breadcrumb-inner">
+    <a href="index.html">홈</a> › <span>고객센터</span>
+  </div>
+</div>
+
+<!-- 히어로 -->
+<div class="cs-hero">
+  <div class="cs-hero-inner">
+    <h1>무엇을 도와드릴까요?</h1>
+    <p>궁금한 점이 있으시면 FAQ를 검색하거나<br>1:1 문의를 남겨주세요. 빠르게 답변해 드립니다.</p>
+    <div class="cs-search-wrap">
+      <input class="cs-search-input" type="text" id="csHeroSearch"
+        placeholder="궁금한 내용을 검색해 보세요..."
+        onkeydown="if(event.key==='Enter') heroSearch()">
+      <button class="cs-search-btn" onclick="heroSearch()">검색</button>
+    </div>
+    <div class="cs-quick-links">
+      <span class="cs-quick-link" onclick="jumpToFaq('주문·결제')">주문·결제</span>
+      <span class="cs-quick-link" onclick="jumpToFaq('배송')">배송</span>
+      <span class="cs-quick-link" onclick="jumpToFaq('교환·반품')">교환·반품</span>
+      <span class="cs-quick-link" onclick="jumpToFaq('회원')">회원·포인트</span>
+      <span class="cs-quick-link" onclick="jumpToFaq('상품')">상품 문의</span>
+    </div>
+  </div>
+</div>
+
+<!-- 연락처 카드 -->
+<div class="cs-contact-row">
+  <div class="cs-contact-card">
+    <div class="cs-contact-icon">📞</div>
+    <div class="cs-contact-title">전화 상담</div>
+    <div class="cs-contact-info">1588-0000</div>
+    <div class="cs-contact-sub">평일 09:00 ~ 18:00<br>점심 12:00 ~ 13:00 제외</div>
+    <button class="cs-contact-btn" onclick="showToast('전화 상담','1588-0000으로 전화해 주세요.','info')">전화하기</button>
+  </div>
+  <div class="cs-contact-card">
+    <div class="cs-contact-icon">💬</div>
+    <div class="cs-contact-title">실시간 채팅</div>
+    <div class="cs-contact-info">AI 챗봇</div>
+    <div class="cs-contact-sub">24시간 365일<br>즉시 답변 가능</div>
+    <button class="cs-contact-btn" onclick="switchCsTab(null,'tab-chatbot')">채팅 시작</button>
+  </div>
+  <div class="cs-contact-card">
+    <div class="cs-contact-icon">✉️</div>
+    <div class="cs-contact-title">1:1 문의</div>
+    <div class="cs-contact-info">평균 2시간</div>
+    <div class="cs-contact-sub">답변까지 평균 2시간<br>24시간 접수 가능</div>
+    <button class="cs-contact-btn" onclick="switchCsTab(null,'tab-inquiry')">문의하기</button>
+  </div>
+</div>
+
+<!-- 메인 컨텐츠 -->
+<div class="cs-wrap">
+  <div class="cs-tab-bar">
+    <button class="cs-tab-btn active" id="tabBtnFaq" onclick="switchCsTab(this,'tab-faq')">❓ 자주 묻는 질문</button>
+    <button class="cs-tab-btn" id="tabBtnNotice" onclick="switchCsTab(this,'tab-notice')">📢 공지사항</button>
+    <button class="cs-tab-btn" id="tabBtnInquiry" onclick="switchCsTab(this,'tab-inquiry')">✉️ 1:1 문의</button>
+    <button class="cs-tab-btn" id="tabBtnMyInquiry" onclick="switchCsTab(this,'tab-my-inquiry')">📋 내 문의 내역</button>
+    <button class="cs-tab-btn" id="tabBtnChatbot" onclick="switchCsTab(this,'tab-chatbot')">🤖 AI 챗봇</button>
+  </div>
+
+  <!-- FAQ 탭 -->
+  <div class="cs-tab-pane active" id="tab-faq">
+    <div class="faq-search">
+      <input type="text" id="faqSearchInput" placeholder="FAQ 검색..." oninput="renderFaqs()">
+    </div>
+    <div class="faq-cat-bar" id="faqCatBar"></div>
+    <div class="faq-list" id="faqList"></div>
+  </div>
+
+  <!-- 공지사항 탭 -->
+  <div class="cs-tab-pane" id="tab-notice">
+    <div class="notice-filter" id="noticeFilterBar"></div>
+    <div class="notice-list" id="noticeList"></div>
+  </div>
+
+  <!-- 1:1 문의 탭 -->
+  <div class="cs-tab-pane" id="tab-inquiry">
+    <div class="inquiry-form-card">
+      <div class="inquiry-form-title"><span>✉️</span> 1:1 문의 작성</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>문의 유형 *</label>
+          <select id="iqType">
+            <option value="">선택해 주세요</option>
+            <option value="주문·결제">주문·결제</option>
+            <option value="배송">배송</option>
+            <option value="교환·반품">교환·반품</option>
+            <option value="상품 문의">상품 문의</option>
+            <option value="회원·포인트">회원·포인트</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>주문 번호 (선택)</label>
+          <input type="text" id="iqOrderNum" placeholder="TT1234567890">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>제목 *</label>
+          <input type="text" id="iqTitle" placeholder="문의 제목을 입력해 주세요" maxlength="100">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>문의 내용 * (최소 10자)</label>
+          <textarea id="iqBody" placeholder="문의 내용을 상세히 입력해 주세요." maxlength="2000"
+            oninput="document.getElementById('iqBodyLen').textContent=this.value.length"></textarea>
+          <div class="char-count"><span id="iqBodyLen">0</span>/2000자</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>이름</label>
+          <input type="text" id="iqName" placeholder="홍길동">
+        </div>
+        <div class="form-group">
+          <label>연락처</label>
+          <input type="tel" id="iqPhone" placeholder="010-0000-0000">
+        </div>
+      </div>
+      <div class="form-row full">
+        <div class="form-group">
+          <label>이메일</label>
+          <input type="email" id="iqEmail" placeholder="example@email.com">
+        </div>
+      </div>
+      <!-- 파일 첨부 -->
+      <div class="form-row full">
+        <div class="form-group">
+          <label>파일 첨부 (선택, 최대 3개)</label>
+          <div class="file-upload-area" onclick="document.getElementById('iqFile').click()">
+            <div class="file-upload-icon">📎</div>
+            <div style="font-size:14px;color:var(--gray3);">클릭하여 파일을 첨부하세요<br><span style="font-size:12px;">JPG, PNG, PDF 최대 10MB</span></div>
+          </div>
+          <input type="file" id="iqFile" multiple accept=".jpg,.jpeg,.png,.pdf" style="display:none" onchange="handleFiles(this)">
+          <div class="file-list" id="fileList"></div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;">
+        <label style="display:flex;align-items:flex-start;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="iqAgree" style="accent-color:var(--primary);width:16px;height:16px;margin-top:2px;flex-shrink:0;">
+          개인정보 수집·이용에 동의합니다. (문의 접수 및 처리 목적)
+        </label>
+      </div>
+      <button class="submit-btn" id="iqSubmitBtn" onclick="submitInquiry()">✉️ 문의 접수하기</button>
+    </div>
+  </div>
+
+  <!-- 내 문의 내역 탭 -->
+  <div class="cs-tab-pane" id="tab-my-inquiry">
+    <div id="myInquiryList"></div>
+  </div>
+
+  <!-- AI 챗봇 탭 -->
+  <div class="cs-tab-pane" id="tab-chatbot">
+    <div class="chatbot-wrap">
+      <div class="chatbot-card">
+        <div class="chatbot-head">
+          <div class="chatbot-avatar">🤖</div>
+          <div class="chatbot-info">
+            <h3>TIRETOP 고객센터 AI</h3>
+            <p><span class="chatbot-status"></span>온라인 · 즉시 답변 가능</p>
+          </div>
+        </div>
+        <div class="chatbot-messages" id="chatMessages"></div>
+        <div class="chatbot-quick" id="chatQuick"></div>
+        <div class="chatbot-input-row">
+          <input class="chatbot-input" type="text" id="chatInput"
+            placeholder="메시지를 입력하세요..."
+            onkeydown="if(event.key==='Enter') sendChat()">
+          <button class="chatbot-send" onclick="sendChat()">전송</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 공지 상세 모달 -->
+<div class="admin-modal-overlay" id="noticeModal">
+  <div class="admin-modal">
+    <div class="modal-header">
+      <h3 id="noticeModalTitle">공지사항</h3>
+      <button class="modal-close" onclick="closeModal('noticeModal')">✕</button>
+    </div>
+    <div class="modal-body" id="noticeModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('noticeModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<div id="tt-footer"></div>
+
+<script>
+// ───────────────────────────────────────────
+// 전역 변수
+// ───────────────────────────────────────────
+let allFaqs     = [];
+let allNotices  = [];
+let uploadedFiles = [];
+let currentFaqCat = '';
+let chatHistory = [];
+let isBotTyping = false;
+
+// ───────────────────────────────────────────
+// 초기화
+// ───────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadFaqs();
+  loadNotices();
+  initInquiryForm();
+  initChatbot();
+  renderMyInquiries();
+
+  // URL 파라미터 처리
+  const params = new URLSearchParams(location.search);
+  const tab    = params.get('tab');
+  if (tab) {
+    const btnMap = {
+      faq       : 'tabBtnFaq',
+      notice    : 'tabBtnNotice',
+      inquiry   : 'tabBtnInquiry',
+      myInquiry : 'tabBtnMyInquiry',
+      chatbot   : 'tabBtnChatbot',
+    };
+    const tabMap = {
+      faq       : 'tab-faq',
+      notice    : 'tab-notice',
+      inquiry   : 'tab-inquiry',
+      myInquiry : 'tab-my-inquiry',
+      chatbot   : 'tab-chatbot',
+    };
+    if (btnMap[tab]) {
+      switchCsTab(document.getElementById(btnMap[tab]), tabMap[tab]);
+    }
+  }
+});
+
+// ───────────────────────────────────────────
+// 탭 전환
+// ───────────────────────────────────────────
+function switchCsTab(btn, tabId) {
+  document.querySelectorAll('.cs-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.cs-tab-pane').forEach(p => p.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  else {
+    const btnMap = {
+      'tab-faq'        : 'tabBtnFaq',
+      'tab-notice'     : 'tabBtnNotice',
+      'tab-inquiry'    : 'tabBtnInquiry',
+      'tab-my-inquiry' : 'tabBtnMyInquiry',
+      'tab-chatbot'    : 'tabBtnChatbot',
+    };
+    const el = document.getElementById(btnMap[tabId]);
+    if (el) el.classList.add('active');
+  }
+  document.getElementById(tabId)?.classList.add('active');
+  if (tabId === 'tab-my-inquiry') renderMyInquiries();
+}
+
+// ───────────────────────────────────────────
+// FAQ
+// ───────────────────────────────────────────
+function loadFaqs() {
+  allFaqs = TTStore.get('tt_faqs') || [];
+
+  // 샘플 FAQ (TTStore 비어있을 때)
+  if (!allFaqs.length) {
+    allFaqs = [
+      { id:1, cat:'주문·결제', question:'주문 후 결제 취소는 어떻게 하나요?',    answer:'마이페이지 > 주문 내역에서 주문 상세를 클릭하신 후 "주문 취소" 버튼을 눌러주세요. 결제 완료 후 24시간 이내 취소 가능합니다.', active:true },
+      { id:2, cat:'배송',     question:'배송 기간은 얼마나 걸리나요?',           answer:'주문 완료 후 영업일 기준 2~4일 내 배송됩니다. 제주 및 도서 지역은 1~2일 추가 소요될 수 있습니다.', active:true },
+      { id:3, cat:'교환·반품', question:'교환이나 반품은 어떻게 신청하나요?',    answer:'수령 후 7일 이내 마이페이지 > 주문 내역에서 교환/반품 신청이 가능합니다. 단, 사용된 상품은 반품이 불가합니다.', active:true },
+      { id:4, cat:'주문·결제', question:'무통장 입금 후 주문 확인은 어디서 하나요?', answer:'마이페이지 > 주문 내역에서 확인하실 수 있습니다. 입금 확인 후 배송이 시작되며, 영업일 기준 1~2시간 내 처리됩니다.', active:true },
+      { id:5, cat:'회원',     question:'포인트는 어떻게 적립되나요?',             answer:'구매 금액의 1%가 자동으로 적립됩니다. 적립된 포인트는 마이페이지에서 확인하실 수 있으며, 결제 시 현금처럼 사용 가능합니다.', active:true },
+      { id:6, cat:'상품',     question:'타이어 사이즈는 어떻게 확인하나요??',    answer:'차량 운전석 도어 스티커 또는 현재 장착된 타이어 옆면에서 확인하실 수 있습니다. 예) 205/55R16 91V', active:true },
+      { id:7, cat:'배송',     question:'배송 추적은 어디서 할 수 있나요?',       answer:'마이페이지 > 주문 내역에서 운송장 번호를 확인 후 택배사 홈페이지에서 조회하실 수 있습니다.', active:true },
+      { id:8, cat:'교환·반품', question:'타이어 장착 후 반품이 가능한가요?',     answer:'장착 후에는 반품이 불가능합니다. 상품 수령 후 미장착 상태에서 7일 이내에만 반품 가능합니다.', active:true },
+    ];
+    TTStore.set('tt_faqs', allFaqs);
+  }
+
+  buildFaqCats();
+  renderFaqs();
+}
+
+function buildFaqCats() {
+  const cats = ['전체', ...new Set(allFaqs.filter(f => f.active).map(f => f.cat))];
+  document.getElementById('faqCatBar').innerHTML = cats.map(c =>
+    `<button class="faq-cat-chip ${c==='전체'?'active':''}"
+             onclick="setFaqCat('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function setFaqCat(cat, el) {
+  currentFaqCat = cat === '전체' ? '' : cat;
+  document.querySelectorAll('.faq-cat-chip').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderFaqs();
+}
+
+function renderFaqs() {
+  const q    = document.getElementById('faqSearchInput')?.value.trim().toLowerCase() || '';
+  let list   = allFaqs.filter(f => f.active);
+  if (currentFaqCat) list = list.filter(f => f.cat === currentFaqCat);
+  if (q) list = list.filter(f =>
+    f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q)
+  );
+
+  const el = document.getElementById('faqList');
+  if (!list.length) {
+    el.innerHTML = `<div class="faq-empty"><div class="faq-empty-icon">🔍</div><p>검색 결과가 없습니다.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(f => `
+    <div class="faq-item" id="faq_${f.id}">
+      <div class="faq-q" onclick="toggleFaq(${f.id})">
+        <div class="faq-q-icon">Q</div>
+        <div class="faq-q-text">${highlight(f.question, q)}</div>
+        <span class="faq-q-cat">${f.cat}</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        <p style="padding-top:14px;">${highlight(f.answer, q)}</p>
+        <div class="faq-helpful">
+          도움이 됐나요?
+          <button class="faq-helpful-btn" onclick="faqHelpful(${f.id},true)">👍 도움돼요</button>
+          <button class="faq-helpful-btn" onclick="faqHelpful(${f.id},false)">👎 아니요</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function highlight(text, q) {
+  if (!q) return text;
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(re, '<mark style="background:#fff3cd;border-radius:2px;">$1</mark>');
+}
+
+function toggleFaq(id) {
+  const el = document.getElementById('faq_' + id);
+  if (!el) return;
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(f => f.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+
+function faqHelpful(id, helpful) {
+  showToast('피드백', helpful ? '피드백 감사합니다! 😊' : '더 나은 답변을 준비할게요.', 'info');
+}
+
+function heroSearch() {
+  const q = document.getElementById('csHeroSearch').value.trim();
+  if (!q) return;
+  document.getElementById('faqSearchInput').value = q;
+  switchCsTab(document.getElementById('tabBtnFaq'), 'tab-faq');
+  renderFaqs();
+  document.querySelector('.cs-wrap').scrollIntoView({ behavior:'smooth' });
+}
+
+function jumpToFaq(cat) {
+  document.getElementById('csHeroSearch').value = '';
+  document.getElementById('faqSearchInput').value = '';
+  switchCsTab(document.getElementById('tabBtnFaq'), 'tab-faq');
+  const chips = document.querySelectorAll('.faq-cat-chip');
+  chips.forEach(c => {
+    if (c.textContent === cat) { setFaqCat(cat, c); c.scrollIntoView({ behavior:'smooth', block:'nearest' }); }
+  });
+  document.querySelector('.cs-wrap').scrollIntoView({ behavior:'smooth' });
+}
+
+// ───────────────────────────────────────────
+// 공지사항
+// ───────────────────────────────────────────
+function loadNotices() {
+  allNotices = TTStore.get('tt_notices') || [];
+
+  if (!allNotices.length) {
+    allNotices = [
+      { id:1, cat:'서비스', title:'TIRETOP 서비스 오픈 안내', body:'안녕하세요, TIRETOP 입니다.\n\n드디어 저희 서비스가 정식 오픈하였습니다.\n더 좋은 서비스로 보답하겠습니다.', date:'2025-01-01', pinned:true, active:true },
+      { id:2, cat:'배송',   title:'설 연휴 배송 안내',        body:'설 연휴 기간 동안 배송이 지연될 수 있습니다.\n1월 28일 ~ 2월 2일 주문 건은 2월 3일부터 순차 발송됩니다.', date:'2025-01-20', pinned:false, active:true },
+      { id:3, cat:'시스템', title:'시스템 점검 안내',          body:'2025년 2월 1일 새벽 2시 ~ 4시 시스템 점검이 예정되어 있습니다.\n이용에 불편을 드려 죄송합니다.', date:'2025-01-25', pinned:false, active:true },
+    ];
+    TTStore.set('tt_notices', allNotices);
+  }
+
+  buildNoticeCats();
+  renderNotices('');
+}
+
+function buildNoticeCats() {
+  const cats = ['전체', ...new Set(allNotices.filter(n => n.active).map(n => n.cat))];
+  document.getElementById('noticeFilterBar').innerHTML = cats.map((c,i) =>
+    `<button class="notice-filter-btn ${i===0?'active':''}"
+             onclick="filterNotice('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function filterNotice(cat, el) {
+  document.querySelectorAll('.notice-filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderNotices(cat === '전체' ? '' : cat);
+}
+
+function renderNotices(cat) {
+  let list = allNotices.filter(n => n.active);
+  if (cat) list = list.filter(n => n.cat === cat);
+  list.sort((a,b) => { if(a.pinned && !b.pinned) return -1; if(!a.pinned && b.pinned) return 1; return b.date > a.date ? 1 : -1; });
+
+  const catColors = { 서비스:'#eff6ff;color:#2563eb', 배송:'#f0fdf4;color:#16a34a', 시스템:'#fff7ed;color:#d97706', 이벤트:'#fff5f5;color:#e02020' };
+  const el = document.getElementById('noticeList');
+
+  if (!list.length) {
+    el.innerHTML = `<div class="notice-empty">📭 공지사항이 없습니다.</div>`;
+    return;
+  }
+
+  // 7일 이내 = NEW
+  const weekAgo = new Date(Date.now() - 7*24*60*60*1000).toISOString().slice(0,10);
+
+  el.innerHTML = list.map(n => {
+    const isNew  = n.date >= weekAgo;
+    const bgCol  = catColors[n.cat] || 'var(--surface);color:var(--gray3)';
+    return `
+      <div>
+        <div class="notice-item" onclick="toggleNotice(${n.id})">
+          <div class="notice-pin ${n.pinned?'':'off'}">${n.pinned?'📌':''}</div>
+          <span class="notice-cat-badge" style="background:#${bgCol};">${n.cat}</span>
+          <div class="notice-title">
+            ${n.title}
+            ${isNew?'<span class="new-badge">NEW</span>':''}
+          </div>
+          <div class="notice-date">${n.date}</div>
+        </div>
+        <div class="notice-detail" id="noticeDetail_${n.id}">
+          <div class="notice-detail-body">${(n.body||'').replace(/\n/g,'<br>')}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleNotice(id) {
+  const el = document.getElementById('noticeDetail_' + id);
+  if (!el) return;
+  el.classList.toggle('show');
+}
+
+// ───────────────────────────────────────────
+// 1:1 문의 작성
+// ───────────────────────────────────────────
+function initInquiryForm() {
+  const user = TTStore.getCurrentUser();
+  if (user) {
+    if (document.getElementById('iqName'))  document.getElementById('iqName').value  = user.name  || '';
+    if (document.getElementById('iqPhone')) document.getElementById('iqPhone').value = user.phone || '';
+    if (document.getElementById('iqEmail')) document.getElementById('iqEmail').value = user.email || '';
+  }
+}
+
+function handleFiles(input) {
+  const files = [...input.files];
+  if (uploadedFiles.length + files.length > 3) {
+    showToast('파일 제한', '최대 3개까지 첨부할 수 있습니다.', 'error');
+    return;
+  }
+  uploadedFiles = [...uploadedFiles, ...files].slice(0, 3);
+  renderFileList();
+}
+
+function renderFileList() {
+  document.getElementById('fileList').innerHTML = uploadedFiles.map((f,i) =>
+    `<div class="file-item">
+       <span>📎</span>
+       <span>${f.name}</span>
+       <button class="file-remove" onclick="removeFile(${i})">×</button>
+     </div>`
+  ).join('');
+}
+
+function removeFile(i) {
+  uploadedFiles.splice(i, 1);
+  renderFileList();
+}
+
+function submitInquiry() {
+  const type  = document.getElementById('iqType').value;
+  const title = document.getElementById('iqTitle').value.trim();
+  const body  = document.getElementById('iqBody').value.trim();
+  const name  = document.getElementById('iqName').value.trim();
+  const phone = document.getElementById('iqPhone').value.trim();
+  const email = document.getElementById('iqEmail').value.trim();
+  const agree = document.getElementById('iqAgree').checked;
+
+  if (!type)          { showToast('입력 오류','문의 유형을 선택해 주세요.','error'); return; }
+  if (!title)         { showToast('입력 오류','제목을 입력해 주세요.','error'); return; }
+  if (body.length<10) { showToast('입력 오류','내용을 10자 이상 입력해 주세요.','error'); return; }
+  if (!agree)         { showToast('동의 필요','개인정보 수집에 동의해 주세요.','error'); return; }
+
+  const user    = TTStore.getCurrentUser();
+  const btn     = document.getElementById('iqSubmitBtn');
+  btn.disabled  = true;
+  btn.textContent = '접수 중...';
+
+  setTimeout(() => {
+    const newInq = {
+      id        : Date.now(),
+      userId    : user?.id || null,
+      customer  : name || user?.name || '비회원',
+      phone     : phone || '',
+      email     : email || '',
+      cat       : type,
+      title,
+      messages  : [{ from:'user', text:body, time: new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) }],
+      orderNum  : document.getElementById('iqOrderNum').value.trim(),
+      files     : uploadedFiles.map(f => f.name),
+      date      : new Date().toISOString().slice(0,10),
+      status    : 'waiting',
+      reply     : null,
+    };
+
+    TTStore.push('tt_inquiries', newInq);
+
+    // 폼 초기화
+    ['iqType','iqTitle','iqBody','iqOrderNum'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('iqBodyLen').textContent = '0';
+    document.getElementById('iqAgree').checked = false;
+    uploadedFiles = [];
+    renderFileList();
+
+    btn.disabled   = false;
+    btn.textContent = '✉️ 문의 접수하기';
+
+    showToast('문의 접수 완료', '문의가 접수되었습니다. 평균 2시간 내 답변 드리겠습니다. 📧', 'success');
+    switchCsTab(document.getElementById('tabBtnMyInquiry'), 'tab-my-inquiry');
+  }, 800);
+}
+
+// ───────────────────────────────────────────
+// 내 문의 내역
+// ───────────────────────────────────────────
+function renderMyInquiries() {
+  const el   = document.getElementById('myInquiryList');
+  const user = TTStore.getCurrentUser();
+
+  if (!TTStore.isLoggedIn()) {
+    el.innerHTML = `
+      <div class="my-inq-empty">
+        <p style="font-size:32px;margin-bottom:12px;">🔒</p>
+        <p style="font-size:16px;font-weight:700;margin-bottom:8px;">로그인이 필요합니다</p>
+        <p style="font-size:14px;color:var(--gray3);margin-bottom:20px;">로그인 후 문의 내역을 확인하세요.</p>
+        <button class="cs-contact-btn" onclick="location.href='login.html?redirect=cs.html?tab=myInquiry'">로그인하기</button>
+      </div>`;
+    return;
+  }
+
+  const all  = TTStore.get('tt_inquiries') || [];
+  const list = all.filter(q => String(q.userId) === String(user.id))
+                  .sort((a,b) => b.id - a.id);
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="my-inq-empty">
+        <p style="font-size:32px;margin-bottom:12px;">📭</p>
+        <p style="font-size:16px;font-weight:700;margin-bottom:8px;">문의 내역이 없습니다</p>
+        <p style="font-size:14px;color:var(--gray3);margin-bottom:20px;">궁금한 점이 있으시면 1:1 문의를 남겨주세요.</p>
+        <button class="cs-contact-btn" onclick="switchCsTab(document.getElementById('tabBtnInquiry'),'tab-inquiry')">문의하기</button>
+      </div>`;
+    return;
+  }
+
+  const statusLabel = { waiting:'답변 대기', answered:'답변 완료', closed:'처리 완료' };
+  const statusClass = { waiting:'waiting', answered:'answered', closed:'closed' };
+
+  el.innerHTML = list.map(q => {
+    const body    = q.messages?.[0]?.text || '';
+    const reply   = q.reply || (q.messages?.find(m => m.from==='admin')?.text) || null;
+    return `
+      <div class="my-inquiry-card">
+        <div class="my-inq-head">
+          <div>
+            <div style="font-size:12px;color:var(--gray3);margin-bottom:4px;">${q.cat} · ${q.date}</div>
+            <div class="my-inq-title">${q.title}</div>
+          </div>
+          <span class="my-inq-status ${statusClass[q.status]||'waiting'}">${statusLabel[q.status]||'답변 대기'}</span>
+        </div>
+        <div class="my-inq-body">${body}</div>
+        ${reply ? `
+          <div class="my-inq-reply">
+            <strong>💬 TIRETOP 답변</strong>
+            ${reply}
+          </div>` : ''}
+        <div class="my-inq-meta" style="margin-top:10px;">
+          접수번호 #${q.id}
+          ${q.orderNum ? ` · 주문번호 ${q.orderNum}` : ''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ───────────────────────────────────────────
+// AI 챗봇
+// ───────────────────────────────────────────
+<script>
+// ───────────────────────────────────────────
+// 전역 변수
+// ───────────────────────────────────────────
+let allFaqs      = [];
+let allNotices   = [];
+let uploadedFiles= [];
+let currentFaqCat= '';
+let chatHistory  = [];
+let isBotTyping  = false;
+
+// ───────────────────────────────────────────
+// AI 챗봇 응답 데이터
+// ───────────────────────────────────────────
+const BOT_RESPONSES = {
+  '배송'     : '배송은 주문 완료 후 영업일 기준 2~4일 내 도착합니다. 제주·도서 지역은 1~2일 추가 소요됩니다. 배송 추적은 마이페이지 > 주문 내역에서 확인하세요! 📦',
+  '취소'     : '주문 취소는 마이페이지 > 주문 내역 > 주문 상세에서 "주문 취소" 버튼을 클릭하세요. 결제 완료 후 24시간 이내에만 취소 가능합니다.',
+  '반품'     : '반품은 상품 수령 후 7일 이내, 미사용·미장착 상태에서만 가능합니다. 마이페이지 > 주문 내역에서 반품 신청을 해주세요.',
+  '교환'     : '교환은 수령 후 7일 이내 신청 가능합니다. 같은 상품의 사이즈·색상 교환만 가능하며, 마이페이지 > 주문 내역에서 신청하세요.',
+  '포인트'   : '포인트는 구매 금액의 1%가 자동 적립됩니다. 적립된 포인트는 결제 시 1P = 1원으로 사용 가능합니다. 마이페이지에서 확인하세요! 💰',
+  '쿠폰'     : '쿠폰은 이벤트 페이지에서 다운로드하거나 특정 조건 달성 시 자동 지급됩니다. 결제 시 쿠폰 코드를 입력하거나 보유 쿠폰을 선택해 사용하세요.',
+  '회원가입' : '회원가입은 상단 메뉴 또는 로그인 페이지에서 가능합니다. 가입 즉시 500P 포인트와 웰컴 쿠폰을 드립니다! 🎁',
+  '비밀번호' : '비밀번호를 잊으셨다면 로그인 페이지 하단 "비밀번호 찾기"를 이용해 주세요. 등록된 이메일로 재설정 링크를 보내드립니다.',
+  '타이어'   : '타이어 사이즈는 차량 운전석 도어 안쪽 스티커나 현재 타이어 옆면에서 확인하실 수 있습니다. 예) 205/55R16 91V. 사이즈 선택이 어려우시면 상담해 드릴게요! 🛞',
+  '결제'     : '신용카드, 체크카드, 카카오페이, 네이버페이, 토스페이, 무통장 입금, 휴대폰 결제를 지원합니다. 5만원 이상 구매 시 무이자 할부도 가능해요!',
+  '영업시간' : '고객센터 운영 시간은 평일 오전 9시 ~ 오후 6시입니다. 점심시간(12~13시) 제외. 공휴일은 휴무입니다. AI 챗봇은 24시간 이용 가능합니다.',
+  '전화'     : '고객센터 전화번호는 1588-0000 입니다. 평일 오전 9시 ~ 오후 6시 운영합니다.',
+  '설치'     : '타이어 장착은 예약 페이지에서 가까운 매장을 선택해 예약하실 수 있습니다. 전문 기술자가 안전하게 장착해 드립니다. 🔧',
+  '예약'     : '타이어 장착 예약은 상단 메뉴 > 예약에서 가능합니다. 원하는 매장과 날짜, 시간을 선택해 예약하세요!',
+  '적립'     : '포인트는 주문 완료 후 구매 금액의 1%가 적립됩니다. 럭키드로우 이벤트 참여 시 추가 포인트를 받을 수도 있어요! 🎰',
+  '주문'     : '주문 내역은 마이페이지 > 주문 내역에서 확인하실 수 있습니다. 주문 번호로 배송 현황도 조회 가능합니다.',
+  '안녕'     : '안녕하세요! TIRETOP 고객센터 AI입니다. 😊 무엇이든 물어보세요! 배송, 반품, 결제, 포인트 등 도움이 필요하신 내용을 말씀해 주세요.',
+  '감사'     : '감사합니다! 더 궁금한 점이 있으시면 언제든지 질문해 주세요. 항상 최선을 다해 도와드리겠습니다. 😊',
+};
+
+const BOT_QUICK_BTNS = ['배송 문의', '반품·교환', '결제 방법', '포인트 조회', '타이어 사이즈', '장착 예약'];
+
+const BOT_FALLBACK = [
+  '죄송합니다, 정확한 답변을 드리기 어렵네요. 1:1 문의를 남겨주시면 전문 상담원이 빠르게 답변해 드리겠습니다.',
+  '해당 내용은 담당자 확인이 필요합니다. 고객센터(1588-0000)로 전화주시거나 1:1 문의를 이용해 주세요.',
+  '더 정확한 답변을 위해 1:1 문의를 이용해 주시면 2시간 내 답변 드리겠습니다.',
+];
+
+// ───────────────────────────────────────────
+// 챗봇 초기화
+// ───────────────────────────────────────────
+function initChatbot() {
+  chatHistory = [];
+  renderChatQuick();
+  // 인사 메시지
+  setTimeout(() => addBotMsg(
+    '안녕하세요! 👋 TIRETOP 고객센터 AI입니다.\n궁금하신 내용을 입력하거나 아래 빠른 메뉴를 선택해 주세요.'
+  ), 300);
+}
+
+function renderChatQuick() {
+  document.getElementById('chatQuick').innerHTML =
+    BOT_QUICK_BTNS.map(b =>
+      `<button class="chatbot-quick-btn" onclick="quickChat('${b}')">${b}</button>`
+    ).join('');
+}
+
+function quickChat(text) {
+  document.getElementById('chatInput').value = text;
+  sendChat();
+}
+
+// ───────────────────────────────────────────
+// 메시지 전송
+// ───────────────────────────────────────────
+function sendChat() {
+  if (isBotTyping) return;
+  const input = document.getElementById('chatInput');
+  const text  = input.value.trim();
+  if (!text) return;
+  input.value = '';
+
+  addUserMsg(text);
+  chatHistory.push({ role:'user', text });
+
+  // 타이핑 표시
+  isBotTyping = true;
+  showTyping();
+
+  setTimeout(() => {
+    removeTyping();
+    const reply = getBotReply(text);
+    addBotMsg(reply);
+    chatHistory.push({ role:'bot', text:reply });
+    isBotTyping = false;
+  }, 800 + Math.random() * 600);
+}
+
+// ───────────────────────────────────────────
+// 봇 응답 로직
+// ───────────────────────────────────────────
+function getBotReply(text) {
+  const t = text.toLowerCase();
+
+  // 키워드 매칭
+  for (const [key, reply] of Object.entries(BOT_RESPONSES)) {
+    if (t.includes(key.toLowerCase())) return reply;
+  }
+
+  // FAQ에서 검색
+  const matched = allFaqs.filter(f =>
+    f.active && (
+      f.question.toLowerCase().includes(t) ||
+      t.split(' ').some(w => w.length > 1 && f.question.toLowerCase().includes(w))
+    )
+  );
+  if (matched.length) {
+    return `📋 관련 FAQ를 찾았습니다:\n\n**Q. ${matched[0].question}**\n\n${matched[0].answer}`;
+  }
+
+  // 폴백
+  return BOT_FALLBACK[Math.floor(Math.random() * BOT_FALLBACK.length)];
+}
+
+// ───────────────────────────────────────────
+// 채팅 UI 빌드
+// ───────────────────────────────────────────
+function addUserMsg(text) {
+  const time = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  appendChatHTML(`
+    <div class="chat-msg user">
+      <div class="chat-bubble">${escapeHtml(text)}</div>
+      <div class="chat-time" style="text-align:right;">${time}</div>
+    </div>`);
+}
+
+function addBotMsg(text) {
+  const time = new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'});
+  // 줄바꿈 처리 + 볼드 마크다운
+  const formatted = escapeHtml(text)
+    .replace(/\n/g,'<br>')
+    .replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>');
+  appendChatHTML(`
+    <div class="chat-msg bot">
+      <div style="display:flex;align-items:flex-end;gap:8px;">
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🤖</div>
+        <div>
+          <div class="chat-bubble">${formatted}</div>
+          <div class="chat-time">${time}</div>
+        </div>
+      </div>
+    </div>`);
+}
+
+function showTyping() {
+  appendChatHTML(`
+    <div class="chat-msg bot" id="chatTyping">
+      <div style="display:flex;align-items:flex-end;gap:8px;">
+        <div style="width:32px;height:32px;background:linear-gradient(135deg,var(--primary),var(--accent));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;">🤖</div>
+        <div class="chat-bubble">
+          <div class="chat-typing">
+            <div class="chat-dot"></div>
+            <div class="chat-dot"></div>
+            <div class="chat-dot"></div>
+          </div>
+        </div>
+      </div>
+    </div>`);
+}
+
+function removeTyping() {
+  document.getElementById('chatTyping')?.remove();
+}
+
+function appendChatHTML(html) {
+  const container = document.getElementById('chatMessages');
+  container.insertAdjacentHTML('beforeend', html);
+  container.scrollTop = container.scrollHeight;
+}
+
+function escapeHtml(str) {
+  return str
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ───────────────────────────────────────────
+// 초기화
+// ───────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  loadFaqs();
+  loadNotices();
+  initInquiryForm();
+  initChatbot();
+  renderMyInquiries();
+
+  // URL 파라미터 처리
+  const params = new URLSearchParams(location.search);
+  const tab    = params.get('tab');
+  if (tab) {
+    const btnMap = {
+      faq        : 'tabBtnFaq',
+      notice     : 'tabBtnNotice',
+      inquiry    : 'tabBtnInquiry',
+      myInquiry  : 'tabBtnMyInquiry',
+      chatbot    : 'tabBtnChatbot',
+    };
+    const tabMap = {
+      faq        : 'tab-faq',
+      notice     : 'tab-notice',
+      inquiry    : 'tab-inquiry',
+      myInquiry  : 'tab-my-inquiry',
+      chatbot    : 'tab-chatbot',
+    };
+    if (btnMap[tab]) switchCsTab(document.getElementById(btnMap[tab]), tabMap[tab]);
+  }
+});
+
+// ───────────────────────────────────────────
+// 탭 전환
+// ───────────────────────────────────────────
+function switchCsTab(btn, tabId) {
+  document.querySelectorAll('.cs-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.cs-tab-pane').forEach(p => p.classList.remove('active'));
+  if (btn) {
+    btn.classList.add('active');
+  } else {
+    const btnMap = {
+      'tab-faq'        : 'tabBtnFaq',
+      'tab-notice'     : 'tabBtnNotice',
+      'tab-inquiry'    : 'tabBtnInquiry',
+      'tab-my-inquiry' : 'tabBtnMyInquiry',
+      'tab-chatbot'    : 'tabBtnChatbot',
+    };
+    const el = document.getElementById(btnMap[tabId]);
+    if (el) el.classList.add('active');
+  }
+  document.getElementById(tabId)?.classList.add('active');
+  if (tabId === 'tab-my-inquiry') renderMyInquiries();
+}
+
+// ───────────────────────────────────────────
+// FAQ 전체
+// ───────────────────────────────────────────
+function loadFaqs() {
+  allFaqs = TTStore.get('tt_faqs') || [];
+  if (!allFaqs.length) {
+    allFaqs = [
+      { id:1, cat:'주문·결제', question:'주문 후 결제 취소는 어떻게 하나요?',         answer:'마이페이지 > 주문 내역에서 "주문 취소" 버튼을 클릭하세요. 결제 후 24시간 이내 가능합니다.', active:true },
+      { id:2, cat:'배송',      question:'배송 기간은 얼마나 걸리나요?',               answer:'영업일 기준 2~4일 내 배송됩니다. 제주·도서 지역은 1~2일 추가 소요됩니다.', active:true },
+      { id:3, cat:'교환·반품', question:'교환이나 반품은 어떻게 신청하나요?',         answer:'수령 후 7일 이내 마이페이지 > 주문 내역에서 신청 가능합니다. 사용된 상품은 불가합니다.', active:true },
+      { id:4, cat:'주문·결제', question:'무통장 입금 후 주문 확인은 어디서 하나요?', answer:'마이페이지 > 주문 내역에서 확인하세요. 영업일 기준 1~2시간 내 처리됩니다.', active:true },
+      { id:5, cat:'회원',      question:'포인트는 어떻게 적립되나요?',                answer:'구매 금액의 1%가 자동 적립됩니다. 결제 시 1P = 1원으로 사용 가능합니다.', active:true },
+      { id:6, cat:'상품',      question:'타이어 사이즈는 어떻게 확인하나요?',         answer:'운전석 도어 스티커 또는 현재 타이어 옆면에서 확인 가능합니다. 예) 205/55R16', active:true },
+      { id:7, cat:'배송',      question:'배송 추적은 어디서 할 수 있나요?',           answer:'마이페이지 > 주문 내역에서 운송장 번호 확인 후 택배사 홈페이지에서 조회하세요.', active:true },
+      { id:8, cat:'교환·반품', question:'타이어 장착 후 반품이 가능한가요?',          answer:'장착 후에는 반품이 불가합니다. 미장착 상태에서만 수령 후 7일 이내 가능합니다.', active:true },
+    ];
+    TTStore.set('tt_faqs', allFaqs);
+  }
+  buildFaqCats();
+  renderFaqs();
+}
+
+function buildFaqCats() {
+  const cats = ['전체', ...new Set(allFaqs.filter(f => f.active).map(f => f.cat))];
+  document.getElementById('faqCatBar').innerHTML = cats.map(c =>
+    `<button class="faq-cat-chip ${c==='전체'?'active':''}"
+             onclick="setFaqCat('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function setFaqCat(cat, el) {
+  currentFaqCat = cat === '전체' ? '' : cat;
+  document.querySelectorAll('.faq-cat-chip').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderFaqs();
+}
+
+function renderFaqs() {
+  const q   = document.getElementById('faqSearchInput')?.value.trim().toLowerCase() || '';
+  let list  = allFaqs.filter(f => f.active);
+  if (currentFaqCat) list = list.filter(f => f.cat === currentFaqCat);
+  if (q) list = list.filter(f =>
+    f.question.toLowerCase().includes(q) || f.answer.toLowerCase().includes(q)
+  );
+  const el = document.getElementById('faqList');
+  if (!list.length) {
+    el.innerHTML = `<div class="faq-empty"><div class="faq-empty-icon">🔍</div><p>검색 결과가 없습니다.</p></div>`;
+    return;
+  }
+  el.innerHTML = list.map(f => `
+    <div class="faq-item" id="faq_${f.id}">
+      <div class="faq-q" onclick="toggleFaq(${f.id})">
+        <div class="faq-q-icon">Q</div>
+        <div class="faq-q-text">${highlight(f.question, q)}</div>
+        <span class="faq-q-cat">${f.cat}</span>
+        <span class="faq-arrow">▼</span>
+      </div>
+      <div class="faq-a">
+        <p style="padding-top:14px;">${highlight(f.answer, q)}</p>
+        <div class="faq-helpful">
+          도움이 됐나요?
+          <button class="faq-helpful-btn" onclick="faqHelpful(${f.id},true)">👍 도움돼요</button>
+          <button class="faq-helpful-btn" onclick="faqHelpful(${f.id},false)">👎 아니요</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function highlight(text, q) {
+  if (!q) return text;
+  const re = new RegExp(`(${q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return text.replace(re,'<mark style="background:#fff3cd;border-radius:2px;">$1</mark>');
+}
+
+function toggleFaq(id) {
+  const el = document.getElementById('faq_' + id);
+  if (!el) return;
+  const isOpen = el.classList.contains('open');
+  document.querySelectorAll('.faq-item.open').forEach(f => f.classList.remove('open'));
+  if (!isOpen) el.classList.add('open');
+}
+
+function faqHelpful(id, helpful) {
+  showToast('피드백', helpful ? '피드백 감사합니다! 😊' : '더 나은 답변을 준비할게요.', 'info');
+}
+
+function heroSearch() {
+  const q = document.getElementById('csHeroSearch').value.trim();
+  if (!q) return;
+  document.getElementById('faqSearchInput').value = q;
+  switchCsTab(document.getElementById('tabBtnFaq'), 'tab-faq');
+  renderFaqs();
+  document.querySelector('.cs-wrap').scrollIntoView({ behavior:'smooth' });
+}
+
+function jumpToFaq(cat) {
+  document.getElementById('csHeroSearch').value   = '';
+  document.getElementById('faqSearchInput').value = '';
+  switchCsTab(document.getElementById('tabBtnFaq'), 'tab-faq');
+  document.querySelectorAll('.faq-cat-chip').forEach(c => {
+    if (c.textContent === cat) {
+      setFaqCat(cat, c);
+      c.scrollIntoView({ behavior:'smooth', block:'nearest' });
+    }
+  });
+  document.querySelector('.cs-wrap').scrollIntoView({ behavior:'smooth' });
+}
+
+// ───────────────────────────────────────────
+// 공지사항 전체
+// ───────────────────────────────────────────
+function loadNotices() {
+  allNotices = TTStore.get('tt_notices') || [];
+  if (!allNotices.length) {
+    allNotices = [
+      { id:1, cat:'서비스', title:'TIRETOP 서비스 정식 오픈 안내', body:'안녕하세요, TIRETOP입니다.\n드디어 정식 오픈하였습니다. 많은 이용 부탁드립니다!', date:'2025-01-01', pinned:true,  active:true },
+      { id:2, cat:'배송',   title:'설 연휴 배송 안내',              body:'설 연휴 기간 배송이 지연될 수 있습니다.\n1월 28일 ~ 2월 2일 주문 건은 2월 3일부터 순차 발송됩니다.', date:'2025-01-20', pinned:false, active:true },
+      { id:3, cat:'시스템', title:'시스템 점검 안내',               body:'2025년 2월 1일 새벽 2시 ~ 4시 시스템 점검이 예정되어 있습니다.\n이용에 불편을 드려 죄송합니다.', date:'2025-01-25', pinned:false, active:true },
+    ];
+    TTStore.set('tt_notices', allNotices);
+  }
+  buildNoticeCats();
+  renderNotices('');
+}
+
+function buildNoticeCats() {
+  const cats = ['전체', ...new Set(allNotices.filter(n => n.active).map(n => n.cat))];
+  document.getElementById('noticeFilterBar').innerHTML = cats.map((c,i) =>
+    `<button class="notice-filter-btn ${i===0?'active':''}"
+             onclick="filterNotice('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function filterNotice(cat, el) {
+  document.querySelectorAll('.notice-filter-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  renderNotices(cat === '전체' ? '' : cat);
+}
+
+function renderNotices(cat) {
+  let list = allNotices.filter(n => n.active);
+  if (cat) list = list.filter(n => n.cat === cat);
+  list.sort((a,b) => {
+    if (a.pinned && !b.pinned) return -1;
+    if (!a.pinned && b.pinned) return 1;
+    return b.date > a.date ? 1 : -1;
+  });
+
+  const el      = document.getElementById('noticeList');
+  const weekAgo = new Date(Date.now()-7*24*60*60*1000).toISOString().slice(0,10);
+  const catBg   = { 서비스:'background:#eff6ff;color:#2563eb', 배송:'background:#f0fdf4;color:#16a34a', 시스템:'background:#fff7ed;color:#d97706', 이벤트:'background:#fff5f5;color:var(--primary)' };
+
+  if (!list.length) {
+    el.innerHTML = `<div class="notice-empty">📭 공지사항이 없습니다.</div>`;
+    return;
+  }
+  el.innerHTML = list.map(n => {
+    const isNew = n.date >= weekAgo;
+    const style = catBg[n.cat] || 'background:var(--surface);color:var(--gray3)';
+    return `
+      <div>
+        <div class="notice-item" onclick="toggleNotice(${n.id})">
+          <div class="notice-pin ${n.pinned?'':'off'}">${n.pinned?'📌':''}</div>
+          <span class="notice-cat-badge" style="${style};">${n.cat}</span>
+          <div class="notice-title">
+            ${n.title}
+            ${isNew?'<span class="new-badge">NEW</span>':''}
+          </div>
+          <div class="notice-date">${n.date}</div>
+        </div>
+        <div class="notice-detail" id="noticeDetail_${n.id}">
+          <div class="notice-detail-body">${(n.body||'').replace(/\n/g,'<br>')}</div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function toggleNotice(id) {
+  const el = document.getElementById('noticeDetail_' + id);
+  if (el) el.classList.toggle('show');
+}
+
+// ───────────────────────────────────────────
+// 1:1 문의 폼
+// ───────────────────────────────────────────
+function initInquiryForm() {
+  const user = TTStore.getCurrentUser();
+  if (!user) return;
+  if (document.getElementById('iqName'))  document.getElementById('iqName').value  = user.name  || '';
+  if (document.getElementById('iqPhone')) document.getElementById('iqPhone').value = user.phone || '';
+  if (document.getElementById('iqEmail')) document.getElementById('iqEmail').value = user.email || '';
+}
+
+function handleFiles(input) {
+  const files = [...input.files];
+  if (uploadedFiles.length + files.length > 3) {
+    showToast('파일 제한','최대 3개까지 첨부 가능합니다.','error');
+    return;
+  }
+  uploadedFiles = [...uploadedFiles, ...files].slice(0,3);
+  renderFileList();
+}
+
+function renderFileList() {
+  document.getElementById('fileList').innerHTML = uploadedFiles.map((f,i) =>
+    `<div class="file-item">
+       <span>📎</span><span>${f.name}</span>
+       <button class="file-remove" onclick="removeFile(${i})">×</button>
+     </div>`
+  ).join('');
+}
+
+function removeFile(i) {
+  uploadedFiles.splice(i,1);
+  renderFileList();
+}
+
+function submitInquiry() {
+  const type  = document.getElementById('iqType').value;
+  const title = document.getElementById('iqTitle').value.trim();
+  const body  = document.getElementById('iqBody').value.trim();
+  const name  = document.getElementById('iqName').value.trim();
+  const phone = document.getElementById('iqPhone').value.trim();
+  const email = document.getElementById('iqEmail').value.trim();
+  const agree = document.getElementById('iqAgree').checked;
+
+  if (!type)          { showToast('입력 오류','문의 유형을 선택해 주세요.','error'); return; }
+  if (!title)         { showToast('입력 오류','제목을 입력해 주세요.','error'); return; }
+  if (body.length<10) { showToast('입력 오류','내용을 10자 이상 입력해 주세요.','error'); return; }
+  if (!agree)         { showToast('동의 필요','개인정보 수집에 동의해 주세요.','error'); return; }
+
+  const user = TTStore.getCurrentUser();
+  const btn  = document.getElementById('iqSubmitBtn');
+  btn.disabled    = true;
+  btn.textContent = '접수 중...';
+
+  setTimeout(() => {
+    const newInq = {
+      id       : Date.now(),
+      userId   : user?.id || null,
+      customer : name || user?.name || '비회원',
+      phone    : phone || '',
+      email    : email || '',
+      cat      : type,
+      title,
+      messages : [{ from:'user', text:body, time:new Date().toLocaleTimeString('ko-KR',{hour:'2-digit',minute:'2-digit'}) }],
+      orderNum : document.getElementById('iqOrderNum')?.value.trim() || '',
+      files    : uploadedFiles.map(f => f.name),
+      date     : new Date().toISOString().slice(0,10),
+      status   : 'waiting',
+      reply    : null,
+    };
+
+    TTStore.push('tt_inquiries', newInq);
+
+    // 폼 초기화
+    ['iqType','iqTitle','iqBody','iqOrderNum'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+    document.getElementById('iqBodyLen').textContent = '0';
+    document.getElementById('iqAgree').checked = false;
+    uploadedFiles = [];
+    renderFileList();
+
+    btn.disabled    = false;
+    btn.textContent = '✉️ 문의 접수하기';
+
+    showToast('접수 완료','문의가 접수되었습니다. 평균 2시간 내 답변 드리겠습니다. 📧','success');
+    switchCsTab(document.getElementById('tabBtnMyInquiry'), 'tab-my-inquiry');
+  }, 800);
+}
+
+// ───────────────────────────────────────────
+// 내 문의 내역
+// ───────────────────────────────────────────
+function renderMyInquiries() {
+  const el   = document.getElementById('myInquiryList');
+  if (!TTStore.isLoggedIn()) {
+    el.innerHTML = `
+      <div class="my-inq-empty">
+        <p style="font-size:32px;margin-bottom:12px;">🔒</p>
+        <p style="font-size:16px;font-weight:700;margin-bottom:8px;">로그인이 필요합니다</p>
+        <p style="font-size:14px;color:var(--gray3);margin-bottom:20px;">로그인 후 문의 내역을 확인하세요.</p>
+        <button class="cs-contact-btn" onclick="location.href='login.html?redirect=cs.html?tab=myInquiry'">로그인하기</button>
+      </div>`;
+    return;
+  }
+  const user = TTStore.getCurrentUser();
+  const all  = TTStore.get('tt_inquiries') || [];
+  const list = all.filter(q => String(q.userId) === String(user.id)).sort((a,b) => b.id-a.id);
+
+  if (!list.length) {
+    el.innerHTML = `
+      <div class="my-inq-empty">
+        <p style="font-size:32px;margin-bottom:12px;">📭</p>
+        <p style="font-size:16px;font-weight:700;margin-bottom:8px;">문의 내역이 없습니다</p>
+        <p style="font-size:14px;color:var(--gray3);margin-bottom:20px;">궁금한 점이 있으시면 1:1 문의를 남겨주세요.</p>
+        <button class="cs-contact-btn"
+          onclick="switchCsTab(document.getElementById('tabBtnInquiry'),'tab-inquiry')">문의하기</button>
+      </div>`;
+    return;
+  }
+
+  const statusLabel = { waiting:'답변 대기', answered:'답변 완료', closed:'처리 완료' };
+  const statusClass = { waiting:'waiting',   answered:'answered',  closed:'closed'   };
+
+  el.innerHTML = list.map(q => {
+    const body  = q.messages?.[0]?.text || '';
+    const reply = q.reply || q.messages?.find(m => m.from==='admin')?.text || null;
+    return `
+      <div class="my-inquiry-card">
+        <div class="my-inq-head">
+          <div>
+            <div style="font-size:12px;color:var(--gray3);margin-bottom:4px;">${q.cat} · ${q.date}</div>
+            <div class="my-inq-title">${q.title}</div>
+          </div>
+          <span class="my-inq-status ${statusClass[q.status]||'waiting'}">${statusLabel[q.status]||'답변 대기'}</span>
+        </div>
+        <div class="my-inq-body">${body}</div>
+        ${reply ? `
+          <div class="my-inq-reply">
+            <strong>💬 TIRETOP 답변</strong>
+            ${reply}
+          </div>` : ''}
+        <div class="my-inq-meta" style="margin-top:10px;">
+          접수번호 #${q.id}${q.orderNum?` · 주문번호 ${q.orderNum}`:''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ───────────────────────────────────────────
+// 공통 유틸
+// ───────────────────────────────────────────
+function closeModal(id) {
+  document.getElementById(id)?.classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    document.querySelectorAll('.admin-modal-overlay.open').forEach(m => m.classList.remove('open'));
+});
+
+document.querySelectorAll('.admin-modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => { if (e.target === overlay) overlay.classList.remove('open'); });
+});
+
+// 실시간 동기화
+window.addEventListener('tt_store_update', e => {
+  if (e.detail?.key === 'tt_faqs')      { loadFaqs();    }
+  if (e.detail?.key === 'tt_notices')   { loadNotices(); }
+  if (e.detail?.key === 'tt_inquiries') { renderMyInquiries(); }
+});
+</script>
+</body>
+</html>

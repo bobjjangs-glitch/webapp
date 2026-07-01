@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>재고 관리 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .stock-level-badge {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700;
+    }
+    .stock-level-badge.danger  { background:#fee2e2; color:#991b1b; }
+    .stock-level-badge.warning { background:#fef3c7; color:#92400e; }
+    .stock-level-badge.safe    { background:#d1fae5; color:#065f46; }
+    .stock-level-badge.empty   { background:var(--gray-100); color:var(--gray-600); }
+
+    .stock-progress { display:flex; align-items:center; gap:8px; }
+    .stock-progress .track {
+      flex:1; height:7px; background:var(--border);
+      border-radius:4px; overflow:hidden; min-width:80px;
+    }
+    .stock-progress .fill { height:100%; border-radius:4px; transition:width 0.4s; }
+
+    .adjust-btn {
+      width:28px; height:28px; border-radius:6px;
+      border:1px solid var(--border); background:var(--bg-card);
+      cursor:pointer; font-size:15px; font-weight:700;
+      display:flex; align-items:center; justify-content:center;
+      transition:all 0.15s; color:var(--text-muted);
+    }
+    .adjust-btn:hover { background:var(--surface); }
+    .adjust-btn.plus:hover  { background:#d1fae5; color:#065f46; border-color:#6ee7b7; }
+    .adjust-btn.minus:hover { background:#fee2e2; color:#991b1b; border-color:#fca5a5; }
+
+    .stock-number-input {
+      width:56px; text-align:center;
+      border:1px solid var(--border); border-radius:6px;
+      padding:4px 6px; font-size:13px; font-weight:700;
+      color:var(--text); outline:none; font-family:inherit;
+    }
+    .stock-number-input:focus { border-color:var(--admin-accent); }
+
+    .history-row {
+      display:flex; align-items:center; gap:12px;
+      padding:10px 0; border-bottom:1px solid var(--gray-50);
+      font-size:13px;
+    }
+    .history-row:last-child { border-bottom:none; }
+    .history-type {
+      width:60px; text-align:center; padding:3px 8px;
+      border-radius:20px; font-size:11px; font-weight:700; flex-shrink:0;
+    }
+    .history-type.in  { background:#d1fae5; color:#065f46; }
+    .history-type.out { background:#fee2e2; color:#991b1b; }
+    .history-type.adj { background:#dbeafe; color:#1e40af; }
+
+    .alert-row {
+      display:flex; align-items:center; gap:14px;
+      padding:14px 16px; border-radius:var(--radius); margin-bottom:10px;
+    }
+    .alert-row.danger  { background:#fff5f5; border:1px solid #fecaca; }
+    .alert-row.warning { background:#fffbeb; border:1px solid #fde68a; }
+    .alert-icon { font-size:22px; flex-shrink:0; }
+    .alert-info { flex:1; }
+    .alert-info h4 { font-size:13px; font-weight:700; color:var(--text); }
+    .alert-info p  { font-size:12px; color:var(--text-muted); margin-top:2px; }
+  </style>
+</head>
+<body>
+<div id="adminMain">
+
+  <div class="page-header">
+    <div>
+      <h2>재고 관리</h2>
+      <p>상품별 재고 현황을 조회하고 입출고를 기록합니다.</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline" onclick="openHistoryModal()">📋 입출고 내역</button>
+      <button class="btn btn-primary" onclick="openStockInModal()">📦 입고 등록</button>
+    </div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="stats-grid" id="inventoryStats" style="margin-bottom:24px;"></div>
+
+  <!-- 재고 경고 -->
+  <div id="stockAlerts" style="margin-bottom:20px;"></div>
+
+  <!-- 필터 -->
+  <div class="filter-bar">
+    <input class="filter-search" type="text" id="invSearch"
+           placeholder="🔍 상품명, SKU 검색..." oninput="renderInventory()">
+    <select id="invCatFilter" onchange="renderInventory()">
+      <option value="">전체 카테고리</option>
+      <option value="tire">타이어</option>
+      <option value="oil">엔진오일</option>
+      <option value="battery">배터리</option>
+      <option value="wiper">와이퍼</option>
+      <option value="wash">세차용품</option>
+    </select>
+    <select id="invLevelFilter" onchange="renderInventory()">
+      <option value="">전체 재고 상태</option>
+      <option value="empty">품절</option>
+      <option value="danger">위험</option>
+      <option value="warning">주의</option>
+      <option value="safe">안전</option>
+    </select>
+    <select id="invSort" onchange="renderInventory()">
+      <option value="stock_asc">재고 적은순</option>
+      <option value="stock_desc">재고 많은순</option>
+      <option value="name">상품명순</option>
+      <option value="cat">카테고리순</option>
+    </select>
+    <div class="spacer"></div>
+    <button class="btn btn-outline btn-sm" onclick="exportCsv()">📥 CSV</button>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>상품</th><th>SKU</th><th>카테고리</th>
+            <th>현재 재고</th><th>최소 기준</th><th>재고 현황</th>
+            <th>상태</th><th>최근 입고일</th><th>수량 조정</th><th>관리</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryTbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                padding:14px 18px;border-top:1px solid var(--border);">
+      <span id="invPageInfo" style="font-size:13px;color:var(--text-muted);"></span>
+      <div id="invPageBtns" style="display:flex;gap:4px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 입고 등록 모달 -->
+<div class="admin-modal-overlay" id="stockInModal">
+  <div class="admin-modal">
+    <div class="modal-header">
+      <h3>📦 입고 등록</h3>
+      <button class="modal-close" onclick="closeModal('stockInModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">상품 선택 *</label>
+        <select class="form-control" id="stockInProduct">
+          <option value="">상품을 선택하세요</option>
+        </select>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">입고 수량 *</label>
+          <input class="form-control" type="number" id="stockInQty"
+                 placeholder="0" min="1">
+        </div>
+        <div class="form-group">
+          <label class="form-label">입고 단가 (원)</label>
+          <input class="form-control" type="number" id="stockInPrice"
+                 placeholder="0">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">공급업체</label>
+        <input class="form-control" id="stockInSupplier"
+               placeholder="예: (주)한국타이어물류">
+      </div>
+      <div class="form-group">
+        <label class="form-label">입고 메모</label>
+        <textarea class="form-control" id="stockInMemo" style="min-height:70px;"
+                  placeholder="특이사항, 발주번호 등..."></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">입고일</label>
+        <input class="form-control" type="date" id="stockInDate">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('stockInModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveStockIn()">입고 등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- 입출고 내역 모달 -->
+<div class="admin-modal-overlay" id="historyModal">
+  <div class="admin-modal lg">
+    <div class="modal-header">
+      <h3>📋 입출고 내역</h3>
+      <button class="modal-close" onclick="closeModal('historyModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;">
+        <select class="form-control" id="histProductFilter"
+                style="width:auto;" onchange="renderHistory()">
+          <option value="">전체 상품</option>
+        </select>
+        <select class="form-control" id="histTypeFilter"
+                style="width:auto;" onchange="renderHistory()">
+          <option value="">전체 유형</option>
+          <option value="in">입고</option>
+          <option value="out">출고</option>
+          <option value="adj">조정</option>
+        </select>
+      </div>
+      <div id="historyList"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('historyModal')">닫기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 재고 상세 모달 -->
+<div class="admin-modal-overlay" id="invDetailModal">
+  <div class="admin-modal lg">
+    <div class="modal-header">
+      <h3 id="invDetailTitle">재고 상세</h3>
+      <button class="modal-close" onclick="closeModal('invDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" id="invDetailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('invDetailModal')">닫기</button>
+      <button class="btn btn-primary" onclick="saveMinStock()">기준 재고 저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+/* ══════════════════════════════
+   데이터 – TTStore 연동
+══════════════════════════════ */
+let INVENTORY = [];
+let HISTORY   = [
+  { id:1, productId:1,  type:'in',  qty:30, price:130000, supplier:'(주)금호물류',   memo:'정기 발주',      date:'2025-04-10', manager:'관리자' },
+  { id:2, productId:6,  type:'in',  qty:60, price:55000,  supplier:'Castrol Korea',  memo:'대량 입고',      date:'2025-04-18', manager:'관리자' },
+  { id:3, productId:3,  type:'out', qty:12, price:0,      supplier:'-',              memo:'판매 출고',      date:'2025-04-22', manager:'시스템' },
+  { id:4, productId:9,  type:'in',  qty:10, price:98000,  supplier:'(주)델코',       memo:'긴급 발주',      date:'2025-03-25', manager:'김매니저' },
+  { id:5, productId:9,  type:'out', qty:8,  price:0,      supplier:'-',              memo:'판매 출고',      date:'2025-04-15', manager:'시스템' },
+  { id:6, productId:2,  type:'adj', qty:-2, price:0,      supplier:'-',              memo:'불량 폐기',      date:'2025-04-20', manager:'관리자' },
+  { id:7, productId:11, type:'in',  qty:100,price:28000,  supplier:'(주)보쉬코리아', memo:'계절 입고',      date:'2025-04-20', manager:'관리자' },
+  { id:8, productId:13, type:'in',  qty:200,price:14000,  supplier:'마틴물산',        memo:'대량 입고',      date:'2025-04-22', manager:'관리자' },
+  { id:9, productId:7,  type:'adj', qty:-5, price:0,      supplier:'-',              memo:'재고 실사 조정', date:'2025-04-25', manager:'김매니저' },
+  { id:10,productId:14, type:'out', qty:20, price:0,      supplier:'-',              memo:'판매 출고',      date:'2025-04-28', manager:'시스템' },
+];
+
+let invPage      = 1;
+const INV_PAGE   = 10;
+let editingInvId = null;
+
+const CAT_LABEL   = { tire:'타이어', oil:'엔진오일', battery:'배터리', wiper:'와이퍼', wash:'세차용품' };
+const LEVEL_LABEL = { empty:'품절', danger:'위험', warning:'주의', safe:'안전' };
+const LEVEL_COLOR = { empty:'#6b7280', danger:'#ef4444', warning:'#f59e0b', safe:'#10b981' };
+
+/* ── 재고 레벨 ── */
+function stockLevel(item) {
+  if (item.stock === 0)             return 'empty';
+  if (item.stock < item.minStock)   return 'danger';
+  if (item.stock < item.minStock*2) return 'warning';
+  return 'safe';
+}
+
+/* ── 통계 ── */
+function renderInvStats() {
+  const el = document.getElementById('inventoryStats');
+  if (!el) return;
+  const total    = INVENTORY.length;
+  const empty    = INVENTORY.filter(i => i.stock === 0).length;
+  const danger   = INVENTORY.filter(i => stockLevel(i) === 'danger').length;
+  const warning  = INVENTORY.filter(i => stockLevel(i) === 'warning').length;
+  const totalVal = INVENTORY.reduce((s, i) => s + i.stock * i.price, 0);
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">📦</div><div class="stat-info"><div class="stat-label">전체 SKU</div><div class="stat-value">${total}종</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">🚨</div><div class="stat-info"><div class="stat-label">품절 / 위험</div><div class="stat-value">${empty + danger}종</div><div style="font-size:11px;color:var(--danger);">품절 ${empty} · 위험 ${danger}</div></div></div>
+    <div class="stat-card"><div class="stat-icon orange">⚠️</div><div class="stat-info"><div class="stat-label">주의 필요</div><div class="stat-value">${warning}종</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">💰</div><div class="stat-info"><div class="stat-label">재고 자산 총액</div><div class="stat-value">₩${(totalVal/10000).toFixed(0)}만</div></div></div>`;
+}
+
+/* ── 재고 경고 ── */
+function renderStockAlerts() {
+  const el = document.getElementById('stockAlerts');
+  if (!el) return;
+  const critical = INVENTORY.filter(i => i.stock === 0 || stockLevel(i) === 'danger');
+  const warn     = INVENTORY.filter(i => stockLevel(i) === 'warning');
+  if (!critical.length && !warn.length) { el.innerHTML = ''; return; }
+  let html = '';
+  critical.forEach(i => {
+    html += `
+      <div class="alert-row danger">
+        <span class="alert-icon">🚨</span>
+        <div class="alert-info">
+          <h4>${i.name}</h4>
+          <p>현재 재고 <strong>${i.stock}개</strong> —
+            ${i.stock === 0 ? '품절 상태입니다.' : `최소 기준(${i.minStock}개) 미달입니다.`}
+          </p>
+        </div>
+        <button class="btn btn-sm btn-primary" onclick="quickStockIn(${i.id})">즉시 발주</button>
+      </div>`;
+  });
+  warn.forEach(i => {
+    html += `
+      <div class="alert-row warning">
+        <span class="alert-icon">⚠️</span>
+        <div class="alert-info">
+          <h4>${i.name}</h4>
+          <p>현재 재고 <strong>${i.stock}개</strong> — 기준(${i.minStock}개)의 2배 미만입니다.</p>
+        </div>
+        <button class="btn btn-sm btn-outline" onclick="quickStockIn(${i.id})">발주 검토</button>
+      </div>`;
+  });
+  el.innerHTML = html;
+}
+
+/* ── 필터 ── */
+function getFiltered() {
+  const search = document.getElementById('invSearch').value.toLowerCase();
+  const cat    = document.getElementById('invCatFilter').value;
+  const level  = document.getElementById('invLevelFilter').value;
+  const sort   = document.getElementById('invSort').value;
+  let list = INVENTORY.filter(i => {
+    if (cat   && i.cat !== cat)            return false;
+    if (level && stockLevel(i) !== level)  return false;
+    if (search && !i.name.toLowerCase().includes(search)
+               && !(i.sku||'').toLowerCase().includes(search)) return false;
+    return true;
+  });
+  if (sort === 'stock_asc')  list.sort((a,b) => a.stock - b.stock);
+  if (sort === 'stock_desc') list.sort((a,b) => b.stock - a.stock);
+  if (sort === 'name')       list.sort((a,b) => a.name.localeCompare(b.name));
+  if (sort === 'cat')        list.sort((a,b) => a.cat.localeCompare(b.cat));
+  return list;
+}
+
+/* ── 테이블 렌더 ── */
+function renderInventory() {
+  const filtered = getFiltered();
+  const pages    = Math.ceil(filtered.length / INV_PAGE) || 1;
+  if (invPage > pages) invPage = 1;
+  const slice    = filtered.slice((invPage-1)*INV_PAGE, invPage*INV_PAGE);
+
+  document.getElementById('invPageInfo').textContent =
+    `총 ${filtered.length}종 중 ${Math.min((invPage-1)*INV_PAGE+1, filtered.length)}–${Math.min(invPage*INV_PAGE, filtered.length)}`;
+
+  const tbody = document.getElementById('inventoryTbody');
+  tbody.innerHTML = slice.map(item => {
+    const lv  = stockLevel(item);
+    const pct = item.minStock > 0
+      ? Math.min(Math.round((item.stock / (item.minStock * 3)) * 100), 100) : 100;
+    return `
+      <tr>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:22px;">${item.emoji || '📦'}</span>
+            <div style="font-weight:600;font-size:13px;max-width:180px;
+                        overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+              ${item.name}
+            </div>
+          </div>
+        </td>
+        <td style="font-size:12px;font-family:monospace;color:var(--text-muted);">
+          ${item.sku || '-'}
+        </td>
+        <td><span class="badge badge-gray">${CAT_LABEL[item.cat] || item.cat}</span></td>
+        <td>
+          <span style="font-size:18px;font-weight:800;color:${LEVEL_COLOR[lv]};">
+            ${item.stock}
+          </span>
+          <span style="font-size:11px;color:var(--text-muted);">개</span>
+        </td>
+        <td style="font-size:13px;color:var(--text-muted);">${item.minStock}개</td>
+        <td>
+          <div class="stock-progress">
+            <div class="track">
+              <div class="fill" style="width:${pct}%;background:${LEVEL_COLOR[lv]};"></div>
+            </div>
+            <span style="font-size:11px;color:var(--text-muted);width:28px;">${pct}%</span>
+          </div>
+        </td>
+        <td>
+          <span class="stock-level-badge ${lv}">
+            ${lv==='empty'?'🔴':lv==='danger'?'🟠':lv==='warning'?'🟡':'🟢'}
+            ${LEVEL_LABEL[lv]}
+          </span>
+        </td>
+        <td style="font-size:12px;color:var(--text-muted);">${item.lastIn || '-'}</td>
+        <td>
+          <div style="display:flex;align-items:center;gap:4px;">
+            <button class="adjust-btn minus" onclick="adjustStock(${item.id},-1)">−</button>
+            <input class="stock-number-input" type="number"
+                   id="stockInput${item.id}" value="${item.stock}" min="0"
+                   onchange="directAdjust(${item.id}, this.value)">
+            <button class="adjust-btn plus" onclick="adjustStock(${item.id},1)">＋</button>
+          </div>
+        </td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-xs btn-outline" onclick="openInvDetail(${item.id})">상세</button>
+            <button class="btn btn-xs btn-primary" onclick="quickStockIn(${item.id})">입고</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  /* 페이지 버튼 */
+  const pb = document.getElementById('invPageBtns');
+  pb.innerHTML = '';
+  for (let i = 1; i <= pages; i++) {
+    const btn = document.createElement('button');
+    btn.className   = `btn btn-sm ${i === invPage ? 'btn-primary' : 'btn-outline'}`;
+    btn.textContent = i;
+    btn.onclick     = () => { invPage = i; renderInventory(); };
+    pb.appendChild(btn);
+  }
+}
+
+/* ── 수량 조정 (TTStore 연동) ── */
+function adjustStock(id, delta) {
+  const item = INVENTORY.find(x => x.id === id);
+  if (!item) return;
+  item.stock = Math.max(0, item.stock + delta);
+
+  /* TTStore 저장 */
+  TTStore.adminSaveInventory(item);
+  /* API에서 로드 */
+
+  /* 히스토리 */
+  HISTORY.unshift({
+    id: Date.now(), productId: id, type: 'adj', qty: delta,
+    price: 0, supplier: '-', memo: '직접 조정',
+    date: new Date().toISOString().slice(0,10), manager: '관리자',
+  });
+
+  const inp = document.getElementById('stockInput' + id);
+  if (inp) inp.value = item.stock;
+  renderInvStats();
+  renderStockAlerts();
+  renderInventory();
+  adminToast(`재고가 ${delta > 0 ? '+'+delta : delta}개 조정되었습니다.`, 'info');
+}
+
+function directAdjust(id, newVal) {
+  const item = INVENTORY.find(x => x.id === id);
+  if (!item) return;
+  const val  = Math.max(0, parseInt(newVal) || 0);
+  const diff = val - item.stock;
+  if (diff === 0) return;
+  item.stock = val;
+
+  /* TTStore 저장 */
+  TTStore.adminSaveInventory(item);
+  /* API에서 로드 */
+
+  HISTORY.unshift({
+    id: Date.now(), productId: id, type: 'adj', qty: diff,
+    price: 0, supplier: '-', memo: '직접 입력 조정',
+    date: new Date().toISOString().slice(0,10), manager: '관리자',
+  });
+  renderInvStats();
+  renderStockAlerts();
+  adminToast('재고가 수정되었습니다.', 'info');
+}
+
+/* ── 입고 모달 ── */
+function quickStockIn(id) {
+  const sel = document.getElementById('stockInProduct');
+  if (sel) sel.value = id;
+  document.getElementById('stockInDate').value = new Date().toISOString().slice(0,10);
+  document.getElementById('stockInModal').classList.add('open');
+}
+
+function openStockInModal() {
+  ['stockInQty','stockInPrice','stockInSupplier','stockInMemo'].forEach(f => {
+    const el = document.getElementById(f);
+    if (el) el.value = '';
+  });
+  document.getElementById('stockInProduct').value = '';
+  document.getElementById('stockInDate').value    = new Date().toISOString().slice(0,10);
+  document.getElementById('stockInModal').classList.add('open');
+}
+
+function saveStockIn() {
+  const pid = parseInt(document.getElementById('stockInProduct').value);
+  const qty = parseInt(document.getElementById('stockInQty').value) || 0;
+  if (!pid) { adminToast('상품을 선택하세요.', 'error');           return; }
+  if (qty < 1) { adminToast('입고 수량은 1 이상이어야 합니다.', 'error'); return; }
+
+  const item  = INVENTORY.find(x => x.id === pid);
+  if (!item) return;
+  const today = document.getElementById('stockInDate').value
+                || new Date().toISOString().slice(0,10);
+
+  item.stock  += qty;
+  item.lastIn  = today;
+
+  /* TTStore 저장 (tt_inventory + tt_products 재고 동기화) */
+  TTStore.adminSaveInventory(item);
+  /* API에서 로드 */
+
+  HISTORY.unshift({
+    id: Date.now(), productId: pid, type: 'in', qty,
+    price:    parseInt(document.getElementById('stockInPrice').value)    || 0,
+    supplier: document.getElementById('stockInSupplier').value.trim()    || '-',
+    memo:     document.getElementById('stockInMemo').value.trim(),
+    date: today, manager: '관리자',
+  });
+
+  closeModal('stockInModal');
+  renderInvStats();
+  renderStockAlerts();
+  renderInventory();
+  adminToast(`${item.name} — ${qty}개 입고 완료`, 'success');
+}
+
+/* ── 입출고 내역 모달 ── */
+function openHistoryModal() {
+  renderHistory();
+  document.getElementById('historyModal').classList.add('open');
+}
+
+function renderHistory() {
+  const typeFilter = document.getElementById('histTypeFilter').value;
+  const prodFilter = parseInt(document.getElementById('histProductFilter').value) || 0;
+  const TYPE_LABEL = { in:'입고', out:'출고', adj:'조정' };
+  const list = HISTORY.filter(h => {
+    if (typeFilter && h.type       !== typeFilter) return false;
+    if (prodFilter && h.productId  !== prodFilter) return false;
+    return true;
+  }).slice(0, 50);
+
+  document.getElementById('historyList').innerHTML = list.length
+    ? list.map(h => {
+        const item = INVENTORY.find(x => x.id === h.productId);
+        return `
+          <div class="history-row">
+            <span class="history-type ${h.type}">${TYPE_LABEL[h.type]}</span>
+            <div style="flex:1;">
+              <div style="font-weight:600;">${item ? item.name : '알 수 없음'}</div>
+              <div style="font-size:11px;color:var(--text-muted);">
+                ${h.memo||'-'} · ${h.supplier !== '-' ? h.supplier + ' · ' : ''}${h.manager}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;">
+              <div style="font-weight:700;color:${h.qty>0?'var(--success)':'var(--danger)'};">
+                ${h.qty > 0 ? '+' : ''}${h.qty}개
+              </div>
+              ${h.price > 0
+                ? `<div style="font-size:11px;color:var(--text-muted);">₩${h.price.toLocaleString()}/개</div>`
+                : ''}
+            </div>
+            <div style="width:80px;text-align:right;font-size:12px;color:var(--text-muted);">
+              ${h.date}
+            </div>
+          </div>`;
+      }).join('')
+    : '<p style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">내역이 없습니다.</p>';
+}
+
+/* ── 재고 상세 모달 ── */
+function openInvDetail(id) {
+  const item = INVENTORY.find(x => x.id === id);
+  if (!item) return;
+  editingInvId = id;
+  const lv = stockLevel(item);
+  document.getElementById('invDetailTitle').textContent = item.name + ' — 재고 상세';
+
+  const itemHistory = HISTORY
+    .filter(h => h.productId === id)
+    .sort((a,b) => b.date.localeCompare(a.date))
+    .slice(0, 10);
+  const TYPE_LABEL = { in:'입고', out:'출고', adj:'조정' };
+
+  document.getElementById('invDetailBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;">
+      <div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:20px;">
+          <span style="font-size:44px;">${item.emoji || '📦'}</span>
+          <div>
+            <div style="font-size:16px;font-weight:700;">${item.name}</div>
+            <div style="font-size:12px;color:var(--text-muted);font-family:monospace;">
+              ${item.sku || '-'}
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:12px;font-size:13px;margin-bottom:20px;">
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">카테고리</span>
+            <span class="badge badge-gray">${CAT_LABEL[item.cat] || item.cat}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">현재 재고</span>
+            <strong style="font-size:20px;color:${LEVEL_COLOR[lv]};">${item.stock}개</strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">재고 상태</span>
+            <span class="stock-level-badge ${lv}">${LEVEL_LABEL[lv]}</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">재고 자산가</span>
+            <strong style="color:var(--admin-accent);">
+              ₩${(item.stock * item.price).toLocaleString()}
+            </strong>
+          </div>
+          <div style="display:flex;justify-content:space-between;">
+            <span style="color:var(--text-muted);">최근 입고일</span>
+            <span>${item.lastIn || '-'}</span>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">최소 기준 재고 수정</label>
+          <input class="form-control" type="number"
+                 id="editMinStock" value="${item.minStock}" min="0">
+        </div>
+      </div>
+      <div>
+        <h4 style="font-size:13px;font-weight:700;color:var(--text-muted);
+                   margin-bottom:12px;text-transform:uppercase;">
+          최근 입출고 내역
+        </h4>
+        ${itemHistory.length
+          ? itemHistory.map(h => `
+              <div class="history-row">
+                <span class="history-type ${h.type}">${TYPE_LABEL[h.type]}</span>
+                <div style="flex:1;font-size:12px;">
+                  <div>${h.memo||'-'}</div>
+                  <div style="color:var(--text-muted);">${h.manager}</div>
+                </div>
+                <div style="font-weight:700;
+                            color:${h.qty>0?'var(--success)':'var(--danger)'};">
+                  ${h.qty > 0 ? '+' : ''}${h.qty}
+                </div>
+                <div style="width:72px;text-align:right;
+                            font-size:11px;color:var(--text-muted);">
+                  ${h.date}
+                </div>
+              </div>`).join('')
+          : '<p style="text-align:center;color:var(--text-muted);font-size:13px;padding:20px;">내역이 없습니다.</p>'}
+      </div>
+    </div>`;
+
+  document.getElementById('invDetailModal').classList.add('open');
+}
+
+function saveMinStock() {
+  const item = INVENTORY.find(x => x.id === editingInvId);
+  if (!item) return;
+  item.minStock = parseInt(document.getElementById('editMinStock').value) || 0;
+
+  /* TTStore 저장 */
+  TTStore.adminSaveInventory(item);
+  /* API에서 로드 */
+
+  closeModal('invDetailModal');
+  renderInvStats();
+  renderStockAlerts();
+  renderInventory();
+  adminToast('최소 기준 재고가 저장되었습니다.', 'success');
+}
+
+/* ── CSV 내보내기 ── */
+function exportCsv() {
+  const header = 'SKU,카테고리,상품명,현재재고,최소기준,상태,최근입고일,단가,재고자산';
+  const rows   = getFiltered().map(i =>
+    `${i.sku||''},${CAT_LABEL[i.cat]||i.cat},${i.name},${i.stock},${i.minStock},${LEVEL_LABEL[stockLevel(i)]},${i.lastIn||''},${i.price},${i.stock*i.price}`
+  );
+  const blob = new Blob([header+'\n'+rows.join('\n')], { type:'text/csv;charset=utf-8;' });
+  const a    = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'inventory_' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+}
+
+/* ── 셀렉트 채우기 ── */
+function fillProductSelects() {
+  ['stockInProduct','histProductFilter'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    if (!sel) return;
+    const firstOpt = sel.options[0].outerHTML;
+    sel.innerHTML  = firstOpt;
+    INVENTORY.forEach(i => {
+      const opt      = document.createElement('option');
+      opt.value      = i.id;
+      opt.textContent= i.name;
+      sel.appendChild(opt);
+    });
+  });
+}
+
+/* ── 공통 ── */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+['stockInModal','historyModal','invDetailModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) closeModal(id);
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    ['stockInModal','historyModal','invDetailModal'].forEach(id => closeModal(id));
+});
+
+/* ── TTStore 실시간 반영 ── */
+window.addEventListener('tt_store_update', e => {
+  if (e.detail.key === 'tt_inventory') {
+    /* API에서 로드 */
+    fillProductSelects();
+    renderInvStats();
+    renderStockAlerts();
+    renderInventory();
+  }
+});
+
+/* ── 초기화 ── */
+async function loadInventory() {
+  try {
+    const res = await AdminAPI.getProducts({ limit: 500 });
+    if (res?.success) {
+      INVENTORY = (res.data || []).map(p => ({
+        ...p,
+        salePrice: p.price || 0,
+        minStock:  p.min_stock || 5,
+        location:  p.warehouse || '',
+      }));
+      if (typeof renderInvStats === 'function') renderInvStats();
+      if (typeof renderInventory === 'function') renderInventory();
+    }
+  } catch(e) { console.error('재고 로드 실패', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadInventory();
+});</script>
+</body>
+</html>

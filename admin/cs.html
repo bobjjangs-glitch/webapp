@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>고객센터 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .cs-tab-bar {
+      display: flex; gap: 4px;
+      border-bottom: 2px solid var(--border);
+      margin-bottom: 20px;
+    }
+    .cs-tab-btn {
+      padding: 10px 20px; border: none; background: none; cursor: pointer;
+      font-size: 13px; font-weight: 600; color: var(--text-muted);
+      border-bottom: 2px solid transparent; margin-bottom: -2px;
+      transition: all var(--transition); font-family: inherit;
+      display: flex; align-items: center; gap: 5px;
+    }
+    .cs-tab-btn.active { color: var(--admin-accent); border-bottom-color: var(--admin-accent); }
+    .cs-panel { display: none; }
+    .cs-panel.active { display: block; }
+
+    .inquiry-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin-bottom: 10px;
+      transition: box-shadow var(--transition);
+      box-shadow: var(--shadow);
+    }
+    .inquiry-card:hover { box-shadow: var(--shadow-md); }
+    .inquiry-card.unread { border-left: 3px solid var(--admin-accent); }
+
+    .inquiry-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 10px;
+    }
+
+    .chat-wrap {
+      display: flex; flex-direction: column; gap: 10px;
+      max-height: 300px; overflow-y: auto; padding: 4px 0;
+    }
+    .chat-msg { display: flex; gap: 10px; align-items: flex-start; }
+    .chat-msg.admin { flex-direction: row-reverse; }
+    .chat-bubble {
+      max-width: 70%; padding: 10px 14px; border-radius: 12px;
+      font-size: 13px; line-height: 1.5;
+    }
+    .chat-msg.user  .chat-bubble { background: var(--surface); color: var(--text); border-radius: 4px 12px 12px 12px; }
+    .chat-msg.admin .chat-bubble { background: var(--admin-accent); color: #fff; border-radius: 12px 4px 12px 12px; }
+
+    .faq-item { border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 8px; }
+    .faq-q {
+      padding: 14px 16px; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 600; background: var(--bg-card);
+      transition: background var(--transition);
+    }
+    .faq-q:hover { background: var(--surface); }
+    .faq-a {
+      display: none; padding: 14px 16px;
+      font-size: 13px; color: var(--text-muted);
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      line-height: 1.6;
+    }
+    .faq-item.open .faq-a { display: block; }
+    .faq-item.open .faq-q { color: var(--admin-accent); }
+  </style>
+</head>
+<body>
+<div id="adminMain">
+
+  <div class="page-header">
+    <div><h2>고객센터</h2><p>1:1 문의, FAQ, 공지사항을 관리합니다.</p></div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="stats-grid" id="csStats" style="margin-bottom:24px;"></div>
+
+  <!-- 탭 -->
+  <div class="cs-tab-bar">
+    <button class="cs-tab-btn active" onclick="switchCsTab(this,'inquiry')">
+      1:1 문의
+      <span class="badge badge-danger" id="inquiryBadge" style="min-width:20px;text-align:center;"></span>
+    </button>
+    <button class="cs-tab-btn" onclick="switchCsTab(this,'faq')">FAQ 관리</button>
+    <button class="cs-tab-btn" onclick="switchCsTab(this,'notice')">공지사항</button>
+  </div>
+
+  <!-- 1:1 문의 -->
+  <div class="cs-panel active" id="panel-inquiry">
+    <div class="filter-bar" style="margin-bottom:14px;">
+      <input class="filter-search" type="text" id="inquirySearch"
+             placeholder="🔍 고객명, 제목 검색..." oninput="renderInquiries()">
+      <select id="inquiryStatusFilter" onchange="renderInquiries()">
+        <option value="">전체</option>
+        <option value="waiting">미답변</option>
+        <option value="answered">답변완료</option>
+        <option value="closed">종료</option>
+      </select>
+      <select id="inquiryCatFilter" onchange="renderInquiries()">
+        <option value="">전체 유형</option>
+        <option>주문·결제</option><option>배송·예약</option>
+        <option>상품 문의</option><option>환불·교환</option><option>기타</option>
+      </select>
+      <div class="spacer"></div>
+      <span id="inquiryCountTxt" style="font-size:13px;color:var(--text-muted);"></span>
+    </div>
+    <div id="inquiryList"></div>
+  </div>
+
+  <!-- FAQ 관리 -->
+  <div class="cs-panel" id="panel-faq">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+      <button class="btn btn-primary" onclick="openFaqModal()">➕ FAQ 추가</button>
+    </div>
+    <div id="faqList"></div>
+  </div>
+
+  <!-- 공지사항 -->
+  <div class="cs-panel" id="panel-notice">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:14px;">
+      <button class="btn btn-primary" onclick="openNoticeModal()">➕ 공지 작성</button>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>분류</th><th>제목</th><th>작성일</th>
+              <th>조회수</th><th>상단고정</th><th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="noticeTbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 문의 상세 모달 -->
+<div class="admin-modal-overlay" id="inquiryModal">
+  <div class="admin-modal lg">
+    <div class="modal-header">
+      <h3 id="inquiryModalTitle">문의 상세</h3>
+      <button class="modal-close" onclick="closeModal('inquiryModal')">✕</button>
+    </div>
+    <div class="modal-body" id="inquiryModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('inquiryModal')">닫기</button>
+      <button class="btn btn-primary" onclick="submitAnswer()">답변 등록</button>
+    </div>
+  </div>
+</div>
+
+<!-- FAQ 모달 -->
+<div class="admin-modal-overlay" id="faqModal">
+  <div class="admin-modal">
+    <div class="modal-header">
+      <h3 id="faqModalTitle">FAQ 추가</h3>
+      <button class="modal-close" onclick="closeModal('faqModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">카테고리</label>
+        <select class="form-control" id="faqCat">
+          <option>주문·결제</option><option>배송·예약</option>
+          <option>상품 문의</option><option>환불·교환</option><option>회원</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">질문</label>
+        <input class="form-control" id="faqQ" placeholder="자주 묻는 질문을 입력하세요">
+      </div>
+      <div class="form-group">
+        <label class="form-label">답변</label>
+        <textarea class="form-control" id="faqA" style="min-height:120px;"
+                  placeholder="상세 답변을 입력하세요"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('faqModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveFaq()">저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 공지 모달 -->
+<div class="admin-modal-overlay" id="noticeModal">
+  <div class="admin-modal lg">
+    <div class="modal-header">
+      <h3 id="noticeModalTitle">공지 작성</h3>
+      <button class="modal-close" onclick="closeModal('noticeModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">분류</label>
+          <select class="form-control" id="noticeCat">
+            <option>공지</option><option>이벤트</option>
+            <option>업데이트</option><option>점검</option>
+          </select>
+        </div>
+        <div class="form-group" style="display:flex;align-items:flex-end;">
+          <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+            <input type="checkbox" id="noticePin"> 상단 고정
+          </label>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">제목</label>
+        <input class="form-control" id="noticeTitle" placeholder="공지사항 제목을 입력하세요">
+      </div>
+      <div class="form-group">
+        <label class="form-label">내용</label>
+        <textarea class="form-control" id="noticeContent"
+                  style="min-height:160px;" placeholder="공지 내용을 입력하세요"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('noticeModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveNotice()">게시</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+/* ══════════════════════════════
+   데이터 (문의는 localStorage 없이 로컬 유지 – 실서비스는 API 연동)
+══════════════════════════════ */
+let INQUIRIES = [
+  { id:1, customer:'김민준', cat:'주문·결제', title:'결제 후 주문 확인이 안됩니다.',       date:'2025-04-30', status:'waiting',  messages:[{from:'user',text:'결제를 완료했는데 주문 내역에서 확인이 안됩니다.',time:'10:23'}] },
+  { id:2, customer:'이서연', cat:'상품 문의', title:'Castrol Edge 5W-30 차량 호환 문의', date:'2025-04-29', status:'waiting',  messages:[{from:'user',text:'2023년식 아반떼에 해당 오일이 맞나요?',time:'14:15'}] },
+  { id:3, customer:'박도현', cat:'환불·교환', title:'배터리 설치 후 불량인 것 같습니다.', date:'2025-04-28', status:'answered', messages:[{from:'user',text:'배터리 교체 후 경고등이 들어옵니다.',time:'09:30'},{from:'admin',text:'안녕하세요 고객님, 가까운 매장 방문 시 무상으로 점검해드리겠습니다.',time:'11:20'}] },
+  { id:4, customer:'최지아', cat:'배송·예약', title:'예약 시간 변경이 가능한가요?',        date:'2025-04-27', status:'answered', messages:[{from:'user',text:'내일 10시로 예약했는데 14시로 변경 가능할까요?',time:'16:40'},{from:'admin',text:'네, 가능합니다. 14시로 변경 완료해드렸습니다!',time:'17:05'}] },
+  { id:5, customer:'정수호', cat:'주문·결제', title:'쿠폰 적용이 안됩니다.',              date:'2025-04-26', status:'waiting',  messages:[{from:'user',text:'TIRE10 쿠폰 코드를 입력해도 적용이 안 되네요.',time:'11:00'}] },
+  { id:6, customer:'윤하은', cat:'기타',      title:'회원 탈퇴 방법을 알고 싶습니다.',    date:'2025-04-25', status:'closed',   messages:[{from:'user',text:'회원 탈퇴는 어떻게 하나요?',time:'09:00'},{from:'admin',text:'마이페이지 > 회원정보 수정 > 하단 "회원 탈퇴" 버튼을 이용해주세요.',time:'09:30'}] },
+];
+
+/* TTStore 에서 로드 */
+let FAQS = [];
+let /* API에서 로드 */
+
+let editingInquiryId = null;
+let editingFaqId     = null;
+let editingNoticeId  = null;
+
+const I_STATUS_BADGE = { waiting:'badge-danger', answered:'badge-success', closed:'badge-gray' };
+const I_STATUS_LABEL = { waiting:'미답변', answered:'답변완료', closed:'종료' };
+const N_CAT_BADGE    = { 공지:'badge-info', 이벤트:'badge-success', 업데이트:'badge-warning', 점검:'badge-danger' };
+
+/* ── 통계 ── */
+function renderCsStats() {
+  const el = document.getElementById('csStats');
+  if (!el) return;
+  const waiting  = INQUIRIES.filter(i => i.status === 'waiting').length;
+  const answered = INQUIRIES.filter(i => i.status === 'answered').length;
+  const badgeEl  = document.getElementById('inquiryBadge');
+  if (badgeEl) badgeEl.textContent = waiting || '';
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">💬</div><div class="stat-info"><div class="stat-label">전체 문의</div><div class="stat-value">${INQUIRIES.length}건</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">🔴</div><div class="stat-info"><div class="stat-label">미답변</div><div class="stat-value">${waiting}건</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-label">답변완료</div><div class="stat-value">${answered}건</div></div></div>
+    <div class="stat-card"><div class="stat-icon orange">📋</div><div class="stat-info"><div class="stat-label">FAQ</div><div class="stat-value">${FAQS.length}개</div></div></div>`;
+}
+
+/* ── 탭 전환 ── */
+function switchCsTab(btn, panel) {
+  document.querySelectorAll('.cs-tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.cs-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-' + panel).classList.add('active');
+}
+
+/* ══════════════════════════════
+   1:1 문의
+══════════════════════════════ */
+function getFilteredInquiries() {
+  const search = document.getElementById('inquirySearch').value.toLowerCase();
+  const status = document.getElementById('inquiryStatusFilter').value;
+  const cat    = document.getElementById('inquiryCatFilter').value;
+  return INQUIRIES.filter(i => {
+    if (status && i.status !== status) return false;
+    if (cat    && i.cat    !== cat)    return false;
+    if (search && !i.customer.includes(search) && !i.title.includes(search)) return false;
+    return true;
+  }).sort((a,b) => b.date.localeCompare(a.date));
+}
+
+function renderInquiries() {
+  const filtered = getFilteredInquiries();
+  document.getElementById('inquiryCountTxt').textContent = `총 ${filtered.length}건`;
+  document.getElementById('inquiryList').innerHTML = filtered.map(i => `
+    <div class="inquiry-card ${i.status === 'waiting' ? 'unread' : ''}">
+      <div class="inquiry-header">
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:5px;">
+            <span class="badge badge-gray">${i.cat}</span>
+            <span class="badge ${I_STATUS_BADGE[i.status]}">${I_STATUS_LABEL[i.status]}</span>
+            <span style="font-size:12px;color:var(--text-muted);">${i.date}</span>
+          </div>
+          <div style="font-size:14px;font-weight:700;">${i.title}</div>
+          <div style="font-size:12px;color:var(--text-muted);margin-top:3px;">작성자: ${i.customer}</div>
+        </div>
+        <button class="btn btn-sm ${i.status === 'waiting' ? 'btn-primary' : 'btn-outline'}"
+                onclick="openInquiry(${i.id})" style="flex-shrink:0;">
+          ${i.status === 'waiting' ? '답변하기' : '상세보기'}
+        </button>
+      </div>
+      <p style="font-size:13px;color:var(--text-muted);margin-top:8px;line-height:1.5;">
+        ${i.messages[0].text.slice(0,80)}${i.messages[0].text.length > 80 ? '...' : ''}
+      </p>
+    </div>`).join('');
+}
+
+function openInquiry(id) {
+  const i = INQUIRIES.find(x => x.id === id);
+  if (!i) return;
+  editingInquiryId = id;
+  document.getElementById('inquiryModalTitle').textContent = i.title;
+  document.getElementById('inquiryModalBody').innerHTML = `
+    <div style="margin-bottom:16px;padding:12px 14px;background:var(--surface);border-radius:8px;font-size:12px;color:var(--text-muted);">
+      <span class="badge badge-gray" style="margin-right:6px;">${i.cat}</span>
+      작성자: <strong>${i.customer}</strong> · ${i.date}
+    </div>
+    <div class="chat-wrap" id="chatWrap">
+      ${i.messages.map(m => `
+        <div class="chat-msg ${m.from}">
+          <div>
+            <div class="chat-bubble">${m.text}</div>
+            <div style="font-size:11px;color:var(--text-muted);text-align:${m.from==='admin'?'right':'left'};margin-top:3px;">${m.time}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    ${i.status !== 'closed' ? `
+      <div style="margin-top:14px;border-top:1px solid var(--border);padding-top:14px;">
+        <textarea class="form-control" id="answerInput"
+                  placeholder="답변을 입력하세요..." style="min-height:90px;"></textarea>
+        <div style="display:flex;gap:8px;margin-top:8px;justify-content:flex-end;">
+          <button class="btn btn-outline btn-sm" onclick="closeInquiry(${id})">문의 종료</button>
+        </div>
+      </div>` :
+      '<p style="text-align:center;color:var(--text-muted);font-size:13px;margin-top:16px;">종료된 문의입니다.</p>'}`;
+  document.getElementById('inquiryModal').classList.add('open');
+}
+
+function submitAnswer() {
+  const i   = INQUIRIES.find(x => x.id === editingInquiryId);
+  const inp = document.getElementById('answerInput');
+  if (!i || !inp) return;
+  if (!inp.value.trim()) { adminToast('답변을 입력하세요.', 'error'); return; }
+  const now = new Date();
+  i.messages.push({
+    from: 'admin', text: inp.value.trim(),
+    time: now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0'),
+  });
+  i.status = 'answered';
+  closeModal('inquiryModal');
+  renderCsStats();
+  renderInquiries();
+  adminToast('답변이 등록되었습니다.', 'success');
+}
+
+function closeInquiry(id) {
+  const i = INQUIRIES.find(x => x.id === id);
+  if (!i || !confirm('문의를 종료하시겠습니까?')) return;
+  i.status = 'closed';
+  closeModal('inquiryModal');
+  renderCsStats();
+  renderInquiries();
+  adminToast('문의가 종료되었습니다.', 'info');
+}
+
+/* ══════════════════════════════
+   FAQ – TTStore 연동
+══════════════════════════════ */
+function renderFaqs() {
+  const el = document.getElementById('faqList');
+  if (!el) return;
+  el.innerHTML = FAQS.length ? FAQS.map(f => `
+    <div class="faq-item" id="faq-${f.id}">
+      <div class="faq-q" onclick="toggleFaq(${f.id})">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="badge badge-gray">${f.cat}</span>
+          <span>${f.q}</span>
+        </div>
+        <div style="display:flex;gap:6px;align-items:center;flex-shrink:0;">
+          <button class="btn btn-xs btn-outline"
+                  onclick="event.stopPropagation();openFaqModal(${f.id})">✏️</button>
+          <button class="btn btn-xs btn-danger"
+                  onclick="event.stopPropagation();deleteFaq(${f.id})">🗑️</button>
+          <span>▾</span>
+        </div>
+      </div>
+      <div class="faq-a">${f.a}</div>
+    </div>`).join('')
+    : '<p style="text-align:center;padding:40px;color:var(--text-muted);font-size:13px;">FAQ가 없습니다.</p>';
+}
+
+function toggleFaq(id) {
+  document.getElementById('faq-' + id)?.classList.toggle('open');
+}
+
+function openFaqModal(id = null) {
+  editingFaqId = id;
+  document.getElementById('faqModalTitle').textContent = id ? 'FAQ 수정' : 'FAQ 추가';
+  if (id) {
+    const f = FAQS.find(x => x.id === id);
+    if (!f) return;
+    document.getElementById('faqCat').value = f.cat;
+    document.getElementById('faqQ').value   = f.q;
+    document.getElementById('faqA').value   = f.a;
+  } else {
+    document.getElementById('faqQ').value = '';
+    document.getElementById('faqA').value = '';
+  }
+  document.getElementById('faqModal').classList.add('open');
+}
+
+function saveFaq() {
+  const q = document.getElementById('faqQ').value.trim();
+  const a = document.getElementById('faqA').value.trim();
+  if (!q || !a) { adminToast('질문과 답변을 모두 입력하세요.', 'error'); return; }
+  const data = {
+    id:  editingFaqId || Date.now(),
+    cat: document.getElementById('faqCat').value,
+    q, a,
+  };
+  TTStore.adminSaveFaq(data);
+  /* API에서 로드 */
+  adminToast(editingFaqId ? 'FAQ가 수정되었습니다.' : 'FAQ가 추가되었습니다.', 'success');
+  closeModal('faqModal');
+  renderFaqs();
+  renderCsStats();
+}
+
+function deleteFaq(id) {
+  if (!confirm('FAQ를 삭제하시겠습니까?')) return;
+  TTStore.remove('tt_faqs', id);
+  /* API에서 로드 */
+  renderFaqs();
+  renderCsStats();
+  adminToast('FAQ가 삭제되었습니다.', 'info');
+}
+
+/* ══════════════════════════════
+   공지사항 – TTStore 연동
+══════════════════════════════ */
+function renderNotices() {
+  const el = document.getElementById('noticeTbody');
+  if (!el) return;
+  el.innerHTML = NOTICES.length ? NOTICES.map(n => `
+    <tr>
+      <td><span class="badge ${N_CAT_BADGE[n.cat] || 'badge-gray'}">${n.cat}</span></td>
+      <td>
+        ${n.pinned ? '<span style="color:var(--admin-accent);font-weight:700;margin-right:4px;">📌</span>' : ''}
+        <span style="font-weight:${n.pinned ? '700' : '400'};">${n.title}</span>
+      </td>
+      <td style="font-size:12px;color:var(--text-muted);">${n.date}</td>
+      <td style="font-size:12px;">${(n.views || 0).toLocaleString()}</td>
+      <td>
+        <label class="toggle-switch" style="transform:scale(0.85);">
+          <input type="checkbox" ${n.pinned ? 'checked' : ''}
+                 onchange="togglePin(${n.id}, this)">
+          <span class="toggle-slider"></span>
+        </label>
+      </td>
+      <td>
+        <div style="display:flex;gap:4px;">
+          <button class="btn btn-xs btn-outline" onclick="openNoticeModal(${n.id})">✏️</button>
+          <button class="btn btn-xs btn-danger"  onclick="deleteNotice(${n.id})">🗑️</button>
+        </div>
+      </td>
+    </tr>`).join('')
+    : '<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--text-muted);">공지사항이 없습니다.</td></tr>';
+}
+
+function togglePin(id, el) {
+  TTStore.update('tt_notices', id, { pinned: el.checked });
+  /* API에서 로드 */
+  renderNotices();
+}
+
+function openNoticeModal(id = null) {
+  editingNoticeId = id;
+  document.getElementById('noticeModalTitle').textContent = id ? '공지 수정' : '공지 작성';
+  if (id) {
+    const n = NOTICES.find(x => x.id === id);
+    if (!n) return;
+    document.getElementById('noticeCat').value     = n.cat;
+    document.getElementById('noticeTitle').value   = n.title;
+    document.getElementById('noticeContent').value = n.content;
+    document.getElementById('noticePin').checked   = n.pinned;
+  } else {
+    document.getElementById('noticeTitle').value   = '';
+    document.getElementById('noticeContent').value = '';
+    document.getElementById('noticePin').checked   = false;
+  }
+  document.getElementById('noticeModal').classList.add('open');
+}
+
+function saveNotice() {
+  const title = document.getElementById('noticeTitle').value.trim();
+  if (!title) { adminToast('제목을 입력하세요.', 'error'); return; }
+  const data = {
+    id:      editingNoticeId || Date.now(),
+    cat:     document.getElementById('noticeCat').value,
+    title,
+    content: document.getElementById('noticeContent').value,
+    pinned:  document.getElementById('noticePin').checked,
+    date:    new Date().toISOString().slice(0, 10),
+    views:   editingNoticeId
+               ? (NOTICES.find(n => n.id === editingNoticeId)?.views || 0)
+               : 0,
+  };
+  TTStore.adminSaveNotice(data);
+  /* API에서 로드 */
+  adminToast(editingNoticeId ? '공지가 수정되었습니다.' : '공지가 게시되었습니다.', 'success');
+  closeModal('noticeModal');
+  renderNotices();
+}
+
+function deleteNotice(id) {
+  if (!confirm('공지를 삭제하시겠습니까?')) return;
+  TTStore.remove('tt_notices', id);
+  /* API에서 로드 */
+  renderNotices();
+  adminToast('공지가 삭제되었습니다.', 'info');
+}
+
+/* ── 공통 ── */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+['inquiryModal', 'faqModal', 'noticeModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) closeModal(id);
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    ['inquiryModal', 'faqModal', 'noticeModal'].forEach(id => closeModal(id));
+});
+
+/* ── TTStore 실시간 반영 ── */
+window.addEventListener('tt_store_update', e => {
+  const { key } = e.detail;
+  if (key === 'tt_faqs') {
+    /* API에서 로드 */
+    renderFaqs();
+    renderCsStats();
+  }
+  if (key === 'tt_notices') {
+    /* API에서 로드 */
+    renderNotices();
+  }
+});
+
+/* ── 초기 렌더 ── */
+async function loadCS() {
+  try {
+    const [noticeRes, faqRes] = await Promise.all([
+      AdminAPI.getNotices({ limit: 200 }),
+      AdminAPI.getFaqs(),
+    ]);
+    if (noticeRes?.success) NOTICES = noticeRes.data || [];
+    if (faqRes?.success)    FAQS    = faqRes.data || [];
+    if (typeof renderFaqs    === 'function') renderFaqs();
+    if (typeof renderNotices === 'function') renderNotices();
+  } catch(e) { console.error('CS 데이터 로드 실패', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadCS();
+});</script>
+</body>
+</html>

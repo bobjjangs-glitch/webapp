@@ -1,0 +1,128 @@
+<!-- TIRETOP 어드민 헤더 -->
+<aside class="admin-sidebar" id="adminSidebar">
+  <div class="sidebar-logo">
+    <div class="logo-icon">T</div>
+    <div>
+      <span class="logo-text">TIRETOP</span>
+      <span class="logo-sub">관리자 시스템</span>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="nav-section-title">메인</div>
+    <a href="/admin/index.html" class="nav-item" data-menu="dashboard">
+      <span class="nav-icon">📊</span> 대시보드
+    </a>
+
+    <div class="nav-section-title">상품·재고</div>
+    <a href="/admin/products.html" class="nav-item" data-menu="products">
+      <span class="nav-icon">🛞</span> 상품 관리
+    </a>
+    <a href="/admin/inventory.html" class="nav-item" data-menu="inventory">
+      <span class="nav-icon">📦</span> 재고 관리
+    </a>
+
+    <div class="nav-section-title">주문·배송</div>
+    <a href="/admin/orders.html" class="nav-item" data-menu="orders">
+      <span class="nav-icon">🧾</span> 주문 관리
+      <span class="nav-badge" id="badgeOrders">0</span>
+    </a>
+    <a href="/admin/reservations.html" class="nav-item" data-menu="reservations">
+      <span class="nav-icon">📅</span> 예약 관리
+      <span class="nav-badge" id="badgeReservations">0</span>
+    </a>
+
+    <div class="nav-section-title">고객·마케팅</div>
+    <a href="/admin/users.html" class="nav-item" data-menu="users">
+      <span class="nav-icon">👥</span> 회원 관리
+    </a>
+    <a href="/admin/coupons.html" class="nav-item" data-menu="coupons">
+      <span class="nav-icon">🎟️</span> 쿠폰 관리
+    </a>
+    <a href="/admin/events.html" class="nav-item" data-menu="events">
+      <span class="nav-icon">🎉</span> 이벤트 관리
+    </a>
+    <a href="/admin/reviews.html" class="nav-item" data-menu="reviews">
+      <span class="nav-icon">⭐</span> 리뷰 관리
+      <span class="nav-badge" id="badgeReviews">0</span>
+    </a>
+
+    <div class="nav-section-title">운영</div>
+    <a href="/admin/stores.html" class="nav-item" data-menu="stores">
+      <span class="nav-icon">🏪</span> 매장 관리
+    </a>
+    <a href="/admin/cs.html" class="nav-item" data-menu="cs">
+      <span class="nav-icon">💬</span> 고객센터
+      <span class="nav-badge" id="badgeCs">0</span>
+    </a>
+    <a href="/admin/stats.html" class="nav-item" data-menu="stats">
+      <span class="nav-icon">📈</span> 통계·분석
+    </a>
+
+    <div class="nav-section-title">설정</div>
+    <a href="/admin/settings.html" class="nav-item" data-menu="settings">
+      <span class="nav-icon">⚙️</span> 사이트 설정
+    </a>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-admin-info">
+      <div class="avatar" id="adminAvatar">A</div>
+      <div>
+        <div class="admin-name" id="adminName">관리자</div>
+        <div class="admin-role" id="adminRole">슈퍼 어드민</div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- 탑바 -->
+<div class="admin-topbar" id="adminTopbar">
+  <button class="sidebar-toggle-btn" id="sidebarToggle" onclick="adminLoader.toggleSidebar()">☰</button>
+  <div class="topbar-title" id="topbarTitle">대시보드</div>
+
+  <div class="topbar-search">
+    <span>🔍</span>
+    <input type="text" placeholder="통합 검색..." id="adminGlobalSearch"
+           onkeydown="if(event.key==='Enter') adminLoader.globalSearch(this.value)">
+  </div>
+
+  <div class="topbar-actions">
+    <!-- 알림 -->
+    <button class="topbar-icon-btn" onclick="adminLoader.toggleNotify()" title="알림">
+      🔔
+      <span class="badge" id="notifyBadge" style="display:none">0</span>
+    </button>
+
+    <!-- 사이트 바로가기 -->
+    <a href="/index.html" target="_blank" class="topbar-icon-btn" title="사이트 보기">🌐</a>
+
+    <!-- 프로필 드롭다운 -->
+    <div class="profile-dropdown-wrap">
+      <button class="topbar-icon-btn profile-btn" onclick="adminLoader.toggleProfileMenu()">
+        <span id="topbarAvatar">👤</span>
+      </button>
+      <div class="profile-dropdown" id="profileDropdown">
+        <div class="profile-dropdown-header">
+          <strong id="dropdownName">관리자</strong>
+          <span id="dropdownEmail">admin@tiretop.co.kr</span>
+        </div>
+        <a href="/admin/settings.html" class="profile-dropdown-item">⚙️ 계정 설정</a>
+        <a href="/index.html" target="_blank" class="profile-dropdown-item">🌐 사이트 보기</a>
+        <div class="profile-dropdown-divider"></div>
+        <button class="profile-dropdown-item danger" onclick="adminLoader.doLogout()">🚪 로그아웃</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 알림 패널 -->
+  <div class="notify-panel" id="notifyPanel">
+    <div class="notify-panel-header">
+      <strong>알림</strong>
+      <button onclick="adminLoader.markAllRead()">모두 읽음</button>
+    </div>
+    <div class="notify-list" id="notifyList">
+      <!-- JS로 렌더링 -->
+    </div>
+  </div>
+</div>

@@ -1,0 +1,11 @@
+<!-- TIRETOP 어드민 푸터 -->
+<footer class="admin-footer" id="adminFooter">
+  <div class="admin-footer-inner">
+    <span class="footer-copy">© 2025 TIRETOP Admin System. All rights reserved.</span>
+    <div class="footer-links">
+      <a href="/admin/settings.html">설정</a>
+      <a href="/index.html" target="_blank">사이트 보기</a>
+      <span class="footer-version">v1.0.0</span>
+    </div>
+  </div>
+</footer>

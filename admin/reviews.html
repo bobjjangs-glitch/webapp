@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>리뷰 관리 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .review-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 16px 18px;
+      margin-bottom: 10px; box-shadow: var(--shadow);
+      transition: box-shadow var(--transition);
+    }
+    .review-card:hover { box-shadow: var(--shadow-md); }
+    .review-card.hidden-rv { opacity: 0.55; }
+    .review-card.reported  { border-left: 3px solid var(--danger); }
+
+    .star-display { color: #f59e0b; letter-spacing: 1px; font-size: 14px; }
+    .star-display .empty { color: var(--border); }
+
+    .review-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px; margin-bottom: 8px;
+    }
+    .review-meta {
+      display: flex; align-items: center; gap: 8px;
+      flex-wrap: wrap; margin-bottom: 6px;
+    }
+    .review-body {
+      font-size: 13px; line-height: 1.65; color: var(--text);
+    }
+    .reply-box {
+      margin-top: 10px; padding: 10px 14px;
+      background: var(--surface); border-radius: 10px;
+      border-left: 3px solid var(--primary);
+      font-size: 13px; color: var(--text-muted); line-height: 1.55;
+    }
+    .reply-box strong {
+      color: var(--primary); font-size: 12px;
+      display: block; margin-bottom: 3px;
+    }
+
+    .rating-bar-row {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; margin-bottom: 5px;
+    }
+    .rating-bar-row .label {
+      width: 20px; text-align: right; color: var(--text-muted);
+    }
+    .rating-bar-row .track {
+      flex: 1; height: 7px; background: var(--border);
+      border-radius: 4px; overflow: hidden;
+    }
+    .rating-bar-row .fill {
+      height: 100%; background: #f59e0b; border-radius: 4px;
+    }
+    .rating-bar-row .cnt { width: 28px; color: var(--text-muted); }
+  </style>
+</head>
+<body>
+<div id="adminMain">
+
+  <div class="page-header">
+    <div>
+      <h2>리뷰 관리</h2>
+      <p>상품 리뷰를 검토하고 답글을 달거나 숨김 처리합니다.</p>
+    </div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="stats-grid" id="reviewStats" style="margin-bottom:24px;"></div>
+
+  <!-- 2열 레이아웃 -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;">
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">평점 분포</h3>
+      </div>
+      <div style="padding:16px 20px;" id="ratingDist"></div>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <h3 class="card-title">카테고리별 평균 평점</h3>
+      </div>
+      <div style="padding:16px 20px;" id="catRating"></div>
+    </div>
+  </div>
+
+  <!-- 필터 -->
+  <div class="filter-bar">
+    <input class="filter-search" type="text" id="rvSearch"
+           placeholder="🔍 고객명, 상품명 검색..." oninput="renderReviews()">
+    <select id="rvStarFilter" onchange="renderReviews()">
+      <option value="">전체 평점</option>
+      <option value="5">⭐⭐⭐⭐⭐ 5점</option>
+      <option value="4">⭐⭐⭐⭐ 4점</option>
+      <option value="3">⭐⭐⭐ 3점</option>
+      <option value="2">⭐⭐ 2점</option>
+      <option value="1">⭐ 1점</option>
+    </select>
+    <select id="rvCatFilter" onchange="renderReviews()">
+      <option value="">전체 카테고리</option>
+      <option value="tire">타이어</option>
+      <option value="oil">엔진오일</option>
+      <option value="battery">배터리</option>
+      <option value="wiper">와이퍼</option>
+    </select>
+    <select id="rvStatusFilter" onchange="renderReviews()">
+      <option value="">전체 상태</option>
+      <option value="normal">정상</option>
+      <option value="hidden">숨김</option>
+      <option value="reported">신고</option>
+    </select>
+    <select id="rvSort" onchange="renderReviews()">
+      <option value="date_desc">최신순</option>
+      <option value="date_asc">오래된순</option>
+      <option value="star_desc">평점 높은순</option>
+      <option value="star_asc">평점 낮은순</option>
+      <option value="like_desc">좋아요 많은순</option>
+    </select>
+    <div class="spacer"></div>
+    <span id="rvCountTxt" style="font-size:13px;color:var(--text-muted);"></span>
+  </div>
+
+  <!-- 리뷰 목록 -->
+  <div id="reviewList"></div>
+  <div id="rvPageBtns" style="display:flex;gap:4px;margin-top:8px;"></div>
+
+</div>
+
+<!-- 답글 모달 -->
+<div class="admin-modal-overlay" id="replyModal">
+  <div class="admin-modal">
+    <div class="modal-header">
+      <h3 id="replyModalTitle">답글 작성</h3>
+      <button class="modal-close" onclick="closeModal('replyModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="replyPreview"
+           style="padding:12px 14px;background:var(--surface);
+                  border-radius:10px;font-size:13px;color:var(--text-muted);
+                  margin-bottom:14px;line-height:1.5;"></div>
+      <div class="form-group">
+        <label class="form-label">관리자 답글</label>
+        <textarea class="form-control" id="replyInput" style="min-height:110px;"
+                  placeholder="고객에게 보여질 답글을 입력하세요..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('replyModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveReply()">답글 등록</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+/* ══════════════════════════════
+   데이터 – TTStore 연동
+══════════════════════════════ */
+let REVIEWS = [];
+
+/* TTStore 에 기본 리뷰 데이터가 없으면 샘플 삽입 */
+if (!REVIEWS.length) {
+  REVIEWS = [
+    { id:1,  customer:'김민준', product:'금호타이어 XT5 225/55R17',   productId:1,  cat:'tire',    star:5, body:'소음도 줄고 연비도 좋아진 것 같아요. 교체 후 주행이 훨씬 안정적입니다!',           date:'2025-04-28', likes:12, status:'normal',   reply:'' },
+    { id:2,  customer:'이서연', product:'Castrol Edge 5W-30 4L',      productId:6,  cat:'oil',     star:5, body:'정품이 맞는지 걱정했는데 포장도 깔끔하고 엔진이 훨씬 부드러워진 느낌이에요.',     date:'2025-04-27', likes:8,  status:'normal',   reply:'안녕하세요! 정품 카스트롤 엣지를 구매해 주셔서 감사합니다. 앞으로도 잘 부탁드려요 😊' },
+    { id:3,  customer:'박도현', product:'한국타이어 RA33 195/65R15',  productId:2,  cat:'tire',    star:2, body:'설치 후 얼마 안 돼서 이상 소리가 납니다. AS 요청했는데 답변이 늦네요.',           date:'2025-04-26', likes:3,  status:'reported', reply:'' },
+    { id:4,  customer:'최지아', product:'보쉬 에어로트윈 650mm',      productId:11, cat:'wiper',   star:4, body:'닦임력이 좋고 조용해요. 가격 대비 만족합니다.',                                   date:'2025-04-25', likes:5,  status:'normal',   reply:'' },
+    { id:5,  customer:'정수호', product:'피렐리 P-Zero 245/40R19',   productId:5,  cat:'tire',    star:5, body:'고성능 타이어답게 코너링이 정말 탁월합니다. 고속 주행 시 안정성도 최고예요.',      date:'2025-04-24', likes:18, status:'normal',   reply:'' },
+    { id:6,  customer:'윤하은', product:'델코 DIN80 AGM 배터리',     productId:9,  cat:'battery', star:1, body:'설치 3일 만에 방전됐습니다. 불량 제품인 것 같아요. 환불 요청합니다.',             date:'2025-04-23', likes:2,  status:'reported', reply:'안녕하세요 고객님, 불편을 드려 죄송합니다. 즉시 교환 처리해 드리겠습니다.' },
+    { id:7,  customer:'강지훈', product:'넥센 N-FERA SU4 205/55R16', productId:3,  cat:'tire',    star:4, body:'가성비 최고입니다. 국산 타이어인데 퍼포먼스가 상당해요.',                          date:'2025-04-22', likes:9,  status:'normal',   reply:'' },
+    { id:8,  customer:'서예진', product:'Mobil 1 ESP 5W-30 4L',      productId:7,  cat:'oil',     star:3, body:'제품 자체는 좋은데 배송이 좀 늦었어요. 포장은 꼼꼼했습니다.',                     date:'2025-04-21', likes:1,  status:'normal',   reply:'' },
+    { id:9,  customer:'오민석', product:'미쉐린 Primacy 4 225/45R18',productId:4,  cat:'tire',    star:5, body:'미쉐린 특유의 승차감, 역시 최고입니다. 조금 비싸지만 충분히 그 가치가 있어요.',    date:'2025-04-20', likes:22, status:'normal',   reply:'' },
+    { id:10, customer:'조현아', product:'불칸 Q90 80Ah 배터리',      productId:10, cat:'battery', star:4, body:'합리적인 가격에 성능 좋은 배터리! 설치도 수월했습니다.',                           date:'2025-04-19', likes:6,  status:'hidden',   reply:'' },
+  ];
+  TTStore.set('tt_reviews', REVIEWS);
+}
+
+const CAT_LABEL  = { tire:'타이어', oil:'엔진오일', battery:'배터리', wiper:'와이퍼' };
+let rvPage       = 1;
+const RV_PER     = 6;
+let editingRvId  = null;
+
+/* ── 통계 ── */
+function renderReviewStats() {
+  const el = document.getElementById('reviewStats');
+  if (!el) return;
+  const total    = REVIEWS.length;
+  const avgStar  = total
+    ? (REVIEWS.reduce((s,r) => s+r.star, 0) / total).toFixed(1)
+    : 0;
+  const reported = REVIEWS.filter(r => r.status === 'reported').length;
+  const noReply  = REVIEWS.filter(r => !r.reply && r.status === 'normal').length;
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">💬</div><div class="stat-info"><div class="stat-label">전체 리뷰</div><div class="stat-value">${total}건</div></div></div>
+    <div class="stat-card"><div class="stat-icon orange">⭐</div><div class="stat-info"><div class="stat-label">평균 평점</div><div class="stat-value">${avgStar}점</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">🚨</div><div class="stat-info"><div class="stat-label">신고 리뷰</div><div class="stat-value">${reported}건</div></div></div>
+    <div class="stat-card"><div class="stat-icon purple">💭</div><div class="stat-info"><div class="stat-label">미답변</div><div class="stat-value">${noReply}건</div></div></div>`;
+}
+
+/* ── 평점 분포 ── */
+function renderRatingDist() {
+  const el    = document.getElementById('ratingDist');
+  if (!el) return;
+  const total = REVIEWS.length;
+  el.innerHTML = [5,4,3,2,1].map(s => {
+    const cnt = REVIEWS.filter(r => r.star === s).length;
+    const pct = total ? Math.round((cnt/total)*100) : 0;
+    return `
+      <div class="rating-bar-row">
+        <span class="label">${s}★</span>
+        <div class="track">
+          <div class="fill" style="width:${pct}%;"></div>
+        </div>
+        <span class="cnt">${cnt}</span>
+      </div>`;
+  }).join('');
+}
+
+/* ── 카테고리별 평점 ── */
+function renderCatRating() {
+  const el = document.getElementById('catRating');
+  if (!el) return;
+  el.innerHTML = Object.entries(CAT_LABEL).map(([k, label]) => {
+    const catRvs = REVIEWS.filter(r => r.cat === k);
+    const avg    = catRvs.length
+      ? (catRvs.reduce((s,r) => s+r.star, 0) / catRvs.length).toFixed(1)
+      : '-';
+    const stars  = catRvs.length
+      ? '⭐'.repeat(Math.round(parseFloat(avg))) : '';
+    return `
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  padding:9px 0;border-bottom:1px solid var(--border);
+                  font-size:13px;">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="badge badge-gray">${label}</span>
+          <span style="font-size:11px;color:var(--text-muted);">${catRvs.length}건</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px;">
+          <span style="font-size:12px;">${stars}</span>
+          <strong style="color:var(--admin-accent);">${avg}</strong>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+/* ── 별점 HTML ── */
+function starsHtml(n) {
+  return [1,2,3,4,5].map(i =>
+    `<span class="${i<=n?'':'empty'}">★</span>`
+  ).join('');
+}
+
+/* ── 필터 ── */
+function getFilteredReviews() {
+  const q      = document.getElementById('rvSearch').value.toLowerCase();
+  const star   = parseInt(document.getElementById('rvStarFilter').value) || 0;
+  const cat    = document.getElementById('rvCatFilter').value;
+  const status = document.getElementById('rvStatusFilter').value;
+  const sort   = document.getElementById('rvSort').value;
+
+  let list = REVIEWS.filter(r => {
+    if (star   && r.star   !== star)   return false;
+    if (cat    && r.cat    !== cat)    return false;
+    if (status && r.status !== status) return false;
+    if (q && !r.customer.includes(q)
+          && !r.product.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  if (sort === 'date_desc') list.sort((a,b) => b.date.localeCompare(a.date));
+  if (sort === 'date_asc')  list.sort((a,b) => a.date.localeCompare(b.date));
+  if (sort === 'star_desc') list.sort((a,b) => b.star - a.star);
+  if (sort === 'star_asc')  list.sort((a,b) => a.star - b.star);
+  if (sort === 'like_desc') list.sort((a,b) => b.likes - a.likes);
+  return list;
+}
+
+/* ── 리뷰 렌더 ── */
+function renderReviews() {
+  const filtered = getFilteredReviews();
+  const pages    = Math.max(1, Math.ceil(filtered.length / RV_PER));
+  if (rvPage > pages) rvPage = 1;
+  const slice    = filtered.slice((rvPage-1)*RV_PER, rvPage*RV_PER);
+
+  document.getElementById('rvCountTxt').textContent = `총 ${filtered.length}건`;
+
+  document.getElementById('reviewList').innerHTML = slice.map(r => {
+    const statusBadge =
+      r.status === 'hidden'
+        ? '<span class="badge badge-gray">숨김</span>'
+        : r.status === 'reported'
+          ? '<span class="badge badge-danger">🚨 신고</span>'
+          : '';
+    return `
+      <div class="review-card
+           ${r.status==='hidden'   ? 'hidden-rv' : ''}
+           ${r.status==='reported' ? 'reported'  : ''}">
+        <div class="review-header">
+          <div class="review-meta">
+            <strong style="font-size:13px;">${r.customer}</strong>
+            <span class="star-display">${starsHtml(r.star)}</span>
+            <span style="font-size:11px;color:var(--text-muted);">${r.date}</span>
+            <span class="badge badge-gray">${CAT_LABEL[r.cat]||r.cat}</span>
+            <span style="font-size:12px;color:var(--text-muted);">👍 ${r.likes}</span>
+            ${statusBadge}
+          </div>
+          <div style="display:flex;gap:4px;flex-shrink:0;">
+            <button class="btn btn-xs btn-outline"
+                    onclick="openReplyModal(${r.id})">
+              ${r.reply ? '✏️ 답글' : '💬 답글'}
+            </button>
+            <button class="btn btn-xs ${r.status==='hidden'?'btn-primary':'btn-outline'}"
+                    onclick="toggleHide(${r.id})">
+              ${r.status === 'hidden' ? '👁 공개' : '🙈 숨김'}
+            </button>
+            <button class="btn btn-xs btn-danger"
+                    onclick="deleteReview(${r.id})">🗑️</button>
+          </div>
+        </div>
+        <div style="font-size:12px;color:var(--text-muted);margin-bottom:6px;">
+          📦 ${r.product}
+        </div>
+        <div class="review-body">${r.body}</div>
+        ${r.reply ? `
+          <div class="reply-box">
+            <strong>🏪 관리자 답글</strong>
+            ${r.reply}
+          </div>` : ''}
+      </div>`;
+  }).join('')
+  || '<p style="text-align:center;padding:40px;color:var(--text-muted);">리뷰가 없습니다.</p>';
+
+  /* 페이지 버튼 */
+  const pb = document.getElementById('rvPageBtns');
+  pb.innerHTML = '';
+  for (let i = 1; i <= pages; i++) {
+    const btn       = document.createElement('button');
+    btn.className   = `btn btn-sm ${i === rvPage ? 'btn-primary' : 'btn-outline'}`;
+    btn.textContent = i;
+    btn.onclick     = () => { rvPage = i; renderReviews(); };
+    pb.appendChild(btn);
+  }
+}
+
+/* ── 숨김 토글 (TTStore 연동) ── */
+function toggleHide(id) {
+  const r = REVIEWS.find(x => x.id === id);
+  if (!r) return;
+  r.status = r.status === 'hidden' ? 'normal' : 'hidden';
+
+  /* TTStore 저장 */
+  TTStore.adminSaveReview(r);
+  /* API에서 로드 */
+
+  renderReviewStats();
+  renderReviews();
+  adminToast(
+    r.status === 'hidden'
+      ? '리뷰가 숨김 처리되었습니다.'
+      : '리뷰가 공개되었습니다.',
+    'info'
+  );
+}
+
+/* ── 리뷰 삭제 (TTStore 연동) ── */
+function deleteReview(id) {
+  if (!confirm('리뷰를 삭제하시겠습니까?')) return;
+
+  /* TTStore 저장 */
+  TTStore.remove('tt_reviews', id);
+  /* API에서 로드 */
+
+  renderReviewStats();
+  renderRatingDist();
+  renderCatRating();
+  renderReviews();
+  adminToast('리뷰가 삭제되었습니다.', 'info');
+}
+
+/* ── 답글 모달 ── */
+function openReplyModal(id) {
+  editingRvId = id;
+  const r = REVIEWS.find(x => x.id === id);
+  if (!r) return;
+  document.getElementById('replyModalTitle').textContent =
+    r.reply ? '답글 수정' : '답글 작성';
+  document.getElementById('replyPreview').innerHTML = `
+    <strong style="font-size:12px;color:var(--text-muted);">📝 원본 리뷰</strong><br>
+    <span style="font-size:12px;font-weight:700;">${starsHtml(r.star)}</span>
+    &nbsp;${r.customer} · ${r.date}<br><br>${r.body}`;
+  document.getElementById('replyInput').value = r.reply || '';
+  document.getElementById('replyModal').classList.add('open');
+  setTimeout(() => document.getElementById('replyInput').focus(), 100);
+}
+
+/* ── 답글 저장 (TTStore 연동) ── */
+function saveReply() {
+  const text = document.getElementById('replyInput').value.trim();
+  if (!text) { adminToast('답글 내용을 입력하세요.', 'error'); return; }
+  const r = REVIEWS.find(x => x.id === editingRvId);
+  if (!r) return;
+  r.reply = text;
+
+  /* TTStore 저장 */
+  TTStore.adminSaveReview(r);
+  /* API에서 로드 */
+
+  closeModal('replyModal');
+  renderReviews();
+  renderReviewStats();
+  adminToast('답글이 등록되었습니다.', 'success');
+}
+
+/* ── 공통 ── */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.getElementById('replyModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal('replyModal');
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal('replyModal');
+});
+
+/* ── TTStore 실시간 반영 ── */
+window.addEventListener('tt_store_update', e => {
+  if (e.detail.key === 'tt_reviews') {
+    /* API에서 로드 */
+    renderReviewStats();
+    renderRatingDist();
+    renderCatRating();
+    renderReviews();
+  }
+});
+
+/* ── 초기화 ── */
+async function loadReviews() {
+  try {
+    const res = await AdminAPI.getReviews({ limit: 500 });
+    if (res?.success) {
+      REVIEWS = (res.data || []).map(r => ({
+        ...r,
+        user:    r.user_name || r.reviewer_name || '익명',
+        product: r.product_name || '상품',
+        content: r.content || r.comment || '',
+        score:   r.rating || r.score || 5,
+        date:    (r.created_at || '').slice(0,10),
+        status:  r.status || 'active',
+        img:     r.image_url || '',
+      }));
+      if (typeof renderReviewStats === 'function') renderReviewStats();
+      if (typeof renderReviews    === 'function') renderReviews();
+    }
+  } catch(e) { console.error('리뷰 로드 실패', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadReviews();
+});</script>
+</body>
+</html>

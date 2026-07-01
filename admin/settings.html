@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>설정 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .settings-layout{display:grid;grid-template-columns:220px 1fr;gap:20px;align-items:start;}
+    .settings-nav{
+      background:var(--bg-card);border:1px solid var(--border);
+      border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);
+      position:sticky;top:80px;
+    }
+    .settings-nav-title{
+      padding:14px 16px;font-size:11px;font-weight:700;
+      color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;
+      border-bottom:1px solid var(--border);
+    }
+    .settings-nav-btn{
+      width:100%;padding:12px 16px;border:none;background:none;cursor:pointer;
+      font-size:13px;font-weight:500;color:var(--text-muted);text-align:left;
+      display:flex;align-items:center;gap:8px;transition:all var(--transition);
+      font-family:inherit;border-left:3px solid transparent;
+    }
+    .settings-nav-btn:hover{background:var(--surface);color:var(--text);}
+    .settings-nav-btn.active{background:rgba(99,102,241,.06);color:var(--primary);border-left-color:var(--primary);font-weight:700;}
+    .settings-panel{display:none;}
+    .settings-panel.active{display:flex;flex-direction:column;gap:20px;}
+    .settings-section{background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);}
+    .settings-section-header{
+      padding:16px 20px;border-bottom:1px solid var(--border);
+      display:flex;align-items:center;justify-content:space-between;
+    }
+    .settings-section-header h3{font-size:14px;font-weight:800;display:flex;align-items:center;gap:8px;}
+    .settings-section-body{padding:20px;}
+    .setting-row{
+      display:flex;align-items:center;justify-content:space-between;
+      gap:16px;padding:13px 0;border-bottom:1px solid var(--gray-50);
+    }
+    .setting-row:last-child{border-bottom:none;}
+    .setting-row-info{flex:1;}
+    .setting-row-info h4{font-size:13px;font-weight:600;color:var(--text);}
+    .setting-row-info p{font-size:12px;color:var(--text-muted);margin-top:2px;}
+    .save-notice{
+      display:flex;align-items:center;gap:8px;padding:12px 16px;
+      border-radius:10px;background:rgba(99,102,241,.07);
+      border:1px solid rgba(99,102,241,.2);font-size:13px;color:var(--primary);
+    }
+    @media(max-width:768px){.settings-layout{grid-template-columns:1fr;}}
+  </style>
+</head>
+<body>
+<div id="adminMain">
+
+  <div class="page-header">
+    <div><h2>설정</h2><p>사이트 전반 설정을 관리합니다.</p></div>
+    <button class="btn btn-primary" onclick="saveAllSettings()">💾 전체 저장</button>
+  </div>
+
+  <div class="save-notice" style="margin-bottom:20px;">
+    ℹ️ 변경사항은 "전체 저장" 또는 각 섹션 저장 버튼을 누르면 메인 페이지에 즉시 반영됩니다.
+  </div>
+
+  <div class="settings-layout">
+    <div class="settings-nav">
+      <div class="settings-nav-title">설정 메뉴</div>
+      <button class="settings-nav-btn active" onclick="switchPanel(this,'general')">🏪 기본 정보</button>
+      <button class="settings-nav-btn" onclick="switchPanel(this,'display')">🎨 디스플레이</button>
+      <button class="settings-nav-btn" onclick="switchPanel(this,'shop')">🛒 쇼핑몰</button>
+      <button class="settings-nav-btn" onclick="switchPanel(this,'notification')">🔔 알림</button>
+      <button class="settings-nav-btn" onclick="switchPanel(this,'delivery')">🚚 배송</button>
+      <button class="settings-nav-btn" onclick="switchPanel(this,'payment')">💳 결제</button>
+      <button class="settings-nav-btn" onclick="switchPanel(this,'security')">🔒 보안</button>
+      <button class="settings-nav-btn" onclick="switchPanel(this,'admin')">👤 관리자</button>
+    </div>
+
+    <div>
+      <!-- ① 기본 정보 -->
+      <div class="settings-panel active" id="panel-general">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🏪 사이트 기본 정보</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="form-group"><label class="form-label">사이트명</label><input class="form-control" id="siteName" value="TIRETOP"></div>
+            <div class="form-group"><label class="form-label">슬로건</label><input class="form-control" id="siteSlogan" value="대한민국 1등 타이어 전문점"></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">대표 전화</label><input class="form-control" id="sitePhone" value="1588-0000"></div>
+              <div class="form-group"><label class="form-label">대표 이메일</label><input class="form-control" id="siteEmail" value="support@tiretop.kr"></div>
+            </div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">사업자등록번호</label><input class="form-control" id="siteBizNo" value="123-45-67890"></div>
+              <div class="form-group"><label class="form-label">대표자명</label><input class="form-control" id="siteCeo" value="홍길동"></div>
+            </div>
+            <div class="form-group"><label class="form-label">주소</label><input class="form-control" id="siteAddr" value="서울 강남구 테헤란로 123 타이어탑빌딩"></div>
+            <div class="form-group"><label class="form-label">저작권 문구</label><input class="form-control" id="siteCopyright" value="© 2025 TIRETOP. All rights reserved."></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ② 디스플레이 -->
+      <div class="settings-panel" id="panel-display">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🎨 브랜드 컬러</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>메인 컬러</h4><p>버튼, 강조 텍스트 등에 사용</p></div>
+              <input type="color" id="colorPrimary" value="#e31e24"
+                     style="width:44px;height:36px;border:none;padding:0;cursor:pointer;border-radius:6px;">
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🖼️ 메인 페이지 설정</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>히어로 슬라이더 표시</h4><p>메인 상단 배너 슬라이드 노출</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="showHero" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>이벤트 배너 표시</h4><p>메인 이벤트 섹션 표시</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="showEventBanner" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>메인 상품 노출 수</h4><p>메인 페이지에 보여줄 상품 수</p></div>
+              <select class="form-control" id="mainProductCount" style="width:90px;padding:7px 10px;">
+                <option value="4">4개</option><option value="6">6개</option>
+                <option value="8" selected>8개</option><option value="12">12개</option>
+              </select>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>리뷰 섹션 표시</h4><p>메인 고객 리뷰 섹션 노출</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="showReviewSection" checked><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ③ 쇼핑몰 -->
+      <div class="settings-panel" id="panel-shop">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🛒 주문 설정</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>쿠폰 사용 허용</h4><p>결제 시 쿠폰 할인 적용 허용</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="allowCoupon" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>재고 없는 상품 주문</h4><p>품절 상품도 주문 허용 (예약 판매)</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="allowOutOfStock"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-group" style="margin-top:14px;">
+              <label class="form-label">최소 주문금액 (원)</label>
+              <input class="form-control" type="number" id="minOrderAmt" value="10000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">주문 취소 가능 시간 (시간)</label>
+              <input class="form-control" type="number" id="cancelHours" value="24">
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🎟️ 포인트 설정</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>포인트 적립 활성화</h4><p>구매 시 포인트 자동 적립</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="enablePoint" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-group" style="margin-top:14px;">
+              <label class="form-label">기본 적립률 (%)</label>
+              <input class="form-control" type="number" id="pointRate" value="1" min="0" max="100">
+            </div>
+            <div class="form-group">
+              <label class="form-label">최소 사용 포인트</label>
+              <input class="form-control" type="number" id="minPointUse" value="1000">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ④ 알림 -->
+      <div class="settings-panel" id="panel-notification">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🔔 관리자 알림</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>신규 주문 알림</h4><p>새 주문 접수 시 알림</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="notiNewOrder" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>재고 부족 알림</h4><p>최소 기준 재고 이하 시 알림</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="notiLowStock" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>미답변 문의 알림</h4><p>24시간 이상 미답변 시 알림</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="notiUnanswered" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>신고 리뷰 알림</h4><p>리뷰 신고 접수 시 즉시 알림</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="notiReported" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-group" style="margin-top:14px;">
+              <label class="form-label">알림 수신 이메일</label>
+              <input class="form-control" id="notiEmail" value="admin@tiretop.kr">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑤ 배송 -->
+      <div class="settings-panel" id="panel-delivery">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🚚 배송 정책</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>무료배송 제공</h4><p>기준금액 이상 구매 시 무료배송</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="freeDelivery" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="form-group" style="margin-top:14px;">
+              <label class="form-label">무료배송 기준금액 (원)</label>
+              <input class="form-control" type="number" id="freeDeliveryAmt" value="50000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">기본 배송비 (원)</label>
+              <input class="form-control" type="number" id="baseDeliveryFee" value="3000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">제주/도서산간 추가 배송비 (원)</label>
+              <input class="form-control" type="number" id="islandFee" value="5000">
+            </div>
+            <div class="form-group">
+              <label class="form-label">평균 배송 소요일</label>
+              <input class="form-control" id="deliveryDays" value="2~3 영업일">
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑥ 결제 -->
+      <div class="settings-panel" id="panel-payment">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>💳 결제 수단</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row"><div class="setting-row-info"><h4>신용카드 / 체크카드</h4></div><label class="toggle-switch"><input type="checkbox" id="payCard" checked><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-row-info"><h4>카카오페이</h4></div><label class="toggle-switch"><input type="checkbox" id="payKakao" checked><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-row-info"><h4>네이버페이</h4></div><label class="toggle-switch"><input type="checkbox" id="payNaver" checked><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-row-info"><h4>토스페이</h4></div><label class="toggle-switch"><input type="checkbox" id="payToss" checked><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-row-info"><h4>삼성페이</h4></div><label class="toggle-switch"><input type="checkbox" id="paySamsung" checked><span class="toggle-slider"></span></label></div>
+            <div class="setting-row"><div class="setting-row-info"><h4>무통장 입금</h4></div><label class="toggle-switch"><input type="checkbox" id="payBank"><span class="toggle-slider"></span></label></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑦ 보안 -->
+      <div class="settings-panel" id="panel-security">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>🔒 보안 정책</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>2단계 인증 (2FA)</h4><p>관리자 로그인 시 OTP 필수</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="enable2fa"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>로그인 시도 제한</h4><p>5회 실패 시 10분 계정 잠금</p></div>
+              <label class="toggle-switch"><input type="checkbox" id="loginLimit" checked><span class="toggle-slider"></span></label>
+            </div>
+            <div class="setting-row">
+              <div class="setting-row-info"><h4>세션 자동 만료</h4><p>미활동 시 자동 로그아웃</p></div>
+              <select class="form-control" id="sessionTimeout" style="width:100px;padding:7px 10px;">
+                <option value="30">30분</option><option value="60" selected>60분</option>
+                <option value="120">2시간</option><option value="0">사용안함</option>
+              </select>
+            </div>
+            <div class="form-group" style="margin-top:14px;">
+              <label class="form-label">허용 IP 목록 (줄바꿈 구분)</label>
+              <textarea class="form-control" id="allowedIps" style="min-height:80px;font-family:monospace;"
+                        placeholder="192.168.1.0/24&#10;123.456.789.0"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ⑧ 관리자 -->
+      <div class="settings-panel" id="panel-admin">
+        <div class="settings-section">
+          <div class="settings-section-header">
+            <h3>👤 내 계정 정보</h3>
+            <button class="btn btn-sm btn-primary" onclick="saveAllSettings()">저장</button>
+          </div>
+          <div class="settings-section-body">
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">관리자 이름</label><input class="form-control" id="adminName" value="홍길동"></div>
+              <div class="form-group"><label class="form-label">관리자 이메일</label><input class="form-control" id="adminEmail" value="admin@tiretop.kr"></div>
+            </div>
+            <div class="form-group"><label class="form-label">연락처</label><input class="form-control" id="adminPhone" value="010-1234-5678"></div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <div class="settings-section-header"><h3>🔑 비밀번호 변경</h3></div>
+          <div class="settings-section-body">
+            <div class="form-group"><label class="form-label">현재 비밀번호</label><input class="form-control" type="password" id="currentPw" placeholder="현재 비밀번호"></div>
+            <div class="form-row">
+              <div class="form-group"><label class="form-label">새 비밀번호</label><input class="form-control" type="password" id="newPw" placeholder="8자 이상"></div>
+              <div class="form-group"><label class="form-label">비밀번호 확인</label><input class="form-control" type="password" id="confirmPw" placeholder="재입력"></div>
+            </div>
+            <button class="btn btn-primary" style="margin-top:4px;" onclick="changePw()">비밀번호 변경</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+function switchPanel(btn, panel) {
+  document.querySelectorAll('.settings-nav-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.settings-panel').forEach(p=>p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('panel-'+panel).classList.add('active');
+}
+
+function saveAllSettings() {
+  const g = (id) => document.getElementById(id);
+  const data = {
+    siteName:         g('siteName')?.value,
+    siteSlogan:       g('siteSlogan')?.value,
+    sitePhone:        g('sitePhone')?.value,
+    siteEmail:        g('siteEmail')?.value,
+    siteBizNo:        g('siteBizNo')?.value,
+    siteAddr:         g('siteAddr')?.value,
+    colorPrimary:     g('colorPrimary')?.value,
+    freeDelivery:     g('freeDelivery')?.checked ?? true,
+    freeDeliveryAmt:  parseInt(g('freeDeliveryAmt')?.value) || 50000,
+    baseDeliveryFee:  parseInt(g('baseDeliveryFee')?.value) || 3000,
+    allowCoupon:      g('allowCoupon')?.checked ?? true,
+    enablePoint:      g('enablePoint')?.checked ?? true,
+    pointRate:        parseInt(g('pointRate')?.value) || 1,
+    showHero:         g('showHero')?.checked ?? true,
+    showEventBanner:  g('showEventBanner')?.checked ?? true,
+    mainProductCount: parseInt(g('mainProductCount')?.value) || 8,
+    showReviewSection:g('showReviewSection')?.checked ?? true,
+  };
+  TTStore.adminSaveSettings(data);
+  adminToast('설정이 저장되었습니다. 메인 페이지에 즉시 반영됩니다.', 'success');
+}
+
+function changePw() {
+  const cur  = document.getElementById('currentPw').value;
+  const nw   = document.getElementById('newPw').value;
+  const conf = document.getElementById('confirmPw').value;
+  if (!cur)         { adminToast('현재 비밀번호를 입력하세요.','error');  return; }
+  if (nw.length<8)  { adminToast('새 비밀번호는 8자 이상이어야 합니다.','error'); return; }
+  if (nw !== conf)  { adminToast('새 비밀번호가 일치하지 않습니다.','error'); return; }
+  ['currentPw','newPw','confirmPw'].forEach(id=>{ document.getElementById(id).value=''; });
+  adminToast('비밀번호가 변경되었습니다.','success');
+}
+
+async function loadSettings() {
+  try {
+    const res = await AdminAPI.getSettings();
+    if (res?.success && res.data) {
+      const s = res.data;
+      // 설정 폼 자동 채우기
+      Object.entries(s).forEach(([key, val]) => {
+        const el = document.getElementById(key) || document.querySelector(`[name="${key}"]`);
+        if (el) {
+          if (el.type === 'checkbox') el.checked = val == 1;
+          else el.value = val || '';
+        }
+      });
+    }
+  } catch(e) { console.error('설정 로드 실패', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadSettings();
+});</script>
+</body>
+</html>

@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>타이어 쇼핑 - TIRETOP</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/common.css">
+<style>
+/* ── loader.js가 주입하는 CSS 변수와 충돌하지 않도록
+      product-list 전용 변수는 .pl-* 접두어로 관리       ── */
+:root {
+  --primary:      #e02020;
+  --primary-dark: #c01010;
+  --dark:         #111827;
+  --gray1:        #374151;
+  --gray2:        #4b5563;
+  --gray3:        #6b7280;
+  --gray4:        #9ca3af;
+  --gray5:        #e5e7eb;
+  --gray6:        #f3f4f6;
+  --gray7:        #f9fafb;
+  --white:        #fff;
+  --accent:       #f59e0b;
+  --shadow-sm:    0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:    0 4px 16px rgba(0,0,0,.10);
+  --radius-sm:    6px;
+  --radius-md:    10px;
+  --radius-lg:    14px;
+  --max-w:        1280px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans KR',sans-serif;background:#f3f4f6 !important;color:#111827 !important;}
+a{text-decoration:none;color:inherit;}
+
+/* loader.js CSS 변수 충돌 방지 — 핵심 색상 직접 명시 */
+.list-header-wrap,
+.brand-tab-bar,
+.filter-sort-bar,
+.page-wrap,
+.side-panel,
+.prod-card,
+.breadcrumb-bar {
+  color: #111827;
+}
+.brand-tab { color: #4b5563; }
+.brand-tab.active { color: #e02020; }
+.filter-chip { color: #4b5563; background: #fff; border-color: #e5e7eb; }
+.filter-chip.active { color: #fff; background: #e02020; border-color: #e02020; }
+.filter-label { color: #9ca3af; }
+.side-title { color: #9ca3af; }
+.side-list li { color: #111827; }
+.side-list li.active { color: #e02020; }
+.prod-card-name { color: #111827; }
+.prod-card-brand { color: #6b7280; }
+.prod-price-main { color: #111827; }
+.product-count { color: #6b7280; }
+.product-count strong { color: #111827; }
+
+/* ── loader.js 헤더가 sticky이므로 list-header-wrap는 top 위치 조정 ── */
+/* loader.js 헤더 높이: 앱배너(38px) + 유틸바(34px) + 메인행(64px) = 136px 기준,
+   실제는 배너가 닫힐 수 있으므로 top:0 유지 (sticky 스크롤 순서로 자연 처리) */
+.list-header-wrap {
+  position: sticky;
+  top: 0;
+  z-index: 800; /* loader 헤더(9000)보다 낮게 — 스크롤 시 헤더 아래로 들어감 */
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+
+/* ── 페이지 타이틀 바 (hidden → 브레드크럼은 filter 아래 breadcrumb-bar로 이동) ── */
+.page-title-bar { display: none; }
+
+/* ── 브레드크럼 바 (필터 아래에 위치) ── */
+.breadcrumb-bar {
+  max-width: var(--max-w); margin: 0 auto;
+  padding: 10px 24px 0;
+  display: flex; align-items: center; gap: 8px;
+}
+.page-breadcrumb {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; color: var(--gray3);
+}
+.page-breadcrumb a { color: var(--gray3); }
+.page-breadcrumb a:hover { color: var(--primary); }
+.page-breadcrumb .sep { color: var(--gray4); }
+.page-breadcrumb .cur { color: var(--gray2); font-weight: 600; }
+.breadcrumb-bar h1 {
+  font-size: 15px; font-weight: 800; color: var(--dark);
+  margin-left: 4px;
+}
+.sep-pipe { color: var(--gray5); margin: 0 6px; font-size: 14px; }
+
+/* ── 브랜드 탭 ── */
+.brand-tab-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--gray5);
+  overflow-x: auto; scrollbar-width: none;
+}
+.brand-tab-bar::-webkit-scrollbar { display: none; }
+.brand-tab-inner {
+  max-width: var(--max-w); margin: 0 auto;
+  display: flex; align-items: center;
+  padding: 0 20px;
+}
+.brand-tab {
+  flex-shrink: 0; padding: 13px 20px;
+  font-size: 13px; font-weight: 600;
+  color: var(--gray2); cursor: pointer; white-space: nowrap;
+  border-bottom: 2.5px solid transparent;
+  transition: all .18s;
+}
+.brand-tab:hover { color: var(--dark); }
+.brand-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+
+/* ── 필터/정렬 바 ── */
+.filter-sort-bar {
+  background: #fff;
+  border-bottom: 1px solid var(--gray5);
+}
+.filter-sort-inner {
+  max-width: var(--max-w); margin: 0 auto;
+  padding: 9px 24px;
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.filter-label {
+  font-size: 11px; font-weight: 700; color: var(--gray4);
+  text-transform: uppercase; letter-spacing: .04em;
+  white-space: nowrap; flex-shrink: 0;
+}
+.filter-chip-group { display: flex; gap: 5px; flex-wrap: wrap; }
+.filter-chip {
+  padding: 5px 13px; border-radius: 20px;
+  border: 1.5px solid var(--gray5);
+  background: #fff; font-size: 12px; font-weight: 600; color: var(--gray2);
+  cursor: pointer; transition: all .18s; white-space: nowrap;
+}
+.filter-chip:hover  { border-color: var(--primary); color: var(--primary); }
+.filter-chip.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+.filter-sep  { width: 1px; height: 18px; background: var(--gray5); margin: 0 4px; flex-shrink: 0; }
+.sort-select {
+  margin-left: auto; padding: 6px 28px 6px 12px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--gray5); background: #fff;
+  font-size: 12px; font-weight: 600; color: var(--gray2);
+  cursor: pointer; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7280' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 8px center;
+  font-family: inherit;
+}
+
+/* ── 레이아웃 ── */
+.page-wrap {
+  max-width: var(--max-w); margin: 0 auto;
+  padding: 20px 20px 60px;
+  display: grid; grid-template-columns: 220px 1fr; gap: 20px; align-items: start;
+}
+
+/* ── 사이드바 ── */
+.side-panel {
+  background: #fff; border-radius: var(--radius-lg);
+  border: 1px solid #e5e7eb;
+  position: sticky; top: 120px; /* list-header-wrap 높이 (브랜드탭+필터) */
+}
+.side-section { padding: 16px; border-bottom: 1px solid var(--gray5); }
+.side-section:last-child { border-bottom: none; }
+.side-title {
+  font-size: 11px; font-weight: 800; color: var(--gray4);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
+}
+.side-list { list-style: none; }
+.side-list li {
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 500; cursor: pointer;
+  transition: all .15s; display: flex; align-items: center; justify-content: space-between;
+}
+.side-list li:hover  { background: var(--gray7); color: var(--primary); }
+.side-list li.active { background: rgba(224,32,32,.07); color: var(--primary); font-weight: 700; }
+.side-count {
+  font-size: 11px; color: var(--gray4);
+  background: var(--gray6); padding: 1px 7px; border-radius: 20px;
+}
+.price-range { display: flex; gap: 8px; align-items: center; }
+.price-input {
+  flex: 1; padding: 7px 10px;
+  border: 1.5px solid var(--gray5); border-radius: 6px;
+  font-size: 12px; font-family: inherit; color: var(--dark);
+}
+.price-input:focus { outline: none; border-color: var(--primary); }
+.price-apply {
+  padding: 7px 12px; border-radius: 6px; border: none;
+  background: var(--primary); color: #fff; font-size: 12px; font-weight: 700;
+  cursor: pointer; white-space: nowrap;
+}
+
+/* ── 상품 그리드 ── */
+.product-info-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 14px;
+}
+.product-count { font-size: 13px; color: var(--gray3); font-weight: 500; }
+.product-count strong { color: var(--dark); font-weight: 800; }
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+/* ── 상품 카드 ── */
+.prod-card {
+  background: #fff; border-radius: var(--radius-md);
+  border: 1px solid var(--gray5); overflow: hidden;
+  cursor: pointer; transition: transform .2s, box-shadow .2s;
+  position: relative;
+}
+.prod-card:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--gray4);
+}
+.prod-card-img-wrap {
+  position: relative; aspect-ratio: 1/1; overflow: hidden;
+  background: #f8f8f8; display: flex; align-items: center; justify-content: center;
+}
+.prod-card-img {
+  width: 85%; height: 85%; object-fit: contain;
+  transition: transform .3s;
+}
+.prod-card:hover .prod-card-img { transform: scale(1.05); }
+.prod-card-badge {
+  position: absolute; top: 8px; left: 8px;
+  background: var(--primary); color: #fff;
+  font-size: 10px; font-weight: 800; padding: 3px 8px; border-radius: 4px;
+  letter-spacing: .04em;
+}
+.prod-card-badge.new  { background: #2563eb; }
+.prod-card-badge.hot  { background: #f59e0b; }
+.prod-card-badge.sale { background: var(--primary); }
+.prod-card-wish {
+  position: absolute; top: 8px; right: 8px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: rgba(255,255,255,.9); border: none; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: all .2s; box-shadow: 0 1px 4px rgba(0,0,0,.12);
+}
+.prod-card-wish.active { background: var(--primary); }
+.prod-card-wish.active svg { stroke: #fff; }
+.prod-card-body { padding: 12px; }
+.prod-card-brand {
+  font-size: 10px; font-weight: 700; color: var(--gray3);
+  text-transform: uppercase; letter-spacing: .08em; margin-bottom: 2px;
+}
+.prod-card-name {
+  font-size: 13px; font-weight: 700; color: var(--dark);
+  line-height: 1.4; margin-bottom: 3px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.prod-card-size { font-size: 11px; color: var(--gray3); margin-bottom: 6px; }
+.prod-card-rating { display: flex; align-items: center; gap: 4px; margin-bottom: 8px; }
+.star-val    { font-size: 11px; font-weight: 700; color: var(--accent); }
+.review-cnt  { font-size: 11px; color: var(--gray4); }
+.prod-card-price-row { display: flex; align-items: flex-end; gap: 6px; flex-wrap: wrap; }
+.prod-price-disc { font-size: 13px; font-weight: 800; color: var(--primary); }
+.prod-price-main { font-size: 18px; font-weight: 900; color: var(--dark); line-height: 1; }
+.prod-price-unit { font-size: 12px; font-weight: 500; color: var(--gray3); }
+.prod-price-orig {
+  font-size: 11px; color: var(--gray4); text-decoration: line-through;
+  display: block; margin-top: 1px;
+}
+.prod-card-footer { padding: 0 12px 12px; display: flex; gap: 6px; }
+.btn-cart {
+  flex: 1; padding: 9px; border-radius: 8px;
+  border: 1.5px solid var(--gray5); background: #fff;
+  font-size: 12px; font-weight: 700; color: var(--gray2);
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+}
+.btn-cart:hover { border-color: var(--primary); color: var(--primary); }
+.btn-buy {
+  flex: 1; padding: 9px; border-radius: 8px;
+  border: none; background: var(--primary); color: #fff;
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: all .2s;
+}
+.btn-buy:hover { background: var(--primary-dark); }
+
+/* ── 페이징 ── */
+.pagination {
+  display: flex; justify-content: center; align-items: center; gap: 6px;
+  margin-top: 32px;
+}
+.page-btn {
+  width: 36px; height: 36px; border-radius: 8px;
+  border: 1.5px solid var(--gray5); background: #fff;
+  font-size: 13px; font-weight: 600; color: var(--gray2);
+  cursor: pointer; transition: all .2s;
+  display: flex; align-items: center; justify-content: center;
+}
+.page-btn:hover          { border-color: var(--primary); color: var(--primary); }
+.page-btn.active         { background: var(--primary); color: #fff; border-color: var(--primary); }
+.page-btn:disabled       { opacity: .4; cursor: not-allowed; }
+
+/* ── 로딩/빈 화면 ── */
+.loading-wrap  { text-align: center; padding: 80px 20px; }
+.loading-spinner {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid var(--gray5); border-top-color: var(--primary);
+  animation: spin .7s linear infinite; margin: 0 auto 12px;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.empty-wrap { text-align: center; padding: 80px 20px; }
+.empty-icon  { font-size: 48px; margin-bottom: 12px; }
+.empty-msg   { font-size: 14px; color: var(--gray3); }
+
+/* ── 반응형 ── */
+@media (max-width: 1024px) {
+  .page-wrap { grid-template-columns: 1fr; }
+  .side-panel { position: static; display: none; }
+  .product-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 640px) {
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .page-wrap    { padding: 12px 12px 40px; }
+  .filter-sort-inner { padding: 9px 12px; }
+  .page-title-bar    { padding: 10px 12px; }
+}
+</style>
+</head>
+<body>
+<!-- loader.js가 여기 위에 헤더를 동적 삽입 (tt-header-sticky) -->
+
+<!-- ── 서브 고정 헤더 (브랜드탭 + 필터) ── -->
+<div class="list-header-wrap">
+
+  <!-- 브랜드 탭 -->
+  <div class="brand-tab-bar">
+    <div class="brand-tab-inner">
+      <div class="brand-tab active" data-brand="">전체 브랜드</div>
+      <div class="brand-tab" data-brand="hankook">한국타이어</div>
+      <div class="brand-tab" data-brand="kumho">금호타이어</div>
+      <div class="brand-tab" data-brand="nexen">넥센타이어</div>
+      <div class="brand-tab" data-brand="michelin">미쉐린</div>
+      <div class="brand-tab" data-brand="bridgestone">브리지스톤</div>
+      <div class="brand-tab" data-brand="continental">콘티넨탈</div>
+      <div class="brand-tab" data-brand="pirelli">피렐리</div>
+      <div class="brand-tab" data-brand="goodyear">굿이어</div>
+    </div>
+  </div>
+
+  <!-- 필터/정렬 -->
+  <div class="filter-sort-bar">
+    <div class="filter-sort-inner">
+      <!-- 시즌 필터 -->
+      <span class="filter-label">시즌</span>
+      <div class="filter-chip-group" id="seasonFilter">
+        <div class="filter-chip active" data-val="">전체</div>
+        <div class="filter-chip" data-val="사계절">사계절</div>
+        <div class="filter-chip" data-val="겨울">겨울용</div>
+      </div>
+
+      <div class="filter-sep"></div>
+
+      <!-- 차종 필터 -->
+      <span class="filter-label">차종</span>
+      <div class="filter-chip-group" id="vehicleFilter">
+        <div class="filter-chip active" data-val="">전체</div>
+        <div class="filter-chip" data-val="승용차">승용차</div>
+        <div class="filter-chip" data-val="SUV">SUV</div>
+        <div class="filter-chip" data-val="트럭">화물</div>
+        <div class="filter-chip" data-val="고성능">고성능</div>
+      </div>
+
+      <!-- 정렬 -->
+      <select class="sort-select" id="sortSelect" onchange="applySort(this.value)">
+        <option value="">추천순</option>
+        <option value="price_asc">가격 낮은순</option>
+        <option value="price_desc">가격 높은순</option>
+        <option value="rating_desc">평점 높은순</option>
+        <option value="review_desc">리뷰 많은순</option>
+        <option value="discount_desc">할인율 높은순</option>
+        <option value="newest">신제품순</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<!-- ── 브레드크럼 (필터 아래, 콘텐츠 위) ── -->
+<div class="breadcrumb-bar">
+  <nav class="page-breadcrumb">
+    <a href="index.html">홈</a>
+    <span class="sep">›</span>
+    <span class="cur" id="breadcrumbCur">타이어 전체</span>
+  </nav>
+  <span class="sep-pipe">|</span>
+  <h1 id="pageTitle">타이어 쇼핑</h1>
+</div>
+
+<!-- ── 메인 콘텐츠 ── -->
+<div class="page-wrap">
+
+  <!-- 사이드바 -->
+  <aside class="side-panel">
+    <!-- 브랜드 -->
+    <div class="side-section">
+      <div class="side-title">브랜드</div>
+      <ul class="side-list" id="sideBrandList">
+        <li class="active" data-brand="" onclick="selectBrand('')">
+          전체 <span class="side-count" id="cntAll">-</span>
+        </li>
+        <li data-brand="hankook"     onclick="selectBrand('hankook')">
+          한국타이어     <span class="side-count" id="cntHankook">-</span>
+        </li>
+        <li data-brand="kumho"       onclick="selectBrand('kumho')">
+          금호타이어     <span class="side-count" id="cntKumho">-</span>
+        </li>
+        <li data-brand="nexen"       onclick="selectBrand('nexen')">
+          넥센타이어     <span class="side-count" id="cntNexen">-</span>
+        </li>
+        <li data-brand="michelin"    onclick="selectBrand('michelin')">
+          미쉐린         <span class="side-count" id="cntMichelin">-</span>
+        </li>
+        <li data-brand="bridgestone" onclick="selectBrand('bridgestone')">
+          브리지스톤     <span class="side-count" id="cntBridgestone">-</span>
+        </li>
+        <li data-brand="continental" onclick="selectBrand('continental')">
+          콘티넨탈       <span class="side-count" id="cntContinental">-</span>
+        </li>
+        <li data-brand="pirelli"     onclick="selectBrand('pirelli')">
+          피렐리         <span class="side-count" id="cntPirelli">-</span>
+        </li>
+        <li data-brand="goodyear"    onclick="selectBrand('goodyear')">
+          굿이어         <span class="side-count" id="cntGoodyear">-</span>
+        </li>
+      </ul>
+    </div>
+
+    <!-- 시즌 -->
+    <div class="side-section">
+      <div class="side-title">시즌</div>
+      <ul class="side-list" id="sideSeasonList">
+        <li class="active" onclick="selectSeason('')">전체</li>
+        <li onclick="selectSeason('사계절')">사계절</li>
+        <li onclick="selectSeason('겨울')">겨울용</li>
+      </ul>
+    </div>
+
+    <!-- 차종 -->
+    <div class="side-section">
+      <div class="side-title">차종</div>
+      <ul class="side-list" id="sideVehicleList">
+        <li class="active" onclick="selectVehicle('')">전체</li>
+        <li onclick="selectVehicle('승용차')">승용차</li>
+        <li onclick="selectVehicle('SUV')">SUV</li>
+        <li onclick="selectVehicle('트럭')">화물·트럭</li>
+        <li onclick="selectVehicle('고성능')">고성능</li>
+      </ul>
+    </div>
+
+    <!-- 가격 -->
+    <div class="side-section">
+      <div class="side-title">가격</div>
+      <div class="price-range">
+        <input class="price-input" type="number" id="priceMin" placeholder="최소" step="10000">
+        <span style="color:var(--gray4);font-size:12px">~</span>
+        <input class="price-input" type="number" id="priceMax" placeholder="최대" step="10000">
+      </div>
+      <button class="price-apply" style="width:100%;margin-top:8px;"
+              onclick="applyPriceFilter()">적용</button>
+    </div>
+  </aside>
+
+  <!-- 상품 목록 -->
+  <div class="product-area">
+    <div class="product-info-bar">
+      <div class="product-count">
+        검색 결과 <strong id="totalCount">0</strong>개 상품
+      </div>
+    </div>
+    <div class="product-grid" id="productGrid">
+      <div class="loading-wrap" style="grid-column:1/-1">
+        <div class="loading-spinner"></div>
+        <p style="font-size:13px;color:var(--gray3)">상품을 불러오는 중...</p>
+      </div>
+    </div>
+    <div class="pagination" id="pagination"></div>
+  </div>
+</div>
+
+<div id="tt-footer"></div>
+<script src="components/loader.js" defer></script>
+
+<script>
+/* ═══════════════════════════════════════════════════════
+   TIRETOP — product-list.html
+   - TTStore 완전 제거, fetch REST API 사용
+   - URL params: ?cat=tire&season=사계절&vehicle=SUV|고성능|트럭
+   - state.vehicle_type 에 URL ?vehicle 값 그대로 매핑
+═══════════════════════════════════════════════════════ */
+
+// ─── 상태 ───────────────────────────────────────────
+let state = {
+  brand: '', season: '', vehicle_type: '', sort: '',
+  page: 1, limit: 20, total: 0, totalPages: 0,
+  priceMin: '', priceMax: '',
+};
+
+// ─── API 헬퍼 ────────────────────────────────────────
+async function apiFetch(path) {
+  try {
+    const res = await fetch(path);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return await res.json();
+  } catch (e) {
+    console.error('[product-list] apiFetch 오류:', path, e);
+    return null;
+  }
+}
+
+// ─── 별표 렌더 ───────────────────────────────────────
+function renderStars(r) {
+  const full  = Math.floor(r);
+  const half  = r % 1 >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(empty);
+}
+
+// ─── 상품 카드 생성 ──────────────────────────────────
+function buildCard(p) {
+  const badgeMap = { BEST: '', HOT: 'hot', NEW: 'new', SALE: 'sale' };
+  const badgeCls = p.badge ? (badgeMap[p.badge] || '') : '';
+  const pid  = p.product_id || p.id;
+  const img  = p.image
+    || `https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand || 'TIRE')}`;
+
+  return `
+  <div class="prod-card" onclick="location.href='product-detail.html?id=${pid}'">
+    <div class="prod-card-img-wrap">
+      <img class="prod-card-img"
+           src="${img}"
+           onerror="this.src='https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand || 'TIRE')}'"
+           alt="${p.name}" loading="lazy">
+      ${p.badge ? `<span class="prod-card-badge ${badgeCls}">${p.badge}</span>` : ''}
+      <button class="prod-card-wish"
+              onclick="event.stopPropagation();toggleWish(this,${pid})"
+              aria-label="찜하기">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+             stroke="#e02020" stroke-width="2.5">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06
+                   a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78
+                   1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      </button>
+    </div>
+    <div class="prod-card-body">
+      <div class="prod-card-brand">${p.brand || ''}</div>
+      <div class="prod-card-name">${p.name || ''}</div>
+      <div class="prod-card-size">${p.size || ''}</div>
+      <div class="prod-card-rating">
+        <span style="color:#f59e0b;font-size:11px;">★</span>
+        <span class="star-val">${(p.rating || 0).toFixed(1)}</span>
+        <span class="review-cnt">(${(p.review_count || 0).toLocaleString()})</span>
+      </div>
+      <div class="prod-card-price-row">
+        ${p.discount ? `<span class="prod-price-disc">${p.discount}%</span>` : ''}
+        <span class="prod-price-main">${Math.floor(p.price / 10000)}만</span>
+        <span class="prod-price-unit">${(p.price % 10000).toLocaleString()}원</span>
+      </div>
+      ${p.original_price > p.price
+        ? `<span class="prod-price-orig">${p.original_price.toLocaleString()}원</span>`
+        : ''}
+    </div>
+    <div class="prod-card-footer" onclick="event.stopPropagation()">
+      <button class="btn-cart" onclick="addToCart(${pid})">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2">
+          <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72
+                   a2 2 0 001.98-1.61L23 6H6"/>
+        </svg>
+        장바구니
+      </button>
+      <button class="btn-buy"
+              onclick="location.href='product-detail.html?id=${pid}'">
+        구매하기
+      </button>
+    </div>
+  </div>`;
+}
+
+// ─── 상품 불러오기 (fetch API) ───────────────────────
+async function fetchProducts() {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = `
+    <div class="loading-wrap" style="grid-column:1/-1">
+      <div class="loading-spinner"></div>
+      <p style="font-size:13px;color:#6b7280">상품을 불러오는 중...</p>
+    </div>`;
+
+  // 쿼리 파라미터 조립
+  const qs = new URLSearchParams({ active: 1, limit: state.limit, page: state.page });
+  if (state.brand)        qs.set('brand',        state.brand);
+  if (state.season)       qs.set('season',       state.season);
+  if (state.vehicle_type) qs.set('vehicle_type', state.vehicle_type);
+  if (state.sort)         qs.set('sort',         state.sort);
+  if (state.priceMin)     qs.set('price_min',    state.priceMin);
+  if (state.priceMax)     qs.set('price_max',    state.priceMax);
+
+  const data = await apiFetch('/api/products?' + qs.toString());
+
+  if (!data || !data.success) {
+    grid.innerHTML = `
+      <div class="empty-wrap" style="grid-column:1/-1">
+        <div class="empty-icon">⚠️</div>
+        <p class="empty-msg">상품을 불러오는 중 오류가 발생했습니다.<br>잠시 후 다시 시도해주세요.</p>
+      </div>`;
+    return;
+  }
+
+  const products = data.data || [];
+  const total    = data.total || 0;
+  state.total      = total;
+  state.totalPages = data.total_pages || Math.ceil(total / state.limit) || 1;
+
+  document.getElementById('totalCount').textContent = total.toLocaleString();
+
+  if (!products.length) {
+    grid.innerHTML = `
+      <div class="empty-wrap" style="grid-column:1/-1">
+        <div class="empty-icon">🔍</div>
+        <p class="empty-msg">조건에 맞는 타이어가 없습니다.</p>
+      </div>`;
+    return;
+  }
+
+  grid.innerHTML = products.map(buildCard).join('');
+  renderPagination();
+  updateSidebarCounts();
+}
+
+// ─── 사이드바 카운트 업데이트 ────────────────────────
+async function updateSidebarCounts() {
+  const brands = [
+    'hankook','kumho','nexen','michelin',
+    'bridgestone','continental','pirelli','goodyear'
+  ];
+  // 전체 카운트
+  apiFetch('/api/products?active=1&limit=1').then(r => {
+    const el = document.getElementById('cntAll');
+    if (el) el.textContent = r?.total ?? '-';
+  });
+  // 브랜드별 카운트
+  brands.forEach(brand => {
+    apiFetch(`/api/products?active=1&brand=${brand}&limit=1`).then(r => {
+      const key = brand.charAt(0).toUpperCase() + brand.slice(1);
+      const el  = document.getElementById('cnt' + key);
+      if (el) el.textContent = r?.total ?? '-';
+    });
+  });
+}
+
+// ─── 페이징 ──────────────────────────────────────────
+function renderPagination() {
+  const wrap = document.getElementById('pagination');
+  if (state.totalPages <= 1) { wrap.innerHTML = ''; return; }
+
+  let html = `<button class="page-btn" ${state.page <= 1 ? 'disabled' : ''}
+              onclick="goPage(${state.page - 1})">‹</button>`;
+  const start = Math.max(1, state.page - 2);
+  const end   = Math.min(state.totalPages, start + 4);
+  for (let i = start; i <= end; i++) {
+    html += `<button class="page-btn ${i === state.page ? 'active' : ''}"
+             onclick="goPage(${i})">${i}</button>`;
+  }
+  html += `<button class="page-btn" ${state.page >= state.totalPages ? 'disabled' : ''}
+           onclick="goPage(${state.page + 1})">›</button>`;
+  wrap.innerHTML = html;
+}
+
+function goPage(p) {
+  state.page = p;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  fetchProducts();
+}
+
+// ─── 필터 액션 ───────────────────────────────────────
+function selectBrand(brand) {
+  state.brand = brand; state.page = 1;
+  document.querySelectorAll('.brand-tab').forEach(t =>
+    t.classList.toggle('active', t.dataset.brand === brand));
+  document.querySelectorAll('#sideBrandList li').forEach(li =>
+    li.classList.toggle('active', li.dataset.brand === brand));
+  fetchProducts();
+}
+
+function selectSeason(season) {
+  state.season = season; state.page = 1;
+  document.querySelectorAll('#seasonFilter .filter-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.val === season));
+  // 사이드바 동기
+  const sideVals = ['', '사계절', '겨울'];
+  document.querySelectorAll('#sideSeasonList li').forEach((li, i) =>
+    li.classList.toggle('active', sideVals[i] === season));
+  updateBreadcrumb();
+  fetchProducts();
+}
+
+function selectVehicle(vt) {
+  state.vehicle_type = vt; state.page = 1;
+  document.querySelectorAll('#vehicleFilter .filter-chip').forEach(c =>
+    c.classList.toggle('active', c.dataset.val === vt));
+  // 사이드바 동기
+  const sideVals = ['', '승용차', 'SUV', '트럭', '고성능'];
+  document.querySelectorAll('#sideVehicleList li').forEach((li, i) =>
+    li.classList.toggle('active', sideVals[i] === vt));
+  updateBreadcrumb();
+  fetchProducts();
+}
+
+function applySort(sort) {
+  state.sort = sort; state.page = 1;
+  fetchProducts();
+}
+
+function applyPriceFilter() {
+  state.priceMin = document.getElementById('priceMin').value;
+  state.priceMax = document.getElementById('priceMax').value;
+  state.page = 1;
+  fetchProducts();
+}
+
+// ─── 브레드크럼/타이틀 동적 업데이트 ───────────────
+function updateBreadcrumb() {
+  const bc    = document.getElementById('breadcrumbCur');
+  const title = document.getElementById('pageTitle');
+  if (!bc || !title) return;
+
+  const vt  = state.vehicle_type;
+  const sea = state.season;
+
+  let label = '타이어 전체';
+  if (vt === '고성능')  label = '고성능 타이어';
+  else if (vt === 'SUV') label = 'SUV 타이어';
+  else if (vt === '트럭') label = '화물·트럭 타이어';
+  else if (vt === '승용차') label = '승용차 타이어';
+  else if (sea === '사계절') label = '사계절 타이어';
+  else if (sea === '겨울')   label = '겨울용 타이어';
+
+  bc.textContent    = label;
+  title.textContent = label;
+}
+
+// ─── 장바구니 / 찜 ───────────────────────────────────
+function addToCart(productId) {
+  const token = localStorage.getItem('tt_token') || sessionStorage.getItem('tt_token');
+  if (!token) {
+    if (confirm('장바구니 이용을 위해 로그인이 필요합니다.\n로그인 페이지로 이동할까요?')) {
+      location.href = 'login.html';
+    }
+    return;
+  }
+  // 로컬 장바구니에 추가 (cart.html과 연동)
+  try {
+    const cart = JSON.parse(localStorage.getItem('tt_cart') || '[]');
+    const idx  = cart.findIndex(i => i.id === productId);
+    if (idx >= 0) { cart[idx].qty = (cart[idx].qty || 1) + 1; }
+    else          { cart.push({ id: productId, qty: 1 }); }
+    localStorage.setItem('tt_cart', JSON.stringify(cart));
+    window.dispatchEvent(new CustomEvent('tt_store_update', { detail: { key: 'tt_cart' } }));
+    alert('장바구니에 추가되었습니다!');
+  } catch (e) {
+    console.error('[cart] 추가 실패:', e);
+  }
+}
+
+function toggleWish(btn, productId) {
+  btn.classList.toggle('active');
+  const on = btn.classList.contains('active');
+  btn.querySelector('svg').style.fill = on ? '#e02020' : 'none';
+}
+
+// ─── URL 파라미터 처리 ───────────────────────────────
+// 드롭다운 링크: ?cat=tire&season=사계절 / ?cat=tire&vehicle=고성능
+// ?vehicle 값을 state.vehicle_type 에 직접 매핑 (vehicle_type 키)
+function initFromUrl() {
+  const p = new URLSearchParams(location.search);
+
+  if (p.get('brand'))   state.brand        = p.get('brand');
+  if (p.get('season'))  state.season       = p.get('season');
+  if (p.get('vehicle')) state.vehicle_type = p.get('vehicle'); // ← 핵심 매핑
+  if (p.get('sort'))    state.sort         = p.get('sort');
+
+  // UI 동기화 (selectXxx는 fetchProducts 호출하므로 여기선 UI만)
+  if (state.brand) {
+    document.querySelectorAll('.brand-tab').forEach(t =>
+      t.classList.toggle('active', t.dataset.brand === state.brand));
+    document.querySelectorAll('#sideBrandList li').forEach(li =>
+      li.classList.toggle('active', li.dataset.brand === state.brand));
+  }
+  if (state.season) {
+    document.querySelectorAll('#seasonFilter .filter-chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.val === state.season));
+    const sideVals = ['', '사계절', '겨울'];
+    document.querySelectorAll('#sideSeasonList li').forEach((li, i) =>
+      li.classList.toggle('active', sideVals[i] === state.season));
+  }
+  if (state.vehicle_type) {
+    document.querySelectorAll('#vehicleFilter .filter-chip').forEach(c =>
+      c.classList.toggle('active', c.dataset.val === state.vehicle_type));
+    const sideVals = ['', '승용차', 'SUV', '트럭', '고성능'];
+    document.querySelectorAll('#sideVehicleList li').forEach((li, i) =>
+      li.classList.toggle('active', sideVals[i] === state.vehicle_type));
+  }
+  if (state.sort) {
+    const sel = document.getElementById('sortSelect');
+    if (sel) sel.value = state.sort;
+  }
+
+  updateBreadcrumb();
+}
+
+// ─── 이벤트 바인딩 ───────────────────────────────────
+document.querySelectorAll('.brand-tab').forEach(tab =>
+  tab.addEventListener('click', () => selectBrand(tab.dataset.brand)));
+
+document.querySelectorAll('#seasonFilter .filter-chip').forEach(chip =>
+  chip.addEventListener('click', () => selectSeason(chip.dataset.val)));
+
+document.querySelectorAll('#vehicleFilter .filter-chip').forEach(chip =>
+  chip.addEventListener('click', () => selectVehicle(chip.dataset.val)));
+
+// ─── 초기화 ──────────────────────────────────────────
+initFromUrl();
+fetchProducts();
+</script>
+</body>
+</html>

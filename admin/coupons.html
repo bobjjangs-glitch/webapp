@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>쿠폰 관리 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .coupon-card {
+      background:var(--bg-card);border:1px solid var(--border);
+      border-radius:var(--radius);overflow:hidden;display:flex;
+      box-shadow:var(--shadow);transition:all var(--transition);
+    }
+    .coupon-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md);}
+    .coupon-left{
+      background:linear-gradient(135deg,var(--admin-accent),var(--admin-accent2));
+      color:#fff;padding:20px 18px;display:flex;flex-direction:column;
+      align-items:center;justify-content:center;min-width:110px;
+      text-align:center;flex-shrink:0;
+    }
+    .coupon-left .disc-val{font-size:26px;font-weight:900;}
+    .coupon-left .disc-unit{font-size:13px;opacity:.85;margin-top:4px;}
+    .coupon-right{padding:16px 18px;flex:1;min-width:0;}
+    .coupon-right h4{font-size:14px;font-weight:700;margin-bottom:6px;}
+    .coupon-right .meta{font-size:12px;color:var(--text-muted);display:flex;flex-direction:column;gap:3px;}
+    .coupon-divider{
+      width:1px;flex-shrink:0;
+      background:repeating-linear-gradient(to bottom,var(--border) 0,var(--border) 5px,transparent 5px,transparent 10px);
+    }
+    .coupon-footer{
+      display:flex;align-items:center;justify-content:space-between;
+      margin-top:10px;padding-top:10px;
+      border-top:1px solid var(--gray-100);gap:8px;
+    }
+  </style>
+</head>
+<body>
+<div id="adminMain">
+
+  <div class="page-header">
+    <div><h2>쿠폰 관리</h2><p>쿠폰 발급·수정·삭제 및 발급 현황을 관리합니다.</p></div>
+    <button class="btn btn-primary" onclick="openCouponModal()">➕ 쿠폰 생성</button>
+  </div>
+
+  <div class="stats-grid" id="couponStats" style="margin-bottom:24px;"></div>
+
+  <div class="filter-bar">
+    <input class="filter-search" type="text" id="couponSearch"
+           placeholder="🔍 쿠폰명, 코드 검색..." oninput="renderCoupons()">
+    <select id="couponTypeFilter" onchange="renderCoupons()">
+      <option value="">전체 유형</option>
+      <option value="rate">정률 할인</option>
+      <option value="fixed">정액 할인</option>
+      <option value="free">무료배송</option>
+    </select>
+    <select id="couponStatusFilter" onchange="renderCoupons()">
+      <option value="">전체 상태</option>
+      <option value="active">활성</option>
+      <option value="expired">만료</option>
+      <option value="disabled">비활성</option>
+    </select>
+    <div class="spacer"></div>
+    <span id="couponCount" style="font-size:13px;color:var(--text-muted);"></span>
+  </div>
+
+  <div id="couponGrid"
+       style="display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:14px;"></div>
+
+</div>
+
+<!-- 쿠폰 모달 -->
+<div class="admin-modal-overlay" id="couponModal">
+  <div class="admin-modal" style="max-width:580px;">
+    <div class="modal-header">
+      <h3 id="couponModalTitle">쿠폰 생성</h3>
+      <button class="modal-close" onclick="closeModal('couponModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">쿠폰명 *</label>
+        <input class="form-control" id="cName" placeholder="예: 신규가입 10% 할인">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">할인 유형</label>
+          <select class="form-control" id="cType" onchange="toggleDiscField()">
+            <option value="rate">정률 (%)</option>
+            <option value="fixed">정액 (원)</option>
+            <option value="free">무료배송</option>
+          </select>
+        </div>
+        <div class="form-group" id="discFieldWrap">
+          <label class="form-label">할인값</label>
+          <input class="form-control" id="cDisc" type="number" placeholder="예: 10">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">최소 주문금액 (원)</label>
+          <input class="form-control" id="cMinAmt" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">최대 할인금액 (정률만)</label>
+          <input class="form-control" id="cMaxDisc" type="number" placeholder="제한없음">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">발급 수량 (0=무제한)</label>
+          <input class="form-control" id="cTotal" type="number" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">1인 사용 제한</label>
+          <input class="form-control" id="cPerUser" type="number" placeholder="1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">시작일</label>
+          <input class="form-control" id="cStart" type="date">
+        </div>
+        <div class="form-group">
+          <label class="form-label">만료일</label>
+          <input class="form-control" id="cEnd" type="date">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">쿠폰 코드 (비워두면 자동생성)</label>
+        <input class="form-control" id="cCode" placeholder="예: NEWYEAR25"
+               style="text-transform:uppercase;font-family:monospace;">
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">적용 카테고리</label>
+          <select class="form-control" id="cCat">
+            <option value="">전체</option>
+            <option value="tire">타이어</option>
+            <option value="oil">엔진오일</option>
+            <option value="battery">배터리</option>
+            <option value="wiper">와이퍼</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">상태</label>
+          <select class="form-control" id="cStatus">
+            <option value="active">활성</option>
+            <option value="disabled">비활성</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('couponModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveCoupon()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+let COUPONS = [];
+let editCouponId = null;
+const TYPE_LABEL   = { rate:'정률', fixed:'정액', free:'무료배송' };
+const STATUS_BADGE = { active:'badge-success', expired:'badge-gray', disabled:'badge-danger' };
+const STATUS_LABEL = { active:'활성', expired:'만료', disabled:'비활성' };
+
+function discText(c) {
+  if (c.type==='rate')  return c.disc+'%';
+  if (c.type==='fixed') return '₩'+c.disc.toLocaleString();
+  return '무료';
+}
+
+function renderCouponStats() {
+  const el = document.getElementById('couponStats');
+  if (!el) return;
+  const active    = COUPONS.filter(c=>c.status==='active').length;
+  const expired   = COUPONS.filter(c=>c.status==='expired').length;
+  const totalUsed = COUPONS.reduce((s,c)=>s+c.used,0);
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-icon purple">🎟️</div><div class="stat-info"><div class="stat-label">전체 쿠폰</div><div class="stat-value">${COUPONS.length}종</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-label">활성</div><div class="stat-value">${active}종</div></div></div>
+    <div class="stat-card"><div class="stat-icon orange">📊</div><div class="stat-info"><div class="stat-label">총 사용수</div><div class="stat-value">${totalUsed.toLocaleString()}회</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">📋</div><div class="stat-info"><div class="stat-label">만료</div><div class="stat-value">${expired}종</div></div></div>`;
+}
+
+function getFilteredCoupons() {
+  const q      = document.getElementById('couponSearch').value.toLowerCase();
+  const type   = document.getElementById('couponTypeFilter').value;
+  const status = document.getElementById('couponStatusFilter').value;
+  return COUPONS.filter(c => {
+    if (type   && c.type   !== type)   return false;
+    if (status && c.status !== status) return false;
+    if (q && !c.name.toLowerCase().includes(q) && !c.code.toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderCoupons() {
+  const list  = getFilteredCoupons();
+  const grid  = document.getElementById('couponGrid');
+  const cntEl = document.getElementById('couponCount');
+  if (cntEl) cntEl.textContent = `총 ${list.length}종`;
+  if (!list.length) {
+    grid.innerHTML = '<p style="color:var(--text-muted);font-size:14px;grid-column:1/-1;text-align:center;padding:40px;">쿠폰이 없습니다.</p>';
+    return;
+  }
+  grid.innerHTML = list.map(c => {
+    const pct = c.total > 0 ? Math.round((c.used/c.total)*100) : null;
+    return `
+      <div class="coupon-card">
+        <div class="coupon-left">
+          <div class="disc-val">${discText(c)}</div>
+          <div class="disc-unit">${TYPE_LABEL[c.type]}</div>
+        </div>
+        <div class="coupon-divider"></div>
+        <div class="coupon-right">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:6px;">
+            <h4>${c.name}</h4>
+            <span class="badge ${STATUS_BADGE[c.status]}" style="flex-shrink:0;">${STATUS_LABEL[c.status]}</span>
+          </div>
+          <div class="meta">
+            <span>코드: <strong style="font-family:monospace;color:var(--admin-accent);">${c.code}</strong></span>
+            <span>최소주문: ${c.minAmt?'₩'+c.minAmt.toLocaleString():'제한없음'}${c.maxDisc?' / 최대할인 ₩'+c.maxDisc.toLocaleString():''}</span>
+            <span>기간: ${c.start} ~ ${c.end}</span>
+            ${c.cat?`<span>적용: ${c.cat}</span>`:''}
+          </div>
+          <div class="coupon-footer">
+            <div style="flex:1;">
+              <div style="font-size:12px;color:var(--text-muted);margin-bottom:4px;">
+                사용: ${c.used}${c.total>0?' / '+c.total:''}회${pct!==null?' ('+pct+'%)':''}
+              </div>
+              ${c.total>0?`
+                <div style="height:5px;background:var(--border);border-radius:3px;overflow:hidden;">
+                  <div style="width:${pct}%;height:100%;background:${pct>=90?'var(--danger)':'var(--admin-accent)'};border-radius:3px;transition:width 0.4s;"></div>
+                </div>`:''}
+            </div>
+            <div style="display:flex;gap:6px;margin-left:12px;flex-shrink:0;">
+              <button class="btn btn-xs btn-outline" onclick="openCouponModal(${c.id})">✏️</button>
+              <button class="btn btn-xs btn-danger"  onclick="deleteCoupon(${c.id})">🗑️</button>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function openCouponModal(id = null) {
+  editCouponId = id;
+  document.getElementById('couponModalTitle').textContent = id ? '쿠폰 수정' : '쿠폰 생성';
+  if (id) {
+    const c = COUPONS.find(x=>x.id===id);
+    if (!c) return;
+    document.getElementById('cName').value    = c.name;
+    document.getElementById('cType').value    = c.type;
+    document.getElementById('cDisc').value    = c.disc;
+    document.getElementById('cMinAmt').value  = c.minAmt;
+    document.getElementById('cMaxDisc').value = c.maxDisc||'';
+    document.getElementById('cTotal').value   = c.total;
+    document.getElementById('cPerUser').value = c.perUser;
+    document.getElementById('cStart').value   = c.start;
+    document.getElementById('cEnd').value     = c.end;
+    document.getElementById('cCode').value    = c.code;
+    document.getElementById('cCat').value     = c.cat;
+    document.getElementById('cStatus').value  = c.status;
+  } else {
+    ['cName','cDisc','cMinAmt','cMaxDisc','cTotal','cPerUser','cStart','cEnd','cCode']
+      .forEach(f=>{ const el=document.getElementById(f); if(el) el.value=''; });
+    document.getElementById('cType').value   = 'rate';
+    document.getElementById('cCat').value    = '';
+    document.getElementById('cStatus').value = 'active';
+  }
+  toggleDiscField();
+  document.getElementById('couponModal').classList.add('open');
+  setTimeout(()=>document.getElementById('cName').focus(),100);
+}
+
+function toggleDiscField() {
+  document.getElementById('discFieldWrap').style.display =
+    document.getElementById('cType').value==='free' ? 'none' : '';
+}
+
+function saveCoupon() {
+  const name = document.getElementById('cName').value.trim();
+  if (!name) { adminToast('쿠폰명을 입력하세요.','error'); return; }
+  const code = (document.getElementById('cCode').value.trim().toUpperCase())
+    || ('TT'+Math.random().toString(36).slice(2,8).toUpperCase());
+  const data = {
+    id:      editCouponId || Date.now(),
+    name,
+    type:    document.getElementById('cType').value,
+    disc:    parseInt(document.getElementById('cDisc').value)    || 0,
+    minAmt:  parseInt(document.getElementById('cMinAmt').value)  || 0,
+    maxDisc: parseInt(document.getElementById('cMaxDisc').value) || 0,
+    total:   parseInt(document.getElementById('cTotal').value)   || 0,
+    perUser: parseInt(document.getElementById('cPerUser').value) || 1,
+    start:   document.getElementById('cStart').value,
+    end:     document.getElementById('cEnd').value,
+    code, cat: document.getElementById('cCat').value,
+    status: document.getElementById('cStatus').value,
+    used:   editCouponId ? (COUPONS.find(c=>c.id===editCouponId)?.used||0) : 0,
+  };
+  TTStore.adminSaveCoupon(data);
+  /* API에서 로드 */
+  adminToast(editCouponId?'쿠폰이 수정되었습니다.':'쿠폰이 생성되었습니다.','success');
+  closeModal('couponModal');
+  renderCouponStats();
+  renderCoupons();
+}
+
+function deleteCoupon(id) {
+  const c = COUPONS.find(x=>x.id===id);
+  if (!c||!confirm(`"${c.name}" 쿠폰을 삭제하시겠습니까?`)) return;
+  TTStore.remove('tt_coupons', id);
+  /* API에서 로드 */
+  renderCouponStats(); renderCoupons();
+  adminToast('쿠폰이 삭제되었습니다.','info');
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.getElementById('couponModal').addEventListener('click', function(e) {
+  if (e.target===this) closeModal('couponModal');
+});
+document.addEventListener('keydown', e => { if(e.key==='Escape') closeModal('couponModal'); });
+window.addEventListener('tt_store_update', e => {
+  if (e.detail.key==='tt_coupons') { COUPONS=TTStore.get('tt_coupons')||[]; renderCouponStats(); renderCoupons(); }
+});
+
+async function loadCoupons() {
+  try {
+    const res = await AdminAPI.getCoupons();
+    if (res?.success) {
+      COUPONS = res.data || [];
+      if (typeof renderCouponStats === 'function') renderCouponStats();
+      if (typeof renderCoupons    === 'function') renderCoupons();
+    }
+  } catch(e) { console.error('쿠폰 로드 실패', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadCoupons();
+});</script>
+</body>
+</html>

@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>상품 관리 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .product-img-preview {
+      width: 100%; max-height: 180px; object-fit: cover;
+      border-radius: 10px; border: 1px solid var(--border);
+      display: none; margin-top: 8px;
+    }
+    .product-img-preview.show { display: block; }
+    .badge-opts { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .badge-opt-btn {
+      padding: 4px 12px; border-radius: 20px; border: 1.5px solid var(--border);
+      background: var(--bg-card); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all var(--transition); font-family: inherit;
+      color: var(--text-muted);
+    }
+    .badge-opt-btn.active {
+      border-color: var(--admin-accent);
+      background: rgba(227,30,36,0.08);
+      color: var(--admin-accent);
+    }
+    .discount-info {
+      padding: 8px 12px; border-radius: 8px; font-size: 12px;
+      background: rgba(16,185,129,0.08); color: #065f46;
+      border: 1px solid rgba(16,185,129,0.2); display: none; margin-top: 6px;
+    }
+    .discount-info.show { display: block; }
+    .stock-bar { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; margin-top: 4px; }
+    .stock-fill { height: 100%; border-radius: 3px; transition: width 0.4s; }
+    @keyframes shakeX {
+      0%,100%{transform:translateX(0)} 20%,60%{transform:translateX(-6px)} 40%,80%{transform:translateX(6px)}
+    }
+    .shake { animation: shakeX 0.4s ease; border-color: var(--danger) !important; }
+    .form-section-title {
+      font-size: 12px; font-weight: 700; color: var(--admin-accent);
+      text-transform: uppercase; letter-spacing: 0.08em;
+      padding: 10px 0 4px; border-bottom: 1px solid var(--border);
+      margin: 12px 0 8px; grid-column: 1 / -1;
+    }
+    .tag-dot {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 700;
+      background: rgba(227,30,36,0.09); color: var(--admin-accent);
+      border: 1px solid rgba(227,30,36,0.18);
+    }
+    .tag-origin {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(59,130,246,0.09); color: #1d4ed8;
+      border: 1px solid rgba(59,130,246,0.18);
+    }
+    .tag-size {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(16,185,129,0.09); color: #065f46;
+      border: 1px solid rgba(16,185,129,0.18);
+    }
+    .tag-factory {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 11px; font-weight: 600;
+      background: rgba(245,158,11,0.09); color: #92400e;
+      border: 1px solid rgba(245,158,11,0.28);
+    }
+    .prod-meta-row { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .data-table th:nth-child(2) { min-width: 220px; }
+    .data-table th:nth-child(5) { min-width: 110px; }
+    .data-table th:nth-child(6) { min-width: 120px; }
+
+    /* 로딩 오버레이 */
+    .loading-overlay {
+      position: fixed; inset: 0;
+      background: rgba(255,255,255,0.85);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 99999; flex-direction: column; gap: 12px;
+      font-size: 14px; color: var(--text-muted);
+    }
+    .loading-spinner {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 3px solid var(--border);
+      border-top-color: var(--admin-accent);
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay.hidden { display: none; }
+  </style>
+</head>
+<body>
+
+<!-- 로딩 오버레이 -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-spinner"></div>
+  <span>상품 데이터를 불러오는 중...</span>
+</div>
+
+<div id="adminMain">
+
+  <div class="page-header">
+    <div>
+      <h2>상품 관리</h2>
+      <p>상품을 등록·수정·삭제하고 노출 상태를 관리합니다.</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-outline" onclick="bulkToggleActive(true)">일괄 활성</button>
+      <button class="btn btn-outline" onclick="bulkToggleActive(false)">일괄 비활성</button>
+      <button class="btn btn-danger btn-sm" id="bulkDeleteBtn"
+              style="display:none;" onclick="bulkDelete()">선택 삭제</button>
+      <button class="btn btn-primary" onclick="openModal()">➕ 상품 등록</button>
+    </div>
+  </div>
+
+  <!-- 통계 -->
+  <div class="stats-grid" id="productStats" style="margin-bottom:24px;"></div>
+
+  <!-- 필터 -->
+  <div class="filter-bar">
+    <input class="filter-search" type="text" id="productSearch"
+           placeholder="🔍 상품명, 브랜드, 규격, 원산지 검색..."
+           oninput="renderTable()">
+    <select id="catFilter" onchange="renderTable()">
+      <option value="">전체 카테고리</option>
+      <option value="tire">타이어</option>
+      <option value="engineoil">엔진오일</option>
+      <option value="battery">배터리</option>
+      <option value="wiper">와이퍼</option>
+    </select>
+    <select id="activeFilter" onchange="renderTable()">
+      <option value="">전체 상태</option>
+      <option value="true">활성</option>
+      <option value="false">비활성</option>
+    </select>
+    <select id="originFilter" onchange="renderTable()">
+      <option value="">전체 원산지</option>
+      <option value="한국">한국</option>
+      <option value="중국">중국</option>
+      <option value="일본">일본</option>
+      <option value="독일">독일</option>
+      <option value="미국">미국</option>
+      <option value="프랑스">프랑스</option>
+      <option value="헝가리">헝가리</option>
+    </select>
+    <select id="sortFilter" onchange="renderTable()">
+      <option value="id_desc">최신 등록순</option>
+      <option value="factory_asc">공장도가 낮은순</option>
+      <option value="factory_desc">공장도가 높은순</option>
+      <option value="price_asc">판매가 낮은순</option>
+      <option value="price_desc">판매가 높은순</option>
+      <option value="stock_asc">재고 적은순</option>
+      <option value="rating_desc">평점 높은순</option>
+      <option value="discount_desc">할인율 높은순</option>
+    </select>
+    <div class="spacer"></div>
+    <span id="productCount" style="font-size:13px;color:var(--text-muted);"></span>
+  </div>
+
+  <!-- 테이블 -->
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th><input type="checkbox" id="allCheck" onchange="toggleAll(this)"></th>
+            <th>상품 정보</th>
+            <th>카테고리</th>
+            <th>규격 / DOT / 원산지</th>
+            <th>공장도가 / 판매가</th>
+            <th>재고</th>
+            <th>평점</th>
+            <th>활성</th>
+            <th>관리</th>
+          </tr>
+        </thead>
+        <tbody id="productTbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;
+                padding:12px 18px;border-top:1px solid var(--border);
+                flex-wrap:wrap;gap:8px;">
+      <span id="pageInfo" style="font-size:13px;color:var(--text-muted);"></span>
+      <div id="pageBtns" style="display:flex;gap:4px;"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ══════════════════ 상품 등록/수정 모달 ══════════════════ -->
+<div class="admin-modal-overlay" id="productModal">
+  <div class="admin-modal lg">
+    <div class="modal-header">
+      <h3 id="modalTitle">상품 등록</h3>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body">
+
+      <!-- 기본 정보 -->
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1;">
+          <div class="form-section-title">📦 기본 정보</div>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">상품명 *</label>
+          <input class="form-control" id="pName"
+                 placeholder="예: 금호타이어 XT5 225/55R17">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">브랜드</label>
+          <input class="form-control" id="pBrand" placeholder="예: 금호">
+        </div>
+        <div class="form-group">
+          <label class="form-label">카테고리</label>
+          <select class="form-control" id="pCategory">
+            <option value="tire">타이어</option>
+            <option value="engineoil">엔진오일</option>
+            <option value="battery">배터리</option>
+            <option value="wiper">와이퍼</option>
+            <option value="wash">세차용품</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 타이어 스펙 -->
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1;">
+          <div class="form-section-title">🔧 타이어 스펙 (규격 / DOT / 원산지)</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">규격 (사이즈)</label>
+          <input class="form-control" id="pSize" placeholder="예: 225/55R17">
+          <small style="color:var(--text-muted);font-size:11px;">
+            예: 205/55R16, 225/45R18
+          </small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">원산지 (제조국)</label>
+          <select class="form-control" id="pOrigin">
+            <option value="">선택 안함</option>
+            <option value="한국">🇰🇷 한국</option>
+            <option value="중국">🇨🇳 중국</option>
+            <option value="일본">🇯🇵 일본</option>
+            <option value="독일">🇩🇪 독일</option>
+            <option value="미국">🇺🇸 미국</option>
+            <option value="프랑스">🇫🇷 프랑스</option>
+            <option value="헝가리">🇭🇺 헝가리</option>
+            <option value="폴란드">🇵🇱 폴란드</option>
+            <option value="루마니아">🇷🇴 루마니아</option>
+            <option value="태국">🇹🇭 태국</option>
+            <option value="인도네시아">🇮🇩 인도네시아</option>
+            <option value="기타">기타</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">DOT 코드</label>
+          <input class="form-control" id="pDot"
+                 placeholder="예: 2524 (25주차 2024년)">
+          <small style="color:var(--text-muted);font-size:11px;">
+            앞 2자리: 제조주차 / 뒤 2자리: 제조연도
+          </small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">제조연월</label>
+          <input class="form-control" id="pMfgDate"
+                 placeholder="예: 2024년 25주차">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">하중지수 / 속도기호 (Spec)</label>
+          <input class="form-control" id="pSpec"
+                 placeholder="예: 91V, 95W, 102H">
+        </div>
+        <div class="form-group">
+          <label class="form-label">패턴명 / 모델코드</label>
+          <input class="form-control" id="pPattern"
+                 placeholder="예: XT5, PRIMACY 4">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">계절</label>
+          <select class="form-control" id="pSeason">
+            <option value="">선택 안함</option>
+            <option value="사계절">사계절</option>
+            <option value="겨울">겨울</option>
+            <option value="여름">여름</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">적합 차종</label>
+          <input class="form-control" id="pCarModel"
+                 placeholder="예: 싼타페, 봉고3, 포터2">
+        </div>
+      </div>
+
+      <!-- 가격 정보 -->
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1;">
+          <div class="form-section-title">💰 가격 정보</div>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">공장도가 (원)</label>
+          <input class="form-control" type="number" id="pFactoryPrice"
+                 placeholder="0" oninput="calcDiscount()">
+          <small style="color:var(--text-muted);font-size:11px;">
+            tireping.com 기준 공장 출고가
+          </small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">정가 (원) *</label>
+          <input class="form-control" type="number" id="pPrice"
+                 placeholder="0" oninput="calcDiscount()">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">할인가 (판매가, 원)</label>
+          <input class="form-control" type="number" id="pSalePrice"
+                 placeholder="미입력 시 정가와 동일"
+                 oninput="calcDiscount()">
+          <div class="discount-info" id="discountInfo"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">재고 수량</label>
+          <input class="form-control" type="number" id="pStock"
+                 placeholder="0" min="0">
+        </div>
+      </div>
+
+      <!-- 이미지 / 배지 -->
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1;">
+          <div class="form-section-title">🖼️ 이미지 / 배지</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">상품 이미지 URL</label>
+        <input class="form-control" id="pImg"
+               placeholder="https://example.com/image.jpg"
+               oninput="previewImg(this.value)">
+        <img id="pImgPreview" class="product-img-preview" alt="미리보기">
+      </div>
+      <div class="form-group">
+        <label class="form-label">배지</label>
+        <input class="form-control" id="pBadge" placeholder="예: 베스트"
+               oninput="syncBadge(this.value)">
+        <div class="badge-opts">
+          <button class="badge-opt-btn" onclick="selectBadge('베스트',this)">베스트</button>
+          <button class="badge-opt-btn" onclick="selectBadge('신상',this)">신상</button>
+          <button class="badge-opt-btn" onclick="selectBadge('할인',this)">할인</button>
+          <button class="badge-opt-btn" onclick="selectBadge('프리미엄',this)">프리미엄</button>
+          <button class="badge-opt-btn" onclick="selectBadge('EV',this)">EV</button>
+          <button class="badge-opt-btn" onclick="selectBadge('',this)">없음</button>
+        </div>
+      </div>
+
+      <!-- 추가 정보 -->
+      <div class="form-row">
+        <div class="form-group" style="grid-column:1/-1;">
+          <div class="form-section-title">📝 추가 정보</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">상품 설명</label>
+        <textarea class="form-control" id="pDesc" style="min-height:80px;"
+                  placeholder="상품 특징, 사용 차량 등을 입력하세요"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-label">태그 (쉼표 구분)</label>
+        <input class="form-control" id="pTags"
+               placeholder="예: 승용차, 사계절용, 고급형">
+        <small style="color:var(--text-muted);font-size:11px;">
+          상품목록 필터에서 사용됩니다
+        </small>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">이모지</label>
+          <input class="form-control" id="pEmoji"
+                 placeholder="예: 🚗 🚙 🚚 🛢️ ⚡ 🌧️">
+        </div>
+        <div class="form-group">
+          <label class="form-label">평점 (0~5)</label>
+          <input class="form-control" type="number" id="pRating"
+                 placeholder="4.5" min="0" max="5" step="0.1">
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">리뷰 수</label>
+          <input class="form-control" type="number" id="pReviewCount"
+                 placeholder="0" min="0">
+        </div>
+        <div class="form-group">
+          <label class="form-label">최소 기준 재고</label>
+          <input class="form-control" type="number" id="pMinStock"
+                 placeholder="5" min="0">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:8px;">
+        <label style="display:flex;align-items:center;gap:8px;
+                      font-size:13px;cursor:pointer;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="pActive" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          활성 (노출)
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;
+                      font-size:13px;cursor:pointer;">
+          <label class="toggle-switch">
+            <input type="checkbox" id="pShowSoldout" checked>
+            <span class="toggle-slider"></span>
+          </label>
+          품절 시 품절 표시
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal()">취소</button>
+      <button class="btn btn-primary" id="saveBtn" onclick="saveProduct()">
+        💾 저장
+      </button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════
+   상품 관리 – MySQL API 완전 연동
+   AdminAPI.getProducts() / createProduct() / updateProduct() 사용
+══════════════════════════════════════════════════════════ */
+
+const CAT_LABEL = {
+  tire: '타이어', engineoil: '엔진오일', oil: '엔진오일',
+  battery: '배터리', wiper: '와이퍼', wash: '세차용품',
+};
+
+/* ── 로컬 상태 ── */
+let PRODUCTS  = [];      // AdminAPI에서 로드
+let editingId = null;
+let selected  = new Set();
+let curPage   = 1;
+const PER     = 12;
+
+/* ════════════════════════════════════════════════════════
+   로딩 UI
+════════════════════════════════════════════════════════ */
+function showLoading(msg = '저장 중...') {
+  const el = document.getElementById('loadingOverlay');
+  el.querySelector('span').textContent = msg;
+  el.classList.remove('hidden');
+}
+function hideLoading() {
+  document.getElementById('loadingOverlay').classList.add('hidden');
+}
+
+/* ════════════════════════════════════════════════════════
+   통계 카드
+════════════════════════════════════════════════════════ */
+function renderStats() {
+  const el = document.getElementById('productStats');
+  if (!el) return;
+  const total   = PRODUCTS.length;
+  const active  = PRODUCTS.filter(p => p.active).length;
+  const soldout = PRODUCTS.filter(p => (p.stock || 0) === 0).length;
+  const avgR    = total
+    ? (PRODUCTS.reduce((s, p) => s + (parseFloat(p.rating) || 0), 0) / total).toFixed(1)
+    : 0;
+  el.innerHTML = `
+    <div class="stat-card">
+      <div class="stat-icon blue">📦</div>
+      <div class="stat-info">
+        <div class="stat-label">전체 상품</div>
+        <div class="stat-value">${total}개</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon green">✅</div>
+      <div class="stat-info">
+        <div class="stat-label">활성 상품</div>
+        <div class="stat-value">${active}개</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon red">🚫</div>
+      <div class="stat-info">
+        <div class="stat-label">품절 상품</div>
+        <div class="stat-value">${soldout}개</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon orange">⭐</div>
+      <div class="stat-info">
+        <div class="stat-label">평균 평점</div>
+        <div class="stat-value">${avgR}점</div>
+      </div>
+    </div>`;
+}
+
+/* ════════════════════════════════════════════════════════
+   필터 / 정렬 (클라이언트 사이드)
+════════════════════════════════════════════════════════ */
+function getFiltered() {
+  const q      = document.getElementById('productSearch').value.toLowerCase();
+  const cat    = document.getElementById('catFilter').value;
+  const active = document.getElementById('activeFilter').value;
+  const origin = document.getElementById('originFilter').value;
+  const sort   = document.getElementById('sortFilter').value;
+
+  let list = PRODUCTS.filter(p => {
+    /* 카테고리 — engineoil/oil 양쪽 허용 */
+    if (cat) {
+      if (cat === 'engineoil') {
+        if (p.category !== 'engineoil' && p.category !== 'oil') return false;
+      } else {
+        if (p.category !== cat) return false;
+      }
+    }
+    if (active && String(Boolean(p.active)) !== active) return false;
+    if (origin && p.origin !== origin)                  return false;
+    if (q) {
+      const hay = [p.name, p.brand, p.size, p.origin, p.dot,
+                   p.pattern, p.mfgDate || p.mfg_date].join(' ').toLowerCase();
+      if (!hay.includes(q)) return false;
+    }
+    return true;
+  });
+
+  /* 정렬 */
+  const fp = p => parseInt(p.factoryPrice || p.factory_price) || 0;
+  const sp = p => parseInt(p.salePrice    || p.sale_price    || p.price) || 0;
+  if (sort === 'factory_asc')   list.sort((a,b) => fp(a) - fp(b));
+  if (sort === 'factory_desc')  list.sort((a,b) => fp(b) - fp(a));
+  if (sort === 'price_asc')     list.sort((a,b) => sp(a) - sp(b));
+  if (sort === 'price_desc')    list.sort((a,b) => sp(b) - sp(a));
+  if (sort === 'stock_asc')     list.sort((a,b) => (a.stock||0) - (b.stock||0));
+  if (sort === 'rating_desc')   list.sort((a,b) => (parseFloat(b.rating)||0) - (parseFloat(a.rating)||0));
+  if (sort === 'discount_desc') {
+    list.sort((a,b) => {
+      const da = parseInt(a.discountRate || a.discount_rate) || 0;
+      const db = parseInt(b.discountRate || b.discount_rate) || 0;
+      return db - da;
+    });
+  }
+  if (sort === 'id_desc') list.sort((a,b) => b.id - a.id);
+
+  return list;
+}
+
+/* ════════════════════════════════════════════════════════
+   테이블 렌더
+════════════════════════════════════════════════════════ */
+function renderTable() {
+  const filtered = getFiltered();
+  const pages    = Math.max(1, Math.ceil(filtered.length / PER));
+  if (curPage > pages) curPage = 1;
+  const slice    = filtered.slice((curPage - 1) * PER, curPage * PER);
+
+  document.getElementById('productCount').textContent = `총 ${filtered.length}개`;
+  document.getElementById('pageInfo').textContent =
+    `${Math.min((curPage-1)*PER+1, filtered.length)}–${Math.min(curPage*PER, filtered.length)} / ${filtered.length}`;
+
+  document.getElementById('productTbody').innerHTML = slice.map(p => {
+
+    /* 가격 필드 — DB(snake_case) / JS(camelCase) 양쪽 대응 */
+    const factoryPrice  = parseInt(p.factoryPrice  || p.factory_price)  || 0;
+    const salePrice     = parseInt(p.salePrice     || p.sale_price || p.price) || 0;
+    const discountRate  = parseInt(p.discountRate  || p.discount_rate)  || 0;
+    const reviewCount   = parseInt(p.reviewCount   || p.review_count)   || 0;
+    const stock         = parseInt(p.stock) || 0;
+    const stockPct      = Math.min(Math.round((stock / 50) * 100), 100);
+    const stockColor    = stock === 0 ? '#ef4444' : stock < 10 ? '#f59e0b' : '#10b981';
+    const disc          = discountRate > 0 ? discountRate
+                        : (factoryPrice > 0 && salePrice < factoryPrice)
+                          ? Math.round((1 - salePrice / factoryPrice) * 100)
+                          : 0;
+
+    /* 마진 계산 */
+    const marginAmt = factoryPrice > 0 ? salePrice - factoryPrice : null;
+    const marginPct = marginAmt !== null && factoryPrice > 0
+                    ? Math.round((marginAmt / factoryPrice) * 100) : null;
+
+    /* DOT 표시 */
+    const dot = p.dot || '';
+    let dotDisplay = '';
+    if (dot.length >= 4) {
+      const week = dot.substring(0, 2);
+      const year = '20' + dot.substring(2, 4);
+      dotDisplay = `DOT ${dot}
+        <span style="color:var(--text-muted);font-size:10px;">
+          (${year}년 ${week}주)
+        </span>`;
+    } else if (dot) {
+      dotDisplay = `DOT ${dot}`;
+    }
+
+    const catLabel  = CAT_LABEL[p.category] || p.category;
+    const isActive  = p.active === true || p.active === 1 || p.active === '1';
+
+    return `
+      <tr>
+        <td>
+          <input type="checkbox" class="prod-check" value="${p.id}"
+                 ${selected.has(p.id) ? 'checked' : ''}
+                 onchange="toggleSelect(${p.id}, this.checked)">
+        </td>
+
+        <!-- 상품 정보 -->
+        <td>
+          <div style="display:flex;align-items:flex-start;gap:10px;">
+            <img src="${p.img || ''}" alt="${p.name}"
+                 style="width:48px;height:48px;border-radius:8px;
+                        object-fit:cover;border:1px solid var(--border);
+                        flex-shrink:0;"
+                 onerror="this.src='https://placehold.co/48x48/e2e8f0/94a3b8?text=?'">
+            <div>
+              <div style="font-weight:700;font-size:13px;max-width:210px;
+                          overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"
+                   title="${p.name}">${p.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);margin-top:2px;">
+                ${p.brand || '-'}
+                ${p.badge
+                  ? `<span style="color:var(--admin-accent);margin-left:4px;">
+                       #${p.badge}
+                     </span>`
+                  : ''}
+              </div>
+              ${(p.pattern || p.mfg_date || p.mfgDate)
+                ? `<div style="font-size:11px;color:#6366f1;margin-top:1px;">
+                     📌 ${p.pattern || ''} ${p.mfgDate || p.mfg_date || ''}
+                   </div>`
+                : ''}
+            </div>
+          </div>
+        </td>
+
+        <!-- 카테고리 -->
+        <td>
+          <span class="badge badge-gray">${catLabel}</span>
+        </td>
+
+        <!-- 규격 / DOT / 원산지 -->
+        <td>
+          <div class="prod-meta-row">
+            ${p.size
+              ? `<span class="tag-size">📐 ${p.size}</span>`
+              : '<span style="color:var(--text-muted);font-size:11px;">-</span>'}
+          </div>
+          ${p.spec
+            ? `<div style="font-size:10px;color:var(--text-muted);margin-top:2px;">
+                 ${p.spec}
+               </div>`
+            : ''}
+          <div class="prod-meta-row" style="margin-top:3px;">
+            ${dot ? `<span class="tag-dot">🔵 ${dotDisplay}</span>` : ''}
+          </div>
+          <div class="prod-meta-row" style="margin-top:3px;">
+            ${p.origin ? `<span class="tag-origin">🌐 ${p.origin}</span>` : ''}
+          </div>
+          ${(p.carModel || p.car_model)
+            ? `<div style="font-size:10px;color:#7c3aed;margin-top:2px;">
+                 🚘 ${p.carModel || p.car_model}
+               </div>`
+            : ''}
+        </td>
+
+        <!-- 공장도가 / 판매가 -->
+        <td>
+          ${factoryPrice > 0
+            ? `<div style="font-size:11px;color:var(--text-muted);">
+                 공장도:
+                 <span class="tag-factory">
+                   ₩${factoryPrice.toLocaleString()}
+                 </span>
+               </div>`
+            : '<div style="font-size:11px;color:var(--text-muted);">공장도: -</div>'}
+          <div style="text-decoration:${disc > 0 ? 'line-through' : 'none'};
+                      font-size:12px;color:var(--text-muted);margin-top:2px;">
+            정가: ₩${(parseInt(p.price) || salePrice).toLocaleString()}
+          </div>
+          <div style="font-weight:700;color:var(--admin-accent);
+                      font-size:14px;margin-top:2px;">
+            ₩${salePrice.toLocaleString()}
+          </div>
+          ${disc > 0
+            ? `<div style="font-size:11px;color:var(--success);">
+                 ▼ ${disc}% 할인
+               </div>`
+            : ''}
+          ${marginPct !== null
+            ? `<div style="font-size:10px;
+                           color:${marginPct >= 0 ? '#10b981' : '#ef4444'};
+                           margin-top:1px;">
+                 마진 ${marginPct >= 0 ? '+' : ''}${marginPct}%
+                 (₩${marginAmt.toLocaleString()})
+               </div>`
+            : ''}
+        </td>
+
+        <!-- 재고 -->
+        <td>
+          <div style="font-weight:700;color:${stockColor};">${stock}개</div>
+          <div class="stock-bar" style="width:70px;">
+            <div class="stock-fill"
+                 style="width:${stockPct}%;background:${stockColor};"></div>
+          </div>
+          ${stock === 0
+            ? '<div style="font-size:10px;color:#ef4444;">품절</div>'
+            : ''}
+        </td>
+
+        <!-- 평점 -->
+        <td style="font-size:13px;">
+          ⭐ ${parseFloat(p.rating) || '-'}
+          <span style="color:var(--text-muted);font-size:11px;">
+            (${reviewCount.toLocaleString()})
+          </span>
+        </td>
+
+        <!-- 활성 토글 -->
+        <td>
+          <label class="toggle-switch" style="transform:scale(0.85);">
+            <input type="checkbox" ${isActive ? 'checked' : ''}
+                   onchange="toggleActive(${p.id}, this.checked)">
+            <span class="toggle-slider"></span>
+          </label>
+        </td>
+
+        <!-- 관리 버튼 -->
+        <td>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-xs btn-outline"
+                    onclick="openModal(${p.id})">✏️</button>
+            <button class="btn btn-xs btn-danger"
+                    onclick="deleteProduct(${p.id})">🗑️</button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  /* 페이지 버튼 */
+  const pb = document.getElementById('pageBtns');
+  pb.innerHTML = '';
+  for (let i = 1; i <= pages; i++) {
+    const btn       = document.createElement('button');
+    btn.className   = `btn btn-sm ${i === curPage ? 'btn-primary' : 'btn-outline'}`;
+    btn.textContent = i;
+    btn.onclick     = () => { curPage = i; renderTable(); };
+    pb.appendChild(btn);
+  }
+
+  document.getElementById('allCheck').checked =
+    slice.length > 0 && slice.every(p => selected.has(p.id));
+
+  renderStats();
+}
+
+/* ════════════════════════════════════════════════════════
+   체크박스
+════════════════════════════════════════════════════════ */
+function toggleAll(el) {
+  const slice = getFiltered().slice((curPage-1)*PER, curPage*PER);
+  slice.forEach(p => el.checked ? selected.add(p.id) : selected.delete(p.id));
+  updateBulkBtn();
+  renderTable();
+}
+function toggleSelect(id, checked) {
+  checked ? selected.add(id) : selected.delete(id);
+  updateBulkBtn();
+}
+function updateBulkBtn() {
+  document.getElementById('bulkDeleteBtn').style.display =
+    selected.size > 0 ? '' : 'none';
+}
+
+/* ════════════════════════════════════════════════════════
+   일괄 처리 (비동기)
+════════════════════════════════════════════════════════ */
+async function bulkToggleActive(active) {
+  if (!selected.size) { adminToast('선택된 상품이 없습니다.', 'info'); return; }
+  showLoading(active ? '일괄 활성화 중...' : '일괄 비활성화 중...');
+  try {
+    await Promise.all(
+      [...selected].map(id => AdminAPI.updateProduct(id, { is_active: active ? 1 : 0 }))
+    );
+    /* 전체 재로드 */
+    await loadProducts();
+    selected.clear(); updateBulkBtn();
+    adminToast(`선택 상품이 ${active ? '활성' : '비활성'}화 되었습니다.`, 'success');
+  } catch(e) {
+    adminToast('처리 중 오류가 발생했습니다.', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+async function bulkDelete() {
+  if (!confirm(`선택한 ${selected.size}개 상품을 삭제하시겠습니까?`)) return;
+  showLoading('삭제 중...');
+  try {
+    await Promise.all([...selected].map(id => AdminAPI.deleteProduct(id)));
+    await loadProducts();
+    selected.clear(); updateBulkBtn();
+    adminToast('선택 상품이 삭제되었습니다.', 'info');
+  } catch(e) {
+    adminToast('삭제 중 오류가 발생했습니다.', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   활성 토글 (단건)
+════════════════════════════════════════════════════════ */
+async function toggleActive(id, active) {
+  try {
+    await AdminAPI.updateProduct(id, { is_active: active ? 1 : 0 });
+    /* 로컬 캐시만 빠르게 업데이트 (재요청 없이) */
+    const p = PRODUCTS.find(x => x.id === id);
+    if (p) p.active = active;
+    renderStats();
+    adminToast(`상품이 ${active ? '활성' : '비활성'}화 되었습니다.`, 'info');
+  } catch(e) {
+    adminToast('처리 중 오류가 발생했습니다.', 'error');
+    renderTable(); // 실패 시 원상복구
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   단건 삭제
+════════════════════════════════════════════════════════ */
+async function deleteProduct(id) {
+  const p = PRODUCTS.find(x => x.id === id);
+  if (!p || !confirm(`"${p.name}"을(를) 삭제하시겠습니까?`)) return;
+  showLoading('삭제 중...');
+  try {
+    const res = await AdminAPI.deleteProduct(id);
+    if (!res?.success) throw new Error(res?.message || '삭제 실패');
+    await loadProducts();
+    adminToast('상품이 삭제되었습니다.', 'info');
+  } catch(e) {
+    adminToast('삭제 중 오류가 발생했습니다.', 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   모달 열기
+════════════════════════════════════════════════════════ */
+function openModal(id = null) {
+  editingId = id;
+  document.getElementById('modalTitle').textContent =
+    id ? '상품 수정' : '상품 등록';
+  resetForm();
+
+  if (id) {
+    /* DB에서 로드된 캐시 기준으로 폼 채우기 */
+    const p = PRODUCTS.find(x => x.id === id);
+    if (!p) { adminToast('상품을 찾을 수 없습니다.', 'error'); return; }
+
+    document.getElementById('pName').value        = p.name          || '';
+    document.getElementById('pBrand').value       = p.brand         || '';
+    document.getElementById('pCategory').value    = p.category      || 'tire';
+    document.getElementById('pSize').value        = p.size          || '';
+    document.getElementById('pOrigin').value      = p.origin        || '';
+    document.getElementById('pDot').value         = p.dot           || '';
+    document.getElementById('pMfgDate').value     = p.mfgDate       || p.mfg_date   || '';
+    document.getElementById('pSpec').value        = p.spec          || '';
+    document.getElementById('pPattern').value     = p.pattern       || '';
+    document.getElementById('pSeason').value      = p.season        || '';
+    document.getElementById('pCarModel').value    = p.carModel      || p.car_model   || '';
+    document.getElementById('pFactoryPrice').value= p.factoryPrice  || p.factory_price || '';
+    document.getElementById('pPrice').value       = p.price         || '';
+    document.getElementById('pSalePrice').value   = p.salePrice     || p.sale_price  || '';
+    document.getElementById('pStock').value       = p.stock         || 0;
+    document.getElementById('pImg').value         = p.img           || '';
+    document.getElementById('pBadge').value       = p.badge         || '';
+    document.getElementById('pDesc').value        = p.description   || '';
+    document.getElementById('pRating').value      = p.rating        || '';
+    document.getElementById('pReviewCount').value = p.reviewCount   || p.review_count || 0;
+    document.getElementById('pMinStock').value    = p.minStock      || p.min_stock   || 5;
+    document.getElementById('pEmoji').value       = p.emoji         || '';
+    document.getElementById('pActive').checked    = p.active === true || p.active === 1;
+    document.getElementById('pShowSoldout').checked =
+      p.showSoldout === true || p.show_soldout === 1 || p.show_soldout === true;
+
+    /* 태그 — JSON 배열 or 문자열 처리 */
+    let tags = p.tags || [];
+    if (typeof tags === 'string') {
+      try { tags = JSON.parse(tags); } catch(e) { tags = []; }
+    }
+    document.getElementById('pTags').value = tags.join(', ');
+
+    previewImg(p.img);
+    calcDiscount();
+    syncBadge(p.badge);
+  }
+
+  document.getElementById('productModal').classList.add('open');
+  setTimeout(() => document.getElementById('pName').focus(), 100);
+}
+
+/* ════════════════════════════════════════════════════════
+   폼 리셋
+════════════════════════════════════════════════════════ */
+function resetForm() {
+  ['pName','pBrand','pSize','pDot','pMfgDate','pSpec','pPattern',
+   'pCarModel','pFactoryPrice','pPrice','pSalePrice','pImg',
+   'pBadge','pDesc','pRating','pReviewCount','pTags','pEmoji']
+    .forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.value = '';
+    });
+  document.getElementById('pCategory').value    = 'tire';
+  document.getElementById('pOrigin').value      = '';
+  document.getElementById('pSeason').value      = '';
+  document.getElementById('pStock').value       = '0';
+  document.getElementById('pMinStock').value    = '5';
+  document.getElementById('pActive').checked    = true;
+  document.getElementById('pShowSoldout').checked = true;
+  document.getElementById('pImgPreview').classList.remove('show');
+  document.getElementById('discountInfo').classList.remove('show');
+  document.querySelectorAll('.badge-opt-btn').forEach(b => b.classList.remove('active'));
+}
+
+function closeModal() {
+  document.getElementById('productModal').classList.remove('open');
+}
+
+/* ════════════════════════════════════════════════════════
+   저장 (비동기 — DB API 호출)
+════════════════════════════════════════════════════════ */
+async function saveProduct() {
+  const name = document.getElementById('pName').value.trim();
+  if (!name) { shake('pName'); adminToast('상품명을 입력하세요.', 'error'); return; }
+
+  const price        = parseInt(document.getElementById('pPrice').value)        || 0;
+  const salePrice    = parseInt(document.getElementById('pSalePrice').value)    || price;
+  const factoryPrice = parseInt(document.getElementById('pFactoryPrice').value) || 0;
+
+  if (!price) { shake('pPrice'); adminToast('정가를 입력하세요.', 'error'); return; }
+  if (salePrice > 0 && salePrice > price) {
+    shake('pSalePrice');
+    adminToast('할인가는 정가보다 낮아야 합니다.', 'error');
+    return;
+  }
+
+  /* 태그 파싱 */
+  const tagsRaw = document.getElementById('pTags').value;
+  const tags    = tagsRaw
+    ? tagsRaw.split(',').map(t => t.trim()).filter(Boolean)
+    : [];
+
+  /* discountRate 자동 계산 */
+  const discountRate = (factoryPrice > 0 && salePrice < factoryPrice)
+    ? Math.round((1 - salePrice / factoryPrice) * 100)
+    : (price > 0 && salePrice < price)
+      ? Math.round((1 - salePrice / price) * 100)
+      : 0;
+
+  const data = {
+    ...(editingId ? { id: editingId } : {}),
+    name,
+    brand:        document.getElementById('pBrand').value.trim(),
+    category:     document.getElementById('pCategory').value,
+    size:         document.getElementById('pSize').value.trim(),
+    origin:       document.getElementById('pOrigin').value,
+    dot:          document.getElementById('pDot').value.trim(),
+    mfgDate:      document.getElementById('pMfgDate').value.trim(),
+    spec:         document.getElementById('pSpec').value.trim(),
+    pattern:      document.getElementById('pPattern').value.trim(),
+    season:       document.getElementById('pSeason').value,
+    carModel:     document.getElementById('pCarModel').value.trim(),
+    factoryPrice, price, salePrice, discountRate,
+    stock:        parseInt(document.getElementById('pStock').value)        || 0,
+    minStock:     parseInt(document.getElementById('pMinStock').value)     || 5,
+    badge:        document.getElementById('pBadge').value.trim(),
+    img:          document.getElementById('pImg').value.trim() ||
+                  `https://placehold.co/400x300/e31e24/fff?text=${encodeURIComponent(name)}`,
+    emoji:        document.getElementById('pEmoji').value.trim() || '📦',
+    description:  document.getElementById('pDesc').value.trim(),
+    active:       document.getElementById('pActive').checked ? 1 : 0,
+    showSoldout:  document.getElementById('pShowSoldout').checked ? 1 : 0,
+    rating:       parseFloat(document.getElementById('pRating').value)     || 4.5,
+    reviewCount:  parseInt(document.getElementById('pReviewCount').value)  || 0,
+    tags,
+  };
+
+  /* 저장 버튼 비활성화 + 로딩 */
+  const saveBtn = document.getElementById('saveBtn');
+  saveBtn.disabled    = true;
+  saveBtn.textContent = '저장 중...';
+  showLoading(editingId ? '상품 수정 중...' : '상품 등록 중...');
+
+  try {
+    let res;
+    if (editingId) {
+      res = await AdminAPI.updateProduct(editingId, data);
+    } else {
+      res = await AdminAPI.createProduct(data);
+    }
+    if (!res?.success) throw new Error(res?.message || '저장 실패');
+    await loadProducts();
+
+    adminToast(
+      editingId ? '상품이 수정되었습니다. ✅' : '상품이 등록되었습니다. 🎉',
+      'success'
+    );
+    closeModal();
+  } catch(e) {
+    adminToast(`저장 실패: ${e.message}`, 'error');
+  } finally {
+    saveBtn.disabled    = false;
+    saveBtn.textContent = '💾 저장';
+    hideLoading();
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   DB에서 상품 로드 → 로컬 PRODUCTS 갱신 → 테이블 렌더
+════════════════════════════════════════════════════════ */
+async function loadProducts() {
+  const res = await AdminAPI.getProducts({ limit: 200 });
+  if (res?.success) {
+    PRODUCTS = res.data || [];
+    renderStats();
+    renderTable();
+  } else {
+    throw new Error(res?.message || '상품 로드 실패');
+  }
+}
+
+/* ════════════════════════════════════════════════════════
+   유틸 함수
+════════════════════════════════════════════════════════ */
+function previewImg(url) {
+  const img = document.getElementById('pImgPreview');
+  if (!url) { img.classList.remove('show'); return; }
+  img.src     = url;
+  img.onload  = () => img.classList.add('show');
+  img.onerror = () => img.classList.remove('show');
+}
+
+function calcDiscount() {
+  const p  = parseInt(document.getElementById('pPrice').value)        || 0;
+  const s  = parseInt(document.getElementById('pSalePrice').value)    || 0;
+  const fp = parseInt(document.getElementById('pFactoryPrice').value) || 0;
+  const el = document.getElementById('discountInfo');
+  let msg  = '';
+
+  if (p > 0 && s > 0 && s < p) {
+    const pct = Math.round((1 - s / p) * 100);
+    msg += `▼ ${pct}% 할인 · ₩${(p-s).toLocaleString()} 절약`;
+  }
+  if (fp > 0 && s > 0) {
+    const margin    = s - fp;
+    const marginPct = Math.round((margin / fp) * 100);
+    msg += msg ? '　|　' : '';
+    msg += `마진 ${marginPct >= 0 ? '+' : ''}${marginPct}% (₩${margin.toLocaleString()})`;
+  }
+  if (msg) { el.innerHTML = msg; el.classList.add('show'); }
+  else      el.classList.remove('show');
+}
+
+function selectBadge(val, btn) {
+  document.querySelectorAll('.badge-opt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('pBadge').value = val;
+}
+function syncBadge(val) {
+  document.querySelectorAll('.badge-opt-btn').forEach(b => {
+    b.classList.toggle('active', b.textContent === val);
+  });
+}
+function shake(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.add('shake');
+  setTimeout(() => el.classList.remove('shake'), 400);
+}
+
+/* ════════════════════════════════════════════════════════
+   모달 외부 클릭 / ESC 닫기
+════════════════════════════════════════════════════════ */
+document.getElementById('productModal').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeModal();
+});
+
+/* ════════════════════════════════════════════════════════
+   TTStore 실시간 반영
+   (다른 탭에서 수정 시 자동 갱신)
+════════════════════════════════════════════════════════ */
+window.addEventListener('tt_store_update', async (e) => {
+  if (e.detail.key === 'tt_products') {
+    /* API로드 - loadProducts() */
+    renderTable();
+  }
+});
+
+/* 중복 loadProducts 제거 (위 함수 사용) */
+
+/* ── 초기화 ── */
+document.addEventListener('DOMContentLoaded', async () => {
+  showLoading('상품 데이터를 불러오는 중...');
+  try {
+    await loadProducts();
+  } catch(e) {
+    /* 에러 상세 내용을 화면에 표시 */
+    hideLoading();
+    const tbody = document.getElementById('productTbody');
+    if (tbody) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="9" style="padding:40px;text-align:center;">
+            <div style="color:#ef4444;font-size:14px;font-weight:700;margin-bottom:8px;">
+              ❌ 상품 로드 실패
+            </div>
+            <div style="color:#6b7280;font-size:12px;margin-bottom:12px;">
+              ${e.message}
+            </div>
+            <div style="color:#9ca3af;font-size:11px;margin-bottom:16px;">
+              브라우저 F12 → Console 탭에서 자세한 오류를 확인하세요
+            </div>
+            <button onclick="location.reload()"
+                    style="padding:8px 20px;background:#6366f1;color:#fff;
+                           border:none;border-radius:8px;cursor:pointer;
+                           font-size:13px;font-weight:600;">
+              🔄 새로고침
+            </button>
+            <button onclick="window.open('${window.location.origin}${window.location.pathname.replace('admin/products.html','').replace('products.html','')}api/test.php','_blank')"
+                    style="padding:8px 20px;background:#10b981;color:#fff;
+                           border:none;border-radius:8px;cursor:pointer;
+                           font-size:13px;font-weight:600;margin-left:8px;">
+              🔍 서버 진단
+            </button>
+          </td>
+        </tr>`;
+    }
+    console.error('[products.html] 초기화 실패:', e);
+    return;
+  }
+  hideLoading();
+});
+
+</body>
+</html>

@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>관리자 로그인 – TIRETOP Admin</title>
+
+  <!-- admin.css 를 불러오지 않고 로그인 전용 스타일만 사용 -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap"
+        rel="stylesheet">
+
+  <style>
+    /* ── 완전 리셋 (admin.css 충돌 방지) ── */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --accent:   #e31e24;
+      --accent2:  #c41920;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --danger:   #ef4444;
+      --success:  #10b981;
+      --primary:  #1a1a2e;
+    }
+
+    /* ── 페이지 전체 배경 + 중앙 정렬 ── */
+    html, body {
+      width: 100%;
+      height: 100%;
+    }
+
+    body {
+      font-family: 'Noto Sans KR', sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 20px;
+      /* admin.css 의 flex 충돌 방지 */
+      flex-direction: column;
+    }
+
+    /* ── 배경 장식 원 ── */
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::before {
+      width: 400px; height: 400px;
+      background: rgba(227, 30, 36, 0.08);
+      top: -100px; right: -100px;
+    }
+
+    body::after {
+      width: 300px; height: 300px;
+      background: rgba(227, 30, 36, 0.05);
+      bottom: -80px; left: -80px;
+    }
+
+    /* ── 로그인 카드 ── */
+    .login-wrap {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+    }
+
+    .login-card {
+      background: #ffffff;
+      border-radius: 20px;
+      padding: 44px 40px 36px;
+      box-shadow:
+        0 25px 60px rgba(0, 0, 0, 0.35),
+        0 0 0 1px rgba(255,255,255,0.05);
+    }
+
+    /* ── 로고 영역 ── */
+    .login-logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .logo-badge {
+      width: 64px;
+      height: 64px;
+      background: linear-gradient(135deg, var(--accent), #ff6b35);
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 30px;
+      font-weight: 900;
+      color: #fff;
+      margin: 0 auto 14px;
+      box-shadow: 0 8px 20px rgba(227,30,36,0.35);
+      letter-spacing: -1px;
+    }
+
+    .login-logo h1 {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gray-900);
+      letter-spacing: -0.5px;
+    }
+
+    .login-logo p {
+      font-size: 13px;
+      color: var(--gray-400);
+      margin-top: 4px;
+    }
+
+    /* ── 에러 메시지 ── */
+    .login-error {
+      display: none;
+      background: #fff5f5;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 13px;
+      font-weight: 500;
+      margin-bottom: 16px;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .login-error.show {
+      display: flex;
+    }
+
+    /* ── 폼 그룹 ── */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gray-700);
+      margin-bottom: 7px;
+    }
+
+    .form-control {
+      width: 100%;
+      padding: 11px 14px;
+      border: 1.5px solid var(--gray-200);
+      border-radius: 10px;
+      font-size: 14px;
+      color: var(--gray-800);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      font-family: inherit;
+      background: #fff;
+    }
+
+    .form-control:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.1);
+    }
+
+    .form-control::placeholder {
+      color: var(--gray-300);
+    }
+
+    /* ── 비밀번호 래퍼 ── */
+    .pw-wrap {
+      position: relative;
+    }
+
+    .pw-wrap .form-control {
+      padding-right: 44px;
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      color: var(--gray-400);
+      padding: 4px;
+      border-radius: 4px;
+      transition: color 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pw-toggle:hover { color: var(--gray-600); }
+
+    /* ── 옵션 행 ── */
+    .form-options {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 22px;
+    }
+
+    .keep-login-label {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 13px;
+      color: var(--gray-600);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .keep-login-label input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .forgot-link {
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+    }
+
+    .forgot-link:hover { text-decoration: underline; }
+
+    /* ── 로그인 버튼 ── */
+    .login-btn {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(135deg, var(--accent), #ff4444);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.25s;
+      font-family: inherit;
+      letter-spacing: 0.2px;
+      box-shadow: 0 4px 14px rgba(227,30,36,0.3);
+    }
+
+    .login-btn:hover {
+      background: linear-gradient(135deg, var(--accent2), #e03333);
+      box-shadow: 0 6px 20px rgba(227,30,36,0.4);
+      transform: translateY(-1px);
+    }
+
+    .login-btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 8px rgba(227,30,36,0.3);
+    }
+
+    .login-btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* ── 로딩 스피너 ── */
+    .btn-spinner {
+      display: none;
+      width: 18px; height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      margin: 0 auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── 구분선 ── */
+    .divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 22px 0;
+      color: var(--gray-300);
+      font-size: 12px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--gray-200);
+    }
+
+    /* ── 힌트 박스 ── */
+    .hint-box {
+      background: var(--gray-100);
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 12px;
+      color: var(--gray-500);
+      line-height: 1.7;
+    }
+
+    .hint-box strong { color: var(--gray-700); }
+
+    /* ── 카드 하단 ── */
+    .login-footer {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.2px;
+    }
+
+    .login-footer a {
+      color: rgba(255,255,255,0.5);
+      text-decoration: none;
+    }
+
+    .login-footer a:hover { color: rgba(255,255,255,0.8); }
+
+    /* ── 브랜드 워터마크 ── */
+    .brand-mark {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .brand-mark span {
+      font-size: 11px;
+      color: rgba(255,255,255,0.25);
+      font-weight: 500;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+    }
+
+    .brand-mark::before,
+    .brand-mark::after {
+      content: '';
+      width: 24px;
+      height: 1px;
+      background: rgba(255,255,255,0.15);
+    }
+
+    /* ── 반응형 ── */
+    @media (max-width: 480px) {
+      .login-card {
+        padding: 36px 24px 28px;
+        border-radius: 16px;
+      }
+
+      .logo-badge {
+        width: 56px; height: 56px;
+        font-size: 26px;
+        border-radius: 15px;
+      }
+
+      .login-logo h1 { font-size: 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="login-wrap">
+
+    <!-- 로그인 카드 -->
+    <div class="login-card">
+
+      <!-- 로고 -->
+      <div class="login-logo">
+        <div class="logo-badge">T</div>
+        <h1>TIRETOP Admin</h1>
+        <p>관리자 전용 시스템에 로그인하세요.</p>
+      </div>
+
+      <!-- 에러 메시지 -->
+      <div class="login-error" id="loginError">
+        <span>🔒</span>
+        <span id="loginErrorMsg">아이디 또는 비밀번호가 올바르지 않습니다.</span>
+      </div>
+
+      <!-- 로그인 폼 -->
+      <div class="form-group">
+        <label class="form-label" for="adminId">관리자 아이디</label>
+        <input class="form-control" id="adminId" type="text"
+               placeholder="아이디를 입력하세요"
+               autocomplete="username"
+               onkeydown="if(event.key==='Enter') doAdminLogin()">
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="adminPw">비밀번호</label>
+        <div class="pw-wrap">
+          <input class="form-control" id="adminPw" type="password"
+                 placeholder="비밀번호를 입력하세요"
+                 autocomplete="current-password"
+                 onkeydown="if(event.key==='Enter') doAdminLogin()">
+          <button class="pw-toggle" type="button"
+                  onclick="togglePw()" title="비밀번호 표시/숨김">
+            👁️
+          </button>
+        </div>
+      </div>
+
+      <!-- 옵션 행 -->
+      <div class="form-options">
+        <label class="keep-login-label">
+          <input type="checkbox" id="keepLogin"> 로그인 상태 유지
+        </label>
+        <a href="#" class="forgot-link"
+           onclick="showHint(); return false;">비밀번호 찾기</a>
+      </div>
+
+      <!-- 로그인 버튼 -->
+      <button class="login-btn" id="loginBtn" type="button" onclick="doAdminLogin()">
+        <span id="loginBtnText">로그인</span>
+        <div class="btn-spinner" id="loginSpinner"></div>
+      </button>
+
+      <!-- 구분선 + 힌트 -->
+      <div class="divider">테스트 계정 안내</div>
+
+      <div class="hint-box" id="hintBox">
+        <div>아이디: <strong>admin</strong></div>
+        <div>비밀번호: <strong>admin1234</strong></div>
+        <div style="margin-top:6px;color:var(--gray-400)">
+          ※ 실제 서비스 배포 시 이 안내를 반드시 제거하세요.
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 카드 하단 -->
+    <div class="login-footer">
+      <div class="brand-mark"><span>TIRETOP</span></div>
+      © 2025 TIRETOP Co., Ltd. All rights reserved.
+      · <a href="/index.html" target="_blank">사이트 보기</a>
+    </div>
+
+  </div>
+
+  <script src="js/admin-api.js"></script>
+  <script>
+  /* ============================================================
+     어드민 로그인 – JWT API 연동 버전
+  ============================================================ */
+
+  /* ── 이미 로그인되어 있으면 대시보드로 이동 ── */
+  (function checkAlreadyLogin() {
+    try {
+      if (AdminAPI.isLoggedIn()) {
+        const params = new URLSearchParams(location.search);
+        location.href = params.get('redirect') || 'index.html';
+      }
+    } catch (e) { /* 무시 */ }
+  })();
+
+  /* ── redirect 파라미터 처리 ── */
+  (function checkRedirect() {
+    const params  = new URLSearchParams(location.search);
+    const redirect= params.get('redirect');
+    if (redirect) {
+      const error = document.getElementById('loginError');
+      const msg   = document.getElementById('loginErrorMsg');
+      if (error && msg) {
+        msg.textContent = '로그인이 필요한 페이지입니다. 로그인 후 이동합니다.';
+        error.style.background = '#fffbeb';
+        error.style.borderColor= '#fde68a';
+        error.style.color      = '#92400e';
+        error.querySelector('span').textContent = '⚠️';
+        error.classList.add('show');
+      }
+    }
+  })();
+
+  /* ── 비밀번호 표시/숨김 ── */
+  function togglePw() {
+    const inp = document.getElementById('adminPw');
+    const btn = document.querySelector('.pw-toggle');
+    if (!inp) return;
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      if (btn) btn.textContent = '🙈';
+    } else {
+      inp.type = 'password';
+      if (btn) btn.textContent = '👁️';
+    }
+  }
+
+  /* ── 힌트 표시 ── */
+  function showHint() {
+    const hint = document.getElementById('hintBox');
+    if (!hint) return;
+    hint.style.background = '#fff0f0';
+    hint.style.border     = '1px solid #fecaca';
+    hint.querySelector('div:first-child').style.color = 'var(--accent)';
+    setTimeout(() => {
+      hint.style.background = '';
+      hint.style.border     = '';
+    }, 1500);
+  }
+
+  /* ── 에러 표시 ── */
+  function showError(msg) {
+    const el  = document.getElementById('loginError');
+    const txt = document.getElementById('loginErrorMsg');
+    if (!el) return;
+    if (txt) txt.textContent = msg;
+    el.style.background  = '#fff5f5';
+    el.style.borderColor = '#fecaca';
+    el.style.color       = 'var(--danger)';
+    el.querySelector('span').textContent = '🔒';
+    el.classList.add('show');
+
+    /* 흔들림 애니메이션 */
+    el.style.animation = 'none';
+    el.offsetHeight; // reflow
+    el.style.animation = 'shake 0.4s ease';
+  }
+
+  /* 흔들림 키프레임 동적 추가 */
+  const shakeStyle = document.createElement('style');
+  shakeStyle.textContent = `
+    @keyframes shake {
+      0%,100%{ transform:translateX(0); }
+      20%     { transform:translateX(-6px); }
+      40%     { transform:translateX(6px); }
+      60%     { transform:translateX(-4px); }
+      80%     { transform:translateX(4px); }
+    }
+  `;
+  document.head.appendChild(shakeStyle);
+
+  /* ── 버튼 로딩 상태 ── */
+  function setLoading(on) {
+    const btn     = document.getElementById('loginBtn');
+    const txt     = document.getElementById('loginBtnText');
+    const spinner = document.getElementById('loginSpinner');
+    if (!btn) return;
+    btn.disabled = on;
+    if (txt)     txt.style.display    = on ? 'none'  : 'block';
+    if (spinner) spinner.style.display = on ? 'block' : 'none';
+  }
+
+  /* ── 실제 로그인 처리 (JWT API) ── */
+  async function doAdminLogin() {
+    const emailInput = document.getElementById('adminId')?.value.trim();
+    const pw = document.getElementById('adminPw')?.value;
+
+    if (!emailInput) {
+      showError('이메일을 입력하세요.');
+      document.getElementById('adminId')?.focus();
+      return;
+    }
+    if (!pw) {
+      showError('비밀번호를 입력하세요.');
+      document.getElementById('adminPw')?.focus();
+      return;
+    }
+
+    document.getElementById('loginError')?.classList.remove('show');
+    setLoading(true);
+
+    try {
+      const persist = document.getElementById('keepLogin')?.checked !== false;
+      const res = await AdminAPI.login(emailInput, pw, persist);
+
+      if (!res?.success) {
+        setLoading(false);
+        showError(res?.message || '로그인에 실패했습니다.');
+        document.getElementById('adminPw').value = '';
+        document.getElementById('adminPw')?.focus();
+        return;
+      }
+
+      // 관리자 권한 확인
+      if (res.data.user.role !== 'admin') {
+        AdminAPI.logout();
+        setLoading(false);
+        showError('관리자 계정이 아닙니다. 관리자 이메일로 로그인하세요.');
+        return;
+      }
+
+      /* 성공 버튼 효과 */
+      const btn = document.getElementById('loginBtn');
+      if (btn) {
+        btn.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+        btn.style.boxShadow  = '0 4px 14px rgba(16,185,129,0.35)';
+      }
+      const txt = document.getElementById('loginBtnText');
+      if (txt) { txt.style.display = 'block'; txt.textContent = '✅ 로그인 성공!'; }
+      const spinner = document.getElementById('loginSpinner');
+      if (spinner) spinner.style.display = 'none';
+
+      setTimeout(() => {
+        const params = new URLSearchParams(location.search);
+        location.href = params.get('redirect') || 'index.html';
+      }, 600);
+
+    } catch (e) {
+      setLoading(false);
+      showError('서버 통신 오류가 발생했습니다.');
+    }
+  }
+  </script>
+
+</body>
+</html>

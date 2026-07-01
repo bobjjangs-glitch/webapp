@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>회원 관리 – TIRETOP Admin</title>
+  <link rel="stylesheet" href="css/admin.css">
+  <style>
+    .user-avatar {
+      width: 36px; height: 36px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 800; color: #fff;
+      flex-shrink: 0;
+    }
+    .grade-badge {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 3px 9px; border-radius: 20px;
+      font-size: 11px; font-weight: 700;
+    }
+    .grade-vip    { background: #fef3c7; color: #78350f; }
+    .grade-gold   { background: #fef9c3; color: #713f12; }
+    .grade-silver { background: #f3f4f6; color: #374151; }
+    .grade-bronze { background: #fef0e7; color: #7c2d12; }
+    .grade-normal { background: var(--surface); color: var(--text-muted); }
+
+    .user-stat-row {
+      display: grid; grid-template-columns: repeat(3,1fr); gap: 10px;
+      margin-bottom: 16px;
+    }
+    .user-stat-item {
+      background: var(--surface); border-radius: 10px;
+      padding: 12px 14px; text-align: center;
+    }
+    .user-stat-item .label { font-size: 11px; color: var(--text-muted); margin-bottom: 4px; }
+    .user-stat-item .val   { font-size: 18px; font-weight: 800; color: var(--admin-accent); }
+  </style>
+</head>
+<body>
+
+<div id="tt-admin-header"></div>
+
+<div class="admin-main" id="adminMain">
+  <div class="admin-content">
+
+    <div class="page-header">
+      <div><h2>회원 관리</h2><p>전체 회원 현황을 조회하고 등급 및 상태를 관리합니다.</p></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline" onclick="exportCsv()">📥 CSV</button>
+        <button class="btn btn-primary" onclick="openUserModal()">➕ 회원 추가</button>
+      </div>
+    </div>
+
+    <!-- 통계 -->
+    <div class="stats-grid" id="userStats" style="margin-bottom:24px;"></div>
+
+    <!-- 필터 -->
+    <div class="filter-bar">
+      <input class="filter-search" type="text" id="userSearch"
+             placeholder="🔍 이름, 이메일, 전화번호 검색..." oninput="renderUsers()">
+      <select id="userGradeFilter" onchange="renderUsers()">
+        <option value="">전체 등급</option>
+        <option value="vip">VIP</option>
+        <option value="gold">골드</option>
+        <option value="silver">실버</option>
+        <option value="bronze">브론즈</option>
+        <option value="normal">일반</option>
+      </select>
+      <select id="userStatusFilter" onchange="renderUsers()">
+        <option value="">전체 상태</option>
+        <option value="active">활성</option>
+        <option value="inactive">휴면</option>
+        <option value="banned">정지</option>
+      </select>
+      <select id="userSort" onchange="renderUsers()">
+        <option value="join_desc">가입일 최신순</option>
+        <option value="join_asc">가입일 오래된순</option>
+        <option value="order_desc">주문 많은순</option>
+        <option value="spend_desc">구매액 높은순</option>
+      </select>
+      <div class="spacer"></div>
+      <span id="userCountTxt" style="font-size:13px;color:var(--text-muted);"></span>
+    </div>
+
+    <!-- 테이블 -->
+    <div class="card">
+      <div style="overflow-x:auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="userAllCheck" onchange="toggleAllUsers(this)"></th>
+              <th>회원</th>
+              <th>연락처</th>
+              <th>등급</th>
+              <th>총 주문</th>
+              <th>총 구매액</th>
+              <th>포인트</th>
+              <th>상태</th>
+              <th>가입일</th>
+              <th>관리</th>
+            </tr>
+          </thead>
+          <tbody id="userTbody"></tbody>
+        </table>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;
+                  padding:12px 18px;border-top:1px solid var(--border);flex-wrap:wrap;gap:8px;">
+        <div style="display:flex;gap:6px;">
+          <span id="bulkCount" style="font-size:13px;color:var(--text-muted);">선택: 0명</span>
+          <button class="btn btn-xs btn-danger" id="bulkBanBtn"
+                  style="display:none;" onclick="bulkBan()">선택 정지</button>
+          <button class="btn btn-xs btn-outline" id="bulkActivateBtn"
+                  style="display:none;" onclick="bulkActivate()">선택 활성화</button>
+        </div>
+        <span id="userPageInfo" style="font-size:13px;color:var(--text-muted);"></span>
+        <div id="userPageBtns" style="display:flex;gap:4px;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div id="tt-admin-footer"></div>
+
+<!-- 회원 상세/수정 모달 -->
+<div class="admin-modal-overlay" id="userModal">
+  <div class="admin-modal lg">
+    <div class="modal-header">
+      <h3 id="userModalTitle">회원 정보</h3>
+      <button class="modal-close" onclick="closeModal('userModal')">✕</button>
+    </div>
+    <div class="modal-body" id="userModalBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('userModal')">닫기</button>
+      <button class="btn btn-primary" onclick="saveUser()">💾 저장</button>
+    </div>
+  </div>
+</div>
+
+<!-- 메모 모달 -->
+<div class="admin-modal-overlay" id="memoModal">
+  <div class="admin-modal" style="max-width:420px;">
+    <div class="modal-header">
+      <h3>관리자 메모</h3>
+      <button class="modal-close" onclick="closeModal('memoModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <textarea class="form-control" id="memoInput" style="min-height:120px;"
+                placeholder="이 회원에 대한 메모를 입력하세요..."></textarea>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('memoModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveMemo()">저장</button>
+    </div>
+  </div>
+</div>
+
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+let USERS = [
+  { id:1,  name:'김민준', email:'kim@example.com',   phone:'010-1234-5678', grade:'vip',    status:'active',   orders:24, spend:4850000, point:48500, joinDate:'2023-06-15', lastLogin:'2025-04-30', memo:'' },
+  { id:2,  name:'이서연', email:'lee@example.com',   phone:'010-2345-6789', grade:'gold',   status:'active',   orders:18, spend:3240000, point:32400, joinDate:'2023-09-22', lastLogin:'2025-04-29', memo:'' },
+  { id:3,  name:'박도현', email:'park@example.com',  phone:'010-3456-7890', grade:'gold',   status:'active',   orders:15, spend:2980000, point:29800, joinDate:'2024-01-10', lastLogin:'2025-04-28', memo:'중고가 타이어 선호' },
+  { id:4,  name:'최지아', email:'choi@example.com',  phone:'010-4567-8901', grade:'silver', status:'active',   orders:8,  spend:1520000, point:15200, joinDate:'2024-03-05', lastLogin:'2025-04-27', memo:'' },
+  { id:5,  name:'정수호', email:'jung@example.com',  phone:'010-5678-9012', grade:'vip',    status:'active',   orders:32, spend:6720000, point:67200, joinDate:'2023-02-14', lastLogin:'2025-04-30', memo:'프리미엄 고객, VIP 관리 필요' },
+  { id:6,  name:'윤하은', email:'yoon@example.com',  phone:'010-6789-0123', grade:'bronze', status:'active',   orders:4,  spend:480000,  point:4800,  joinDate:'2024-07-20', lastLogin:'2025-04-25', memo:'' },
+  { id:7,  name:'강지훈', email:'kang@example.com',  phone:'010-7890-1234', grade:'silver', status:'inactive', orders:6,  spend:920000,  point:9200,  joinDate:'2023-11-30', lastLogin:'2025-01-15', memo:'' },
+  { id:8,  name:'서예진', email:'seo@example.com',   phone:'010-8901-2345', grade:'bronze', status:'active',   orders:3,  spend:320000,  point:3200,  joinDate:'2025-01-08', lastLogin:'2025-04-28', memo:'' },
+  { id:9,  name:'오민석', email:'oh@example.com',    phone:'010-9012-3456', grade:'gold',   status:'active',   orders:14, spend:2650000, point:26500, joinDate:'2023-08-19', lastLogin:'2025-04-26', memo:'' },
+  { id:10, name:'조현아', email:'jo@example.com',    phone:'010-0123-4567', grade:'normal', status:'banned',   orders:2,  spend:98000,   point:0,     joinDate:'2025-02-14', lastLogin:'2025-03-01', memo:'허위 리뷰 작성으로 계정 정지' },
+  { id:11, name:'황준호', email:'hwang@example.com', phone:'010-1122-3344', grade:'silver', status:'active',   orders:9,  spend:1780000, point:17800, joinDate:'2024-04-03', lastLogin:'2025-04-24', memo:'' },
+  { id:12, name:'임소연', email:'lim@example.com',   phone:'010-2233-4455', grade:'bronze', status:'active',   orders:5,  spend:620000,  point:6200,  joinDate:'2024-09-11', lastLogin:'2025-04-22', memo:'' },
+];
+
+const GRADE_LABEL  = { vip:'VIP', gold:'골드', silver:'실버', bronze:'브론즈', normal:'일반' };
+const GRADE_CLASS  = { vip:'grade-vip', gold:'grade-gold', silver:'grade-silver', bronze:'grade-bronze', normal:'grade-normal' };
+const GRADE_EMOJI  = { vip:'👑', gold:'🥇', silver:'🥈', bronze:'🥉', normal:'👤' };
+const STATUS_LABEL = { active:'활성', inactive:'휴면', banned:'정지' };
+const STATUS_BADGE = { active:'badge-success', inactive:'badge-gray', banned:'badge-danger' };
+const AVATAR_COLORS= ['#6366f1','#e31e24','#f59e0b','#10b981','#3b82f6','#8b5cf6','#ec4899','#14b8a6'];
+
+let userPage = 1;
+const USER_PER = 10;
+let selectedUsers = new Set();
+let editingUserId = null;
+let memoUserId    = null;
+
+/* ── 통계 ── */
+function renderUserStats() {
+  const el = document.getElementById('userStats');
+  if (!el) return;
+  const total    = USERS.length;
+  const active   = USERS.filter(u=>u.status==='active').length;
+  const banned   = USERS.filter(u=>u.status==='banned').length;
+  const vipGold  = USERS.filter(u=>['vip','gold'].includes(u.grade)).length;
+  el.innerHTML = `
+    <div class="stat-card"><div class="stat-icon blue">👥</div><div class="stat-info"><div class="stat-label">전체 회원</div><div class="stat-value">${total}명</div></div></div>
+    <div class="stat-card"><div class="stat-icon green">✅</div><div class="stat-info"><div class="stat-label">활성 회원</div><div class="stat-value">${active}명</div></div></div>
+    <div class="stat-card"><div class="stat-icon purple">👑</div><div class="stat-info"><div class="stat-label">VIP + 골드</div><div class="stat-value">${vipGold}명</div></div></div>
+    <div class="stat-card"><div class="stat-icon red">🚫</div><div class="stat-info"><div class="stat-label">정지 회원</div><div class="stat-value">${banned}명</div></div></div>`;
+}
+
+/* ── 필터/정렬 ── */
+function getFiltered() {
+  const q      = document.getElementById('userSearch').value.toLowerCase();
+  const grade  = document.getElementById('userGradeFilter').value;
+  const status = document.getElementById('userStatusFilter').value;
+  const sort   = document.getElementById('userSort').value;
+  let list = USERS.filter(u => {
+    if (grade  && u.grade  !== grade)  return false;
+    if (status && u.status !== status) return false;
+    if (q && !u.name.includes(q) && !u.email.includes(q) && !u.phone.includes(q)) return false;
+    return true;
+  });
+  if (sort === 'join_desc')  list.sort((a,b)=>(b.joinDate||'').localeCompare(a.joinDate||''));
+  if (sort === 'join_asc')   list.sort((a,b)=>(a.joinDate||'').localeCompare(b.joinDate||''));
+  if (sort === 'order_desc') list.sort((a,b)=>b.orders-a.orders);
+  if (sort === 'spend_desc') list.sort((a,b)=>b.spend-a.spend);
+  return list;
+}
+
+/* ── 테이블 렌더 ── */
+function renderUsers() {
+  const filtered = getFiltered();
+  const pages    = Math.max(1, Math.ceil(filtered.length/USER_PER));
+  if (userPage > pages) userPage = 1;
+  const slice    = filtered.slice((userPage-1)*USER_PER, userPage*USER_PER);
+
+  document.getElementById('userCountTxt').textContent = `총 ${filtered.length}명`;
+  document.getElementById('userPageInfo').textContent =
+    `${Math.min((userPage-1)*USER_PER+1,filtered.length)}–${Math.min(userPage*USER_PER,filtered.length)} / ${filtered.length}명`;
+
+  const tbody = document.getElementById('userTbody');
+  tbody.innerHTML = slice.map(u => {
+    const initials  = u.name.slice(0,1);
+    const colorIdx  = u.id % AVATAR_COLORS.length;
+    return `
+      <tr>
+        <td>
+          <input type="checkbox" class="user-check" value="${u.id}"
+                 ${selectedUsers.has(u.id)?'checked':''}
+                 onchange="toggleUserSelect(${u.id},this.checked)">
+        </td>
+        <td>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <div class="user-avatar" style="background:${AVATAR_COLORS[colorIdx]};">${initials}</div>
+            <div>
+              <div style="font-weight:700;font-size:13px;">${u.name}</div>
+              <div style="font-size:11px;color:var(--text-muted);">${u.email}</div>
+            </div>
+          </div>
+        </td>
+        <td style="font-size:12px;color:var(--text-muted);">${u.phone}</td>
+        <td>
+          <span class="grade-badge ${GRADE_CLASS[u.grade]}">
+            ${GRADE_EMOJI[u.grade]} ${GRADE_LABEL[u.grade]}
+          </span>
+        </td>
+        <td style="font-weight:700;">${u.orders}건</td>
+        <td style="font-weight:700;color:var(--admin-accent);">₩${u.spend.toLocaleString()}</td>
+        <td style="font-size:12px;color:var(--text-muted);">${u.point.toLocaleString()}P</td>
+        <td>
+          <span class="badge ${STATUS_BADGE[u.status]}">${STATUS_LABEL[u.status]}</span>
+        </td>
+        <td style="font-size:12px;color:var(--text-muted);">${u.joinDate}</td>
+        <td>
+          <div style="display:flex;gap:4px;">
+            <button class="btn btn-xs btn-outline" onclick="openUserModal(${u.id})">✏️</button>
+            <button class="btn btn-xs btn-outline" onclick="openMemoModal(${u.id})"
+                    title="메모">📝</button>
+            <button class="btn btn-xs ${u.status==='banned'?'btn-primary':'btn-danger'}"
+                    onclick="toggleBan(${u.id})">
+              ${u.status==='banned'?'해제':'정지'}
+            </button>
+          </div>
+        </td>
+      </tr>`;
+  }).join('');
+
+  /* 페이지 버튼 */
+  const pb = document.getElementById('userPageBtns');
+  pb.innerHTML = '';
+  for (let i=1; i<=pages; i++) {
+    const btn = document.createElement('button');
+    btn.className = `btn btn-sm ${i===userPage?'btn-primary':'btn-outline'}`;
+    btn.textContent = i;
+    btn.onclick = () => { userPage=i; renderUsers(); };
+    pb.appendChild(btn);
+  }
+  document.getElementById('userAllCheck').checked =
+    slice.length > 0 && slice.every(u => selectedUsers.has(u.id));
+}
+
+/* ── 체크박스 ── */
+function toggleAllUsers(el) {
+  const filtered = getFiltered();
+  const slice    = filtered.slice((userPage-1)*USER_PER, userPage*USER_PER);
+  slice.forEach(u => el.checked ? selectedUsers.add(u.id) : selectedUsers.delete(u.id));
+  updateBulkBar();
+  renderUsers();
+}
+function toggleUserSelect(id, checked) {
+  checked ? selectedUsers.add(id) : selectedUsers.delete(id);
+  updateBulkBar();
+}
+function updateBulkBar() {
+  const cnt = selectedUsers.size;
+  document.getElementById('bulkCount').textContent = `선택: ${cnt}명`;
+  const show = cnt > 0;
+  document.getElementById('bulkBanBtn').style.display      = show ? '' : 'none';
+  document.getElementById('bulkActivateBtn').style.display = show ? '' : 'none';
+}
+
+/* ── 일괄 처리 ── */
+function bulkBan() {
+  if (!confirm(`선택한 ${selectedUsers.size}명을 정지하시겠습니까?`)) return;
+  selectedUsers.forEach(id => {
+    const u = USERS.find(x=>x.id===id); if(u) u.status='banned';
+  });
+  selectedUsers.clear();
+  updateBulkBar(); renderUserStats(); renderUsers();
+  adminToast('선택 회원이 정지되었습니다.','info');
+}
+function bulkActivate() {
+  selectedUsers.forEach(id => {
+    const u = USERS.find(x=>x.id===id); if(u) u.status='active';
+  });
+  selectedUsers.clear();
+  updateBulkBar(); renderUserStats(); renderUsers();
+  adminToast('선택 회원이 활성화되었습니다.','success');
+}
+
+/* ── 정지 토글 ── */
+function toggleBan(id) {
+  const u = USERS.find(x=>x.id===id);
+  if (!u) return;
+  if (u.status === 'banned') {
+    u.status = 'active';
+    adminToast(`${u.name}님의 계정이 활성화되었습니다.`,'success');
+  } else {
+    if (!confirm(`"${u.name}"님을 정지하시겠습니까?`)) return;
+    u.status = 'banned';
+    adminToast(`${u.name}님이 정지되었습니다.`,'info');
+  }
+  renderUserStats(); renderUsers();
+}
+
+/* ── 회원 모달 ── */
+function openUserModal(id = null) {
+  editingUserId = id;
+  const isNew = !id;
+  document.getElementById('userModalTitle').textContent = isNew ? '회원 추가' : '회원 정보 수정';
+  const u = id ? USERS.find(x=>x.id===id) : null;
+
+  document.getElementById('userModalBody').innerHTML = `
+    ${!isNew ? `
+    <div class="user-stat-row">
+      <div class="user-stat-item"><div class="label">총 주문</div><div class="val">${u.orders}건</div></div>
+      <div class="user-stat-item"><div class="label">총 구매액</div><div class="val" style="font-size:15px;">₩${(u.spend/10000).toFixed(0)}만</div></div>
+      <div class="user-stat-item"><div class="label">포인트</div><div class="val" style="font-size:15px;">${u.point.toLocaleString()}P</div></div>
+    </div>` : ''}
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">이름 *</label>
+        <input class="form-control" id="uName" value="${u?.name||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">이메일 *</label>
+        <input class="form-control" id="uEmail" type="email" value="${u?.email||''}">
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">전화번호</label>
+        <input class="form-control" id="uPhone" value="${u?.phone||''}">
+      </div>
+      <div class="form-group">
+        <label class="form-label">등급</label>
+        <select class="form-control" id="uGrade">
+          ${Object.entries(GRADE_LABEL).map(([k,v])=>`<option value="${k}" ${u?.grade===k?'selected':''}>${GRADE_EMOJI[k]} ${v}</option>`).join('')}
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">상태</label>
+        <select class="form-control" id="uStatus">
+          <option value="active"   ${u?.status==='active'  ?'selected':''}>활성</option>
+          <option value="inactive" ${u?.status==='inactive'?'selected':''}>휴면</option>
+          <option value="banned"   ${u?.status==='banned'  ?'selected':''}>정지</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">포인트</label>
+        <input class="form-control" id="uPoint" type="number" value="${u?.point||0}">
+      </div>
+    </div>
+    ${!isNew ? `
+    <div class="form-group">
+      <label class="form-label">최근 로그인</label>
+      <input class="form-control" value="${u.lastLogin}" readonly style="background:var(--surface);color:var(--text-muted);">
+    </div>
+    <div class="form-group">
+      <label class="form-label">관리자 메모</label>
+      <textarea class="form-control" id="uMemo" style="min-height:70px;">${u.memo||''}</textarea>
+    </div>` : ''}`;
+  document.getElementById('userModal').classList.add('open');
+  setTimeout(()=>document.getElementById('uName').focus(),100);
+}
+
+function saveUser() {
+  const name  = document.getElementById('uName').value.trim();
+  const email = document.getElementById('uEmail').value.trim();
+  if (!name || !email) { adminToast('이름과 이메일은 필수 항목입니다.','error'); return; }
+  const data = {
+    name, email,
+    phone:  document.getElementById('uPhone').value.trim(),
+    grade:  document.getElementById('uGrade').value,
+    status: document.getElementById('uStatus').value,
+    point:  parseInt(document.getElementById('uPoint')?.value)||0,
+    memo:   document.getElementById('uMemo')?.value.trim()||'',
+  };
+  if (editingUserId) {
+    const idx = USERS.findIndex(u=>u.id===editingUserId);
+    if (idx>-1) USERS[idx] = { ...USERS[idx], ...data };
+    adminToast('회원 정보가 수정되었습니다.','success');
+  } else {
+    USERS.unshift({ id:Date.now(), orders:0, spend:0, joinDate:new Date().toISOString().slice(0,10), lastLogin:'-', ...data });
+    adminToast('회원이 추가되었습니다.','success');
+  }
+  closeModal('userModal');
+  renderUserStats(); renderUsers();
+}
+
+/* ── 메모 모달 ── */
+function openMemoModal(id) {
+  memoUserId = id;
+  const u = USERS.find(x=>x.id===id);
+  if (!u) return;
+  document.getElementById('memoInput').value = u.memo || '';
+  document.getElementById('memoModal').classList.add('open');
+  setTimeout(()=>document.getElementById('memoInput').focus(),100);
+}
+function saveMemo() {
+  const u = USERS.find(x=>x.id===memoUserId);
+  if (!u) return;
+  u.memo = document.getElementById('memoInput').value.trim();
+  closeModal('memoModal');
+  adminToast('메모가 저장되었습니다.','success');
+}
+
+/* ── CSV ── */
+function exportCsv() {
+  const header = '이름,이메일,전화번호,등급,상태,주문수,구매액,포인트,가입일,최근로그인';
+  const rows = USERS.map(u =>
+    `${u.name},${u.email},${u.phone},${GRADE_LABEL[u.grade]},${STATUS_LABEL[u.status]},${u.orders},${u.spend},${u.point},${u.joinDate},${u.lastLogin}`
+  );
+  const blob = new Blob([header+'\n'+rows.join('\n')],{type:'text/csv;charset=utf-8;'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'users_'+new Date().toISOString().slice(0,10)+'.csv';
+  a.click();
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+['userModal','memoModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target===this) closeModal(id);
+  });
+});
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') ['userModal','memoModal'].forEach(closeModal);
+});
+
+async function loadUsers() {
+  try {
+    const res = await AdminAPI.getUsers({ limit: 500 });
+    if (res?.success) {
+      USERS = (res.data || []).map(u => ({
+        ...u,
+        joinDate: u.created_at || '',
+        orders:   u.order_count || 0,
+        spend:    u.total_spend || 0,
+        phone:    u.phone || '',
+      }));
+      renderUserStats();
+      renderUsers();
+    }
+  } catch(e) { console.error('회원 로드 실패', e); }
+}
+
+async function updateUserStatus(id, status) {
+  const res = await AdminAPI.updateUser(id, { status });
+  if (res?.success) {
+    AdminAPI.toast(status === 'banned' ? '회원이 정지되었습니다.' : '상태가 변경되었습니다.', status === 'banned' ? 'warn' : 'success');
+    await loadUsers();
+  }
+}
+
+async function updateUserGrade(id, grade) {
+  const res = await AdminAPI.updateUser(id, { grade });
+  if (res?.success) {
+    AdminAPI.toast('등급이 변경되었습니다.', 'success');
+    await loadUsers();
+  }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadUsers();
+});
+</script>
+</body>
+</html>

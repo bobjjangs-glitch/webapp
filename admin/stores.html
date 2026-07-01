@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>매장 관리 – TireTop Admin</title>
+  <link rel="stylesheet" href="css/admin.css"/>
+  <style>
+    .store-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .store-kpi-card {
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      padding: 20px 22px;
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      transition: all var(--transition);
+    }
+    .store-kpi-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    .store-kpi-icon {
+      width: 46px; height: 46px;
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+    }
+    .store-kpi-value {
+      font-size: 1.5rem; font-weight: 800;
+      line-height: 1; margin-bottom: 4px;
+    }
+    .store-kpi-label {
+      font-size: 0.78rem; color: var(--text-muted); font-weight: 500;
+    }
+
+    .store-toolbar {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 14px 18px;
+      background: var(--bg-card);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      margin-bottom: 20px;
+    }
+    .view-toggle { display: flex; gap: 4px; }
+    .view-btn {
+      padding: 8px 14px; border-radius: 8px; font-size: 0.8rem;
+      font-weight: 600; border: 1.5px solid var(--border);
+      background: transparent; cursor: pointer;
+      transition: all var(--transition); color: var(--text-muted);
+    }
+    .view-btn.active {
+      background: var(--primary); border-color: var(--primary); color: #fff;
+    }
+    .store-search-wrap { position: relative; flex: 1; min-width: 180px; }
+    .store-search-wrap::before {
+      content: '🔍'; position: absolute; left: 11px; top: 50%;
+      transform: translateY(-50%); font-size: 0.85rem; pointer-events: none;
+    }
+    .store-search-input {
+      width: 100%; padding: 9px 14px 9px 33px;
+      border: 1.5px solid var(--border); border-radius: 10px;
+      font-size: 0.875rem; background: var(--surface);
+      transition: all var(--transition); font-family: inherit;
+    }
+    .store-search-input:focus {
+      outline: none; border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-glow);
+    }
+
+    .store-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 18px;
+    }
+    .store-card {
+      background: var(--bg-card); border-radius: var(--radius);
+      border: 1px solid var(--border); overflow: hidden;
+      box-shadow: var(--shadow); transition: all var(--transition);
+      display: flex; flex-direction: column;
+    }
+    .store-card:hover {
+      transform: translateY(-3px); box-shadow: var(--shadow-md);
+    }
+    .store-card-map {
+      height: 110px;
+      background: linear-gradient(135deg, #ddd6fe, #c4b5fd);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2.8rem; position: relative; flex-shrink: 0;
+    }
+    .store-status-badge {
+      position: absolute; top: 10px; right: 10px;
+      padding: 3px 10px; border-radius: 20px;
+      font-size: 0.7rem; font-weight: 700;
+    }
+    .badge-open      { background: rgba(16,185,129,0.15); color: #059669; }
+    .badge-closed    { background: rgba(244,63,94,0.12);  color: var(--accent); }
+    .badge-preparing { background: rgba(245,158,11,0.15); color: #d97706; }
+
+    .store-card-body {
+      padding: 16px 18px; flex: 1; display: flex; flex-direction: column;
+    }
+    .store-card-name { font-size: 1rem; font-weight: 800; margin-bottom: 6px; }
+    .store-card-meta {
+      font-size: 0.78rem; color: var(--text-muted);
+      display: flex; flex-direction: column; gap: 3px; margin-bottom: 12px;
+    }
+    .store-card-meta span { display: flex; align-items: flex-start; gap: 5px; }
+    .store-reserve-count { font-weight: 800; color: var(--primary); }
+
+    .store-service-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+    .store-service-tag {
+      padding: 3px 9px; border-radius: 6px; font-size: 0.72rem; font-weight: 600;
+      background: var(--surface); color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .store-feature-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 12px; }
+    .store-feature-tag {
+      padding: 3px 9px; border-radius: 20px; font-size: 0.7rem; font-weight: 700;
+      background: rgba(99,102,241,0.1); color: var(--primary);
+    }
+    .store-card-footer {
+      display: flex; gap: 6px;
+      border-top: 1px solid var(--border);
+      padding-top: 12px; margin-top: auto;
+    }
+
+    .store-list-wrap { display: none; }
+
+    .detail-info-grid { display: flex; flex-direction: column; gap: 10px; font-size: 0.875rem; }
+    .detail-info-row {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; gap: 12px;
+      padding: 8px 0; border-bottom: 1px solid var(--border);
+    }
+    .detail-info-row:last-child { border-bottom: none; }
+    .detail-info-label { color: var(--text-muted); font-weight: 600; flex-shrink: 0; min-width: 90px; }
+    .detail-info-val   { text-align: right; font-weight: 500; }
+
+    .map-placeholder {
+      width: 100%; height: 220px;
+      background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+      border-radius: 12px; border: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: center;
+      flex-direction: column; gap: 8px;
+      color: var(--text-muted); font-size: 0.85rem;
+    }
+
+    .schedule-grid {
+      display: grid; grid-template-columns: repeat(7, 1fr);
+      gap: 5px; margin-top: 10px;
+    }
+    .schedule-day {
+      text-align: center; padding: 7px 4px;
+      border-radius: 8px; border: 1px solid var(--border);
+      font-size: 0.72rem;
+    }
+    .schedule-day .day-name { font-weight: 700; margin-bottom: 3px; color: var(--text-muted); }
+    .schedule-day.sched-open   { background: #f0fdf4; border-color: #86efac; }
+    .schedule-day.sched-closed { background: var(--surface); }
+    .schedule-day.sched-open   .day-time { color: #10b981; font-size: 0.68rem; }
+    .schedule-day.sched-closed .day-off  { font-size: 0.68rem; color: #cbd5e1; }
+
+    .svc-check-wrap { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .svc-check-label {
+      display: flex; align-items: center; gap: 5px;
+      font-size: 0.85rem; cursor: pointer; padding: 5px 12px;
+      border-radius: 20px; border: 1.5px solid var(--border);
+      transition: all var(--transition); user-select: none;
+    }
+    .svc-check-label:has(input:checked) {
+      border-color: var(--primary);
+      background: rgba(99,102,241,0.08);
+      color: var(--primary); font-weight: 600;
+    }
+    .svc-check-label input { accent-color: var(--primary); }
+
+    .form-section-label {
+      font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.8px;
+      padding-bottom: 6px; border-bottom: 1.5px solid var(--border);
+      margin-bottom: 4px; display: flex; align-items: center; gap: 6px;
+    }
+    .btn-ghost {
+      background: rgba(99,102,241,0.08); color: var(--primary);
+      border: 1.5px solid rgba(99,102,241,0.2);
+    }
+    .btn-ghost:hover {
+      background: rgba(99,102,241,0.15); border-color: var(--primary);
+    }
+
+    @media (max-width: 1100px) { .store-kpi-grid { grid-template-columns: repeat(2,1fr); } }
+    @media (max-width: 640px)  {
+      .store-kpi-grid { grid-template-columns: 1fr 1fr; }
+      .store-grid     { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="adminMain">
+
+  <div class="page-header">
+    <div>
+      <h2>매장 관리</h2>
+      <p>전국 매장 정보를 조회·수정하고 운영 현황을 관리합니다.</p>
+    </div>
+    <button class="btn btn-primary" onclick="openStoreModal()">＋ 매장 추가</button>
+  </div>
+
+  <!-- 통계 카드 -->
+  <div class="store-kpi-grid" id="storeKpi"></div>
+
+  <!-- 툴바 -->
+  <div class="store-toolbar">
+    <div class="view-toggle">
+      <button class="view-btn active" id="btnViewGrid"
+              onclick="setView('grid')">▦ 카드</button>
+      <button class="view-btn" id="btnViewList"
+              onclick="setView('list')">☰ 목록</button>
+    </div>
+    <div class="store-search-wrap">
+      <input class="store-search-input" id="storeSearch"
+             placeholder="매장명, 지역, 주소 검색…"
+             oninput="renderStores()"/>
+    </div>
+    <select class="form-control" id="storeStatusFilter"
+            onchange="renderStores()" style="width:120px;">
+      <option value="">전체 상태</option>
+      <option value="open">영업중</option>
+      <option value="closed">휴업</option>
+      <option value="preparing">준비중</option>
+    </select>
+    <select class="form-control" id="storeRegionFilter"
+            onchange="renderStores()" style="width:110px;">
+      <option value="">전체 지역</option>
+      <option>서울</option><option>경기</option><option>인천</option>
+      <option>부산</option><option>대구</option><option>기타</option>
+    </select>
+    <span id="storeCountTxt"
+          style="margin-left:auto;font-size:0.85rem;
+                 color:var(--text-muted);white-space:nowrap;"></span>
+  </div>
+
+  <!-- 카드 뷰 -->
+  <div class="store-grid" id="storeGridView"></div>
+
+  <!-- 리스트 뷰 -->
+  <div class="store-list-wrap card" id="storeListView" style="padding:0;">
+    <div style="overflow-x:auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>매장명</th><th>지역</th><th>주소</th><th>전화</th>
+            <th>운영시간</th><th>서비스</th><th>오늘 예약</th>
+            <th>상태</th><th>관리</th>
+          </tr>
+        </thead>
+        <tbody id="storeListTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- 매장 등록/수정 모달 -->
+<div class="admin-modal-overlay" id="storeModal">
+  <div class="admin-modal lg" style="max-width:720px;">
+    <div class="modal-header">
+      <h3 id="storeModalTitle">매장 추가</h3>
+      <button class="modal-close" onclick="closeModal('storeModal')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:calc(90vh - 160px);overflow-y:auto;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+        <!-- 왼쪽 -->
+        <div>
+          <div class="form-section-label">📋 기본 정보</div>
+          <div class="form-row" style="margin-top:12px;">
+            <div class="form-group">
+              <label class="form-label">매장명 *</label>
+              <input class="form-control" id="sName" placeholder="예: 강남점"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">지역</label>
+              <select class="form-control" id="sRegion">
+                <option>서울</option><option>경기</option><option>인천</option>
+                <option>부산</option><option>대구</option><option>기타</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">주소 *</label>
+            <input class="form-control" id="sAddr" placeholder="도로명 주소를 입력하세요"/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">대표 전화</label>
+              <input class="form-control" id="sPhone" placeholder="02-0000-0000"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">담당자</label>
+              <input class="form-control" id="sManager" placeholder="홍길동"/>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">평일 운영시간</label>
+              <input class="form-control" id="sWeekHour" placeholder="09:00~18:00"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">주말 운영시간</label>
+              <input class="form-control" id="sWeekendHour"
+                     placeholder="10:00~17:00 또는 휴무"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">매장 상태</label>
+            <select class="form-control" id="sStatus">
+              <option value="open">영업중</option>
+              <option value="closed">휴업</option>
+              <option value="preparing">준비중</option>
+            </select>
+          </div>
+          <div class="form-section-label" style="margin-top:16px;">🔧 제공 서비스</div>
+          <div class="svc-check-wrap" id="serviceCheckWrap"></div>
+        </div>
+
+        <!-- 오른쪽 -->
+        <div>
+          <div class="form-section-label">⚙️ 추가 설정</div>
+          <div class="form-group" style="margin-top:12px;">
+            <label class="form-label">매장 특징 태그</label>
+            <input class="form-control" id="sTags"
+                   placeholder="예: 24시간, 대형주차, 예약필수 (쉼표 구분)"/>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">최대 동시 예약</label>
+              <input class="form-control" type="number" id="sMaxReserve"
+                     placeholder="3" min="1"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">주차</label>
+              <select class="form-control" id="sParking">
+                <option value="yes">가능</option>
+                <option value="no">불가</option>
+                <option value="paid">유료</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-section-label" style="margin-top:8px;">🗺️ 지도 좌표</div>
+          <div class="form-row" style="margin-top:10px;">
+            <div class="form-group">
+              <label class="form-label">위도 (Latitude)</label>
+              <input class="form-control" id="sLat" type="number"
+                     step="any" placeholder="37.000000"/>
+            </div>
+            <div class="form-group">
+              <label class="form-label">경도 (Longitude)</label>
+              <input class="form-control" id="sLng" type="number"
+                     step="any" placeholder="127.000000"/>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">관리자 메모 (내부용)</label>
+            <textarea class="form-control" id="sMemo" rows="4"
+                      placeholder="내부 관리용 메모…"></textarea>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('storeModal')">취소</button>
+      <button class="btn btn-primary" onclick="saveStore()">💾 저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- 매장 상세 모달 -->
+<div class="admin-modal-overlay" id="storeDetailModal">
+  <div class="admin-modal lg" style="max-width:680px;">
+    <div class="modal-header">
+      <h3 id="storeDetailTitle">매장 상세</h3>
+      <button class="modal-close"
+              onclick="closeModal('storeDetailModal')">✕</button>
+    </div>
+    <div class="modal-body" style="max-height:calc(90vh - 160px);overflow-y:auto;"
+         id="storeDetailBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-outline"
+              onclick="closeModal('storeDetailModal')">닫기</button>
+      <button class="btn btn-primary" id="storeEditBtn">✏️ 수정하기</button>
+    </div>
+  </div>
+</div>
+
+<script src="../js/store.js"></script>
+<script src="js/admin-api.js"></script>
+<script src="components/admin-loader.js"></script>
+<script>
+/* ══════════════════════════════
+   데이터 – TTStore 연동
+══════════════════════════════ */
+let STORES = [];
+
+/* TTStore 에 기본 매장 데이터가 없으면 샘플 삽입 */
+if (!STORES.length) {
+  STORES = [
+    { id:1, name:'강남점',   region:'서울', addr:'서울 강남구 테헤란로 123',       phone:'02-1234-5678',  manager:'이강남', weekHour:'09:00~18:00', weekendHour:'10:00~17:00', services:['타이어','엔진오일','배터리','와이퍼','얼라인먼트'],    tags:['대형주차','예약우선'],  maxReserve:4, parking:'yes', status:'open',     todayReserve:7, lat:37.498, lng:127.027, memo:'' },
+    { id:2, name:'판교점',   region:'경기', addr:'경기 성남시 분당구 판교로 1',     phone:'031-2345-6789', manager:'박판교', weekHour:'09:00~18:00', weekendHour:'10:00~17:00', services:['타이어','엔진오일','배터리','종합점검'],                tags:['주차가능'],             maxReserve:3, parking:'yes', status:'open',     todayReserve:5, lat:37.394, lng:127.111, memo:'' },
+    { id:3, name:'합정점',   region:'서울', addr:'서울 마포구 합정로 45',           phone:'02-3456-7890',  manager:'김합정', weekHour:'10:00~19:00', weekendHour:'11:00~17:00', services:['타이어','엔진오일','와이퍼','세차'],                    tags:['소형주차'],             maxReserve:2, parking:'paid',status:'open',     todayReserve:3, lat:37.549, lng:126.913, memo:'' },
+    { id:4, name:'송도점',   region:'인천', addr:'인천 연수구 송도동 1',            phone:'032-4567-8901', manager:'최송도', weekHour:'09:00~18:00', weekendHour:'09:00~17:00', services:['타이어','엔진오일','배터리','와이퍼','세차','얼라인먼트'], tags:['24시간','대형주차'],    maxReserve:5, parking:'yes', status:'open',     todayReserve:9, lat:37.389, lng:126.641, memo:'' },
+    { id:5, name:'잠실점',   region:'서울', addr:'서울 송파구 잠실로 10',           phone:'02-5678-9012',  manager:'정잠실', weekHour:'09:00~18:00', weekendHour:'10:00~16:00', services:['타이어','엔진오일','배터리'],                           tags:['예약필수'],             maxReserve:3, parking:'yes', status:'open',     todayReserve:4, lat:37.512, lng:127.100, memo:'' },
+    { id:6, name:'수원점',   region:'경기', addr:'경기 수원시 영통구 이의동 1',     phone:'031-6789-0123', manager:'윤수원', weekHour:'09:00~18:00', weekendHour:'10:00~17:00', services:['타이어','엔진오일','배터리','종합점검','얼라인먼트'],    tags:['대형주차','예약우선'],  maxReserve:4, parking:'yes', status:'open',     todayReserve:6, lat:37.272, lng:127.048, memo:'' },
+    { id:7, name:'해운대점', region:'부산', addr:'부산 해운대구 센텀로 1',          phone:'051-7890-1234', manager:'강해운', weekHour:'09:00~18:00', weekendHour:'10:00~17:00', services:['타이어','엔진오일','배터리','세차'],                    tags:['주차가능'],             maxReserve:3, parking:'yes', status:'open',     todayReserve:2, lat:35.169, lng:129.128, memo:'' },
+    { id:8, name:'수성점',   region:'대구', addr:'대구 수성구 범어로 33',           phone:'053-8901-2345', manager:'임수성', weekHour:'09:00~18:00', weekendHour:'10:00~15:00', services:['타이어','엔진오일','와이퍼'],                           tags:[],                       maxReserve:2, parking:'no',  status:'preparing',todayReserve:0, lat:35.857, lng:128.618, memo:'리모델링 중 (예상 5/15 재오픈)' },
+  ];
+  TTStore.set('tt_stores', STORES);
+}
+
+const ALL_SERVICES   = ['타이어','엔진오일','배터리','와이퍼','세차','얼라인먼트','종합점검'];
+const PARKING_LABEL  = { yes:'가능', no:'불가', paid:'유료' };
+const STATUS_LABEL   = { open:'영업중', closed:'휴업', preparing:'준비중' };
+const STATUS_CLASS   = { open:'badge-open', closed:'badge-closed', preparing:'badge-preparing' };
+const MAP_COLORS     = [
+  'linear-gradient(135deg,#ddd6fe,#c4b5fd)',
+  'linear-gradient(135deg,#bfdbfe,#93c5fd)',
+  'linear-gradient(135deg,#d1fae5,#6ee7b7)',
+  'linear-gradient(135deg,#fde68a,#fbbf24)',
+  'linear-gradient(135deg,#fecaca,#f87171)',
+  'linear-gradient(135deg,#e0f2fe,#38bdf8)',
+];
+
+let curView        = 'grid';
+let editingStoreId = null;
+
+/* ══════════════════════════════
+   통계 카드
+══════════════════════════════ */
+function renderKpi() {
+  const total    = STORES.length;
+  const open     = STORES.filter(s => s.status === 'open').length;
+  const totalRsv = STORES.reduce((s,x) => s + (x.todayReserve||0), 0);
+  const avgRsv   = open > 0
+    ? (STORES.filter(s => s.status==='open')
+             .reduce((s,x) => s + (x.todayReserve||0), 0) / open).toFixed(1)
+    : '0';
+
+  const items = [
+    { icon:'🏪', label:'전체 매장',       value: total   + '개', color:'#6366f1' },
+    { icon:'✅', label:'영업중',           value: open    + '개', color:'#10b981' },
+    { icon:'📅', label:'오늘 전체 예약',  value: totalRsv+ '건', color:'#f59e0b' },
+    { icon:'📊', label:'매장당 평균 예약', value: avgRsv  + '건', color:'#f43f5e' },
+  ];
+
+  document.getElementById('storeKpi').innerHTML = items.map(k => `
+    <div class="store-kpi-card">
+      <div class="store-kpi-icon" style="background:${k.color}1a;">
+        <span style="font-size:1.4rem;">${k.icon}</span>
+      </div>
+      <div>
+        <div class="store-kpi-value" style="color:${k.color};">${k.value}</div>
+        <div class="store-kpi-label">${k.label}</div>
+      </div>
+    </div>`).join('');
+}
+
+/* ══════════════════════════════
+   필터
+══════════════════════════════ */
+function getFiltered() {
+  const search = document.getElementById('storeSearch').value.toLowerCase();
+  const status = document.getElementById('storeStatusFilter').value;
+  const region = document.getElementById('storeRegionFilter').value;
+  return STORES.filter(s => {
+    if (status && s.status !== status) return false;
+    if (region && s.region !== region) return false;
+    if (search
+        && !s.name.toLowerCase().includes(search)
+        && !s.addr.toLowerCase().includes(search)
+        && !s.region.toLowerCase().includes(search)) return false;
+    return true;
+  });
+}
+
+/* ══════════════════════════════
+   뷰 전환
+══════════════════════════════ */
+function setView(v) {
+  curView = v;
+  document.getElementById('storeGridView').style.display = v==='grid' ? 'grid' : 'none';
+  document.getElementById('storeListView').style.display = v==='list' ? 'block': 'none';
+  document.getElementById('btnViewGrid').classList.toggle('active', v==='grid');
+  document.getElementById('btnViewList').classList.toggle('active', v==='list');
+  renderStores();
+}
+
+/* ══════════════════════════════
+   렌더링
+══════════════════════════════ */
+function renderStores() {
+  const list = getFiltered();
+  document.getElementById('storeCountTxt').textContent = `총 ${list.length}개 매장`;
+  curView === 'grid' ? renderGrid(list) : renderList(list);
+}
+
+/* ── 카드 뷰 ── */
+function renderGrid(list) {
+  const el = document.getElementById('storeGridView');
+  if (!list.length) {
+    el.innerHTML = `
+      <div style="grid-column:1/-1;padding:60px 0;text-align:center;color:var(--text-muted);">
+        <div style="font-size:2.5rem;margin-bottom:12px;">🏪</div>
+        <div style="font-weight:600;">조건에 맞는 매장이 없습니다</div>
+      </div>`;
+    return;
+  }
+  el.innerHTML = list.map((s, i) => `
+    <div class="store-card">
+      <div class="store-card-map"
+           style="background:${MAP_COLORS[i % MAP_COLORS.length]};">
+        🏪
+        <span class="store-status-badge ${STATUS_CLASS[s.status]}">
+          ${STATUS_LABEL[s.status]}
+        </span>
+      </div>
+      <div class="store-card-body">
+        <div class="store-card-name">${s.name}</div>
+        <div class="store-card-meta">
+          <span>📍 ${s.addr}</span>
+          <span>📞 ${s.phone}</span>
+          <span>⏰ 평일 ${s.weekHour}</span>
+          <span>👤 담당: ${s.manager}</span>
+          <span>📅 오늘 예약:
+            <span class="store-reserve-count">${s.todayReserve||0}건</span>
+          </span>
+        </div>
+        <div class="store-service-tags">
+          ${s.services.map(sv =>
+            `<span class="store-service-tag">${sv}</span>`).join('')}
+        </div>
+        ${s.tags && s.tags.length ? `
+          <div class="store-feature-tags">
+            ${s.tags.map(t =>
+              `<span class="store-feature-tag">${t}</span>`).join('')}
+          </div>` : ''}
+        <div class="store-card-footer">
+          <button class="btn btn-sm btn-outline" style="flex:1;"
+                  onclick="openStoreDetail(${s.id})">상세</button>
+          <button class="btn btn-sm btn-ghost" style="flex:1;"
+                  onclick="openStoreModal(${s.id})">수정</button>
+          <button class="btn btn-sm" style="flex:1;
+            background:${s.status==='open'?'rgba(244,63,94,0.08)':'rgba(16,185,129,0.08)'};
+            color:${s.status==='open'?'var(--accent)':'#10b981'};
+            border:1.5px solid ${s.status==='open'?'rgba(244,63,94,0.2)':'rgba(16,185,129,0.2)'};"
+                  onclick="toggleStoreStatus(${s.id})">
+            ${s.status === 'open' ? '휴업' : '영업'}
+          </button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+/* ── 리스트 뷰 ── */
+function renderList(list) {
+  const tbody = document.getElementById('storeListTbody');
+  if (!list.length) {
+    tbody.innerHTML = `
+      <tr><td colspan="9"
+              style="text-align:center;padding:40px;color:var(--text-muted);">
+        조건에 맞는 매장이 없습니다
+      </td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(s => `
+    <tr>
+      <td><span style="font-weight:700;">${s.name}</span></td>
+      <td>
+        <span style="padding:3px 10px;border-radius:20px;
+                     background:rgba(99,102,241,0.1);color:var(--primary);
+                     font-size:0.78rem;font-weight:700;">
+          ${s.region}
+        </span>
+      </td>
+      <td style="font-size:0.8rem;color:var(--text-muted);
+                 max-width:160px;overflow:hidden;
+                 text-overflow:ellipsis;white-space:nowrap;">
+        ${s.addr}
+      </td>
+      <td style="font-size:0.85rem;">${s.phone}</td>
+      <td style="font-size:0.85rem;">${s.weekHour}</td>
+      <td>
+        <div style="display:flex;flex-wrap:wrap;gap:3px;max-width:150px;">
+          ${s.services.slice(0,3).map(sv =>
+            `<span class="store-service-tag">${sv}</span>`).join('')}
+          ${s.services.length > 3
+            ? `<span class="store-service-tag">+${s.services.length-3}</span>`
+            : ''}
+        </div>
+      </td>
+      <td>
+        <span style="font-weight:800;color:var(--primary);">
+          ${s.todayReserve||0}건
+        </span>
+      </td>
+      <td>
+        <span class="store-status-badge ${STATUS_CLASS[s.status]}"
+              style="position:static;padding:4px 10px;border-radius:20px;
+                     font-size:0.75rem;font-weight:700;display:inline-flex;">
+          ${STATUS_LABEL[s.status]}
+        </span>
+      </td>
+      <td>
+        <div style="display:flex;gap:5px;">
+          <button class="btn btn-sm btn-outline"
+                  onclick="openStoreDetail(${s.id})">상세</button>
+          <button class="btn btn-sm btn-ghost"
+                  onclick="openStoreModal(${s.id})">수정</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+/* ══════════════════════════════
+   매장 상세 모달
+══════════════════════════════ */
+function openStoreDetail(id) {
+  const s = STORES.find(x => x.id === id);
+  if (!s) return;
+
+  document.getElementById('storeDetailTitle').textContent = '🏪 ' + s.name + ' 상세';
+  document.getElementById('storeEditBtn').onclick = () => {
+    closeModal('storeDetailModal');
+    openStoreModal(id);
+  };
+
+  const DAYS = ['월','화','수','목','금','토','일'];
+
+  document.getElementById('storeDetailBody').innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:28px;">
+      <div>
+        <div style="display:flex;align-items:center;justify-content:space-between;
+                    margin-bottom:16px;">
+          <h4 style="font-size:0.8rem;font-weight:700;color:var(--text-muted);
+                     text-transform:uppercase;letter-spacing:0.5px;">매장 정보</h4>
+          <span class="store-status-badge ${STATUS_CLASS[s.status]}"
+                style="position:static;padding:4px 12px;border-radius:20px;
+                       font-size:0.75rem;font-weight:700;display:inline-flex;">
+            ${STATUS_LABEL[s.status]}
+          </span>
+        </div>
+        <div class="detail-info-grid">
+          <div class="detail-info-row">
+            <span class="detail-info-label">📍 주소</span>
+            <span class="detail-info-val" style="text-align:right;">${s.addr}</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="detail-info-label">📞 전화</span>
+            <span class="detail-info-val">${s.phone}</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="detail-info-label">👤 담당자</span>
+            <span class="detail-info-val">${s.manager}</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="detail-info-label">⏰ 평일</span>
+            <span class="detail-info-val">${s.weekHour}</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="detail-info-label">⏰ 주말</span>
+            <span class="detail-info-val">${s.weekendHour||'휴무'}</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="detail-info-label">🚗 주차</span>
+            <span class="detail-info-val">${PARKING_LABEL[s.parking]}</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="detail-info-label">📅 최대 예약</span>
+            <span class="detail-info-val">${s.maxReserve}건</span>
+          </div>
+          <div class="detail-info-row">
+            <span class="detail-info-label">📌 오늘 예약</span>
+            <span class="detail-info-val"
+                  style="color:var(--primary);font-weight:800;font-size:1rem;">
+              ${s.todayReserve||0}건
+            </span>
+          </div>
+        </div>
+        <div style="margin-top:20px;">
+          <h4 style="font-size:0.8rem;font-weight:700;color:var(--text-muted);
+                     text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+            🔧 제공 서비스
+          </h4>
+          <div class="store-service-tags">
+            ${s.services.map(sv =>
+              `<span class="store-service-tag">${sv}</span>`).join('')}
+          </div>
+        </div>
+        ${s.tags && s.tags.length ? `
+          <div style="margin-top:14px;">
+            <h4 style="font-size:0.8rem;font-weight:700;color:var(--text-muted);
+                       text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">
+              🏷️ 특징 태그
+            </h4>
+            <div class="store-feature-tags">
+              ${s.tags.map(t =>
+                `<span class="store-feature-tag">${t}</span>`).join('')}
+            </div>
+          </div>` : ''}
+        ${s.memo ? `
+          <div style="margin-top:16px;padding:12px 14px;
+                      background:rgba(245,158,11,0.08);
+                      border:1px solid rgba(245,158,11,0.25);
+                      border-radius:10px;font-size:0.85rem;">
+            📝 ${s.memo}
+          </div>` : ''}
+      </div>
+      <div>
+        <div class="map-placeholder">
+          <span style="font-size:3rem;">🗺️</span>
+          <span style="font-weight:600;">${s.name}</span>
+          <span style="font-size:0.8rem;">위도 ${s.lat} / 경도 ${s.lng}</span>
+          <span style="font-size:0.75rem;color:var(--text-muted);">
+            실제 환경에서 카카오맵 API 연동
+          </span>
+        </div>
+        <div style="margin-top:20px;">
+          <h4 style="font-size:0.8rem;font-weight:700;color:var(--text-muted);
+                     text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;">
+            📆 주간 운영 스케줄
+          </h4>
+          <div class="schedule-grid">
+            ${DAYS.map((d, i) => {
+              const isWeekend = i >= 5;
+              const timeStr   = isWeekend ? s.weekendHour : s.weekHour;
+              const isOpen    = timeStr && timeStr !== '휴무';
+              return `
+                <div class="schedule-day ${isOpen?'sched-open':'sched-closed'}">
+                  <div class="day-name">${d}</div>
+                  ${isOpen
+                    ? `<div class="day-time">${timeStr.split('~')[0]}</div>`
+                    : `<div class="day-off">휴무</div>`}
+                </div>`;
+            }).join('')}
+          </div>
+        </div>
+      </div>
+    </div>`;
+
+  document.getElementById('storeDetailModal').classList.add('open');
+}
+
+/* ══════════════════════════════
+   매장 등록/수정 모달
+══════════════════════════════ */
+function buildServiceCheckboxes() {
+  const wrap = document.getElementById('serviceCheckWrap');
+  if (!wrap) return;
+  wrap.innerHTML = ALL_SERVICES.map(s => `
+    <label class="svc-check-label">
+      <input type="checkbox" class="svc-chk" value="${s}"/> ${s}
+    </label>`).join('');
+}
+
+function openStoreModal(id = null) {
+  editingStoreId = id;
+  buildServiceCheckboxes();
+  document.getElementById('storeModalTitle').textContent =
+    id ? '매장 수정' : '매장 추가';
+
+  /* 초기화 */
+  ['sName','sAddr','sPhone','sManager','sWeekHour','sWeekendHour','sTags','sMemo']
+    .forEach(fid => {
+      const el = document.getElementById(fid);
+      if (el) el.value = '';
+    });
+  const maxEl = document.getElementById('sMaxReserve');
+  if (maxEl) maxEl.value = '';
+  const latEl = document.getElementById('sLat');
+  if (latEl) latEl.value = '';
+  const lngEl = document.getElementById('sLng');
+  if (lngEl) lngEl.value = '';
+  document.getElementById('sStatus').value  = 'open';
+  document.getElementById('sParking').value = 'yes';
+  document.getElementById('sRegion').value  = '서울';
+  document.querySelectorAll('.svc-chk').forEach(c => c.checked = false);
+
+  if (id) {
+    const s = STORES.find(x => x.id === id);
+    if (!s) return;
+    document.getElementById('sName').value        = s.name;
+    document.getElementById('sRegion').value      = s.region;
+    document.getElementById('sAddr').value        = s.addr;
+    document.getElementById('sPhone').value       = s.phone;
+    document.getElementById('sManager').value     = s.manager;
+    document.getElementById('sWeekHour').value    = s.weekHour;
+    document.getElementById('sWeekendHour').value = s.weekendHour || '';
+    document.getElementById('sStatus').value      = s.status;
+    document.getElementById('sTags').value        = (s.tags||[]).join(', ');
+    document.getElementById('sMaxReserve').value  = s.maxReserve;
+    document.getElementById('sParking').value     = s.parking;
+    document.getElementById('sLat').value         = s.lat;
+    document.getElementById('sLng').value         = s.lng;
+    document.getElementById('sMemo').value        = s.memo || '';
+    document.querySelectorAll('.svc-chk').forEach(c => {
+      if (s.services.includes(c.value)) c.checked = true;
+    });
+  }
+
+  document.getElementById('storeModal').classList.add('open');
+}
+
+/* ── 매장 저장 (TTStore 연동) ── */
+function saveStore() {
+  const name = document.getElementById('sName').value.trim();
+  const addr = document.getElementById('sAddr').value.trim();
+  if (!name) { adminToast('매장명을 입력해주세요.', 'error'); return; }
+  if (!addr) { adminToast('주소를 입력해주세요.', 'error');   return; }
+
+  const services = [...document.querySelectorAll('.svc-chk:checked')]
+    .map(c => c.value);
+  const tags = document.getElementById('sTags').value
+    .split(',').map(t => t.trim()).filter(Boolean);
+
+  const data = {
+    id:          editingStoreId || Date.now(),
+    name, addr, services, tags,
+    region:      document.getElementById('sRegion').value,
+    phone:       document.getElementById('sPhone').value.trim(),
+    manager:     document.getElementById('sManager').value.trim(),
+    weekHour:    document.getElementById('sWeekHour').value.trim(),
+    weekendHour: document.getElementById('sWeekendHour').value.trim(),
+    status:      document.getElementById('sStatus').value,
+    maxReserve:  parseInt(document.getElementById('sMaxReserve').value) || 3,
+    parking:     document.getElementById('sParking').value,
+    lat:         parseFloat(document.getElementById('sLat').value) || 37.5,
+    lng:         parseFloat(document.getElementById('sLng').value) || 127.0,
+    memo:        document.getElementById('sMemo').value.trim(),
+    todayReserve: editingStoreId
+      ? (STORES.find(s => s.id === editingStoreId)?.todayReserve || 0)
+      : 0,
+  };
+
+  /* TTStore 저장 */
+  TTStore.adminSaveStore(data);
+  /* API에서 로드 */
+
+  adminToast(
+    editingStoreId
+      ? '매장 정보가 수정되었습니다. ✅'
+      : '새 매장이 추가되었습니다. 🎉',
+    'success'
+  );
+  closeModal('storeModal');
+  renderKpi();
+  renderStores();
+}
+
+/* ── 영업/휴업 빠른 전환 (TTStore 연동) ── */
+function toggleStoreStatus(id) {
+  const s = STORES.find(x => x.id === id);
+  if (!s) return;
+  const newStatus = s.status === 'open' ? 'closed' : 'open';
+
+  /* TTStore 저장 */
+  TTStore.update('tt_stores', id, { status: newStatus });
+  /* API에서 로드 */
+
+  adminToast(
+    `${s.name}이 ${STATUS_LABEL[newStatus]}으로 변경되었습니다.`,
+    'info'
+  );
+  renderKpi();
+  renderStores();
+}
+
+/* ── 공통 ── */
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+['storeModal','storeDetailModal'].forEach(id => {
+  document.getElementById(id).addEventListener('click', function(e) {
+    if (e.target === this) closeModal(id);
+  });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape')
+    ['storeModal','storeDetailModal'].forEach(id => closeModal(id));
+});
+
+/* ── TTStore 실시간 반영 ── */
+window.addEventListener('tt_store_update', e => {
+  if (e.detail.key === 'tt_stores') {
+    /* API에서 로드 */
+    renderKpi();
+    renderStores();
+  }
+});
+
+/* ── 초기화 ── */
+async function loadStores() {
+  try {
+    const res = await AdminAPI.getStores();
+    if (res?.success) {
+      STORES = res.data || [];
+      if (typeof renderStoreStats === 'function') renderStoreStats();
+      if (typeof renderStores    === 'function') renderStores();
+      if (typeof renderMap       === 'function') renderMap();
+    }
+  } catch(e) { console.error('매장 로드 실패', e); }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  loadStores();
+});</script>
+</body>
+</html>

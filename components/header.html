@@ -1,0 +1,351 @@
+<!-- ===== TOP BANNER ===== -->
+<div class="top-banner" id="topBanner">
+  🎉 <strong>타이어 4개 구매 시 장착공임 무료</strong> + 신규가입 쿠폰팩 2만7천원 증정! →
+  <span class="top-banner-close" onclick="this.parentElement.style.display='none'">✕</span>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header>
+  <div class="header-inner">
+    <!-- 로고 -->
+    <a href="index.html" class="logo">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="10" fill="#111"/>
+          <circle cx="12" cy="12" r="4" fill="#e02020"/>
+        </svg>
+      </div>
+      TIRETOP
+    </a>
+
+    <!-- 검색창 -->
+    <div class="header-search" onclick="openSearch()">
+      <input type="text" placeholder="차량번호 또는 타이어 규격으로 검색 (예: 225/45R17)" readonly>
+      <button class="header-search-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2.2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="7"/>
+          <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+        </svg>
+      </button>
+    </div>
+
+    <!-- 오른쪽 아이콘 그룹 -->
+    <div class="header-actions">
+      <button class="icon-btn" id="loginBtn" onclick="handleLoginBtn()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+        <span id="loginBtnLabel">로그인</span>
+      </button>
+
+      <button class="icon-btn" onclick="goWish()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67
+                   l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06
+                   L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+        찜
+      </button>
+
+      <button class="icon-btn" onclick="goCart()" style="position:relative">
+        <i class="badge" id="cartBadge" style="display:none">0</i>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round">
+          <circle cx="9" cy="21" r="1"/>
+          <circle cx="20" cy="21" r="1"/>
+          <path d="M1 1h4l2.68 13.39a2 2 0 002 1.61
+                   h9.72a2 2 0 002-1.61L23 6H6"/>
+        </svg>
+        장바구니
+      </button>
+
+      <button class="icon-btn" onclick="goMypage()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2" stroke-linecap="round">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <path d="M9 9h6M9 13h4"/>
+        </svg>
+        마이페이지
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- ===== GNB - 타이어 전문몰 메뉴만 ===== -->
+<nav class="gnb">
+  <div class="gnb-inner">
+    <div class="gnb-item gnb-active" id="gnb-tire"
+         onmouseenter="openSubmenu('tire')" onmouseleave="scheduleClose()"
+         onclick="location.href='product-list.html?cat=tire'">타이어</div>
+    <div class="gnb-item" id="gnb-store"
+         onmouseenter="closeSubmenu()"
+         onclick="location.href='store.html'">매장찾기</div>
+    <div class="gnb-item" id="gnb-event"
+         onmouseenter="closeSubmenu()"
+         onclick="location.href='event.html'">기획전</div>
+    <div class="gnb-item" id="gnb-cs"
+         onmouseenter="closeSubmenu()"
+         onclick="location.href='cs.html'">고객센터</div>
+  </div>
+</nav>
+
+<!-- ===== 타이어 SUBMENU ===== -->
+<div class="submenu-overlay" id="sub-tire"
+     onmouseenter="cancelClose()" onmouseleave="scheduleClose()">
+  <div class="submenu-close-bg" onclick="closeSubmenu()"></div>
+  <div class="submenu-panel">
+    <div class="submenu-inner">
+      <div class="submenu-grid-2col">
+        <div>
+          <p class="sub-title">카테고리</p>
+          <div class="sub-category-grid" style="margin-bottom:24px">
+            <div class="sub-cat-item" onclick="location.href='product-list.html?cat=tire&type=all'">
+              <div class="sub-cat-icon">☀️</div>
+              <div class="sub-cat-name">사계절 타이어</div>
+              <div class="sub-cat-sub">연중 사용 가능</div>
+            </div>
+            <div class="sub-cat-item" onclick="location.href='product-list.html?cat=tire&type=winter'">
+              <div class="sub-cat-icon">❄️</div>
+              <div class="sub-cat-name">겨울용 타이어</div>
+              <div class="sub-cat-sub">스노우·아이스</div>
+            </div>
+            <div class="sub-cat-item" onclick="location.href='product-list.html?cat=tire&type=sport'">
+              <div class="sub-cat-icon">🏎️</div>
+              <div class="sub-cat-name">고성능 타이어</div>
+              <div class="sub-cat-sub">UHP · 스포츠</div>
+            </div>
+            <div class="sub-cat-item" onclick="location.href='product-list.html?cat=tire&type=suv'">
+              <div class="sub-cat-icon">🚙</div>
+              <div class="sub-cat-name">SUV 타이어</div>
+              <div class="sub-cat-sub">레저·오프로드</div>
+            </div>
+            <div class="sub-cat-item" onclick="location.href='product-list.html?cat=tire&type=truck'">
+              <div class="sub-cat-icon">🚚</div>
+              <div class="sub-cat-name">화물용 타이어</div>
+              <div class="sub-cat-sub">트럭·버스</div>
+            </div>
+          </div>
+          <p class="sub-title">브랜드</p>
+          <div class="sub-brand-row">
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=hankook'">한국타이어</span>
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=kumho'">금호타이어</span>
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=nexen'">넥센타이어</span>
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=michelin'">미쉐린</span>
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=bridgestone'">브리지스톤</span>
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=continental'">콘티넨탈</span>
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=pirelli'">피렐리</span>
+            <span class="sub-brand-pill" onclick="location.href='product-list.html?brand=goodyear'">굿이어</span>
+          </div>
+        </div>
+        <div class="submenu-right">
+          <p class="sub-title">인기 사이즈</p>
+          <div class="sub-size-grid">
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=205/55R16'">205/55R16</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=225/45R17'">225/45R17</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=195/65R15'">195/65R15</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=215/60R16'">215/60R16</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=235/55R19'">235/55R19</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=245/45R18'">245/45R18</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=255/40R19'">255/40R19</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=175/65R14'">175/65R14</div>
+            <div class="sub-size-chip" onclick="location.href='product-list.html?size=185/65R15'">185/65R15</div>
+          </div>
+          <br>
+          <p class="sub-title">지금 특가</p>
+          <div style="background:linear-gradient(135deg,#e02020,#ff4444);
+                      border-radius:14px;padding:18px;color:#fff;cursor:pointer"
+               onclick="location.href='event.html'">
+            <div style="font-size:11px;opacity:.75;margin-bottom:4px">🔥 LIMITED OFFER</div>
+            <div style="font-size:16px;font-weight:900">타이어 4개 구매 시</div>
+            <div style="font-size:13px;opacity:.85">장착공임 무료 이벤트</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- NOTICE BAR -->
+<div class="notice-bar">
+  <div class="notice-inner">
+    <span class="notice-badge">공지</span>
+    <span class="notice-text">윈터 타이어 첫 보관 1년 무료 이벤트가 진행 중입니다. 지금 예약하세요!</span>
+    <a href="event.html" class="notice-link">자세히 보기 →</a>
+  </div>
+</div>
+
+<!-- ===== FLOATING ===== -->
+<div class="floating">
+  <button class="float-btn float-chat"
+          onclick="showToast('카카오 채널','카카오 채널로 연결됩니다.','info')">💬</button>
+  <button class="float-btn float-top"
+          onclick="window.scrollTo({top:0,behavior:'smooth'})">↑</button>
+</div>
+
+<!-- ===== LOGIN MODAL ===== -->
+<div class="modal-overlay" id="loginModal"
+     onclick="if(event.target===this)closeModal('loginModal')">
+  <div class="modal-box">
+    <button class="modal-close" onclick="closeModal('loginModal')">✕</button>
+    <div class="login-head">
+      <div class="login-logo">TIRETOP</div>
+      <p class="login-tagline">타이어 전문몰 No.1</p>
+      <div class="login-tabs">
+        <div class="login-tab active"
+             onclick="switchLoginTab(this,'emailForm')">이메일 로그인</div>
+        <div class="login-tab"
+             onclick="switchLoginTab(this,'phoneForm')">휴대폰 로그인</div>
+      </div>
+    </div>
+    <div class="login-body">
+      <div class="coupon-notice">
+        <div class="coupon-notice-icon">🎁</div>
+        <div>
+          <div class="coupon-notice-title">신규가입 시 쿠폰팩 27,000원 지급!</div>
+          <div class="coupon-notice-sub">지금 가입하고 첫 주문에 바로 사용하세요</div>
+        </div>
+      </div>
+      <div id="emailForm">
+        <button class="social-btn social-kakao" onclick="socialLogin('카카오')">💬 카카오로 시작하기</button>
+        <button class="social-btn social-naver" onclick="socialLogin('네이버')">N 네이버로 시작하기</button>
+        <button class="social-btn social-apple" onclick="socialLogin('Apple')">🍎 Apple로 시작하기</button>
+        <div class="divider">또는 이메일로 로그인</div>
+        <div class="form-group">
+          <label class="form-label">이메일</label>
+          <input class="form-input" type="email" placeholder="이메일 주소 입력" id="loginEmail">
+        </div>
+        <div class="form-group">
+          <label class="form-label">비밀번호</label>
+          <div class="form-input-wrap">
+            <input class="form-input" type="password" placeholder="비밀번호 입력" id="loginPw"
+                   style="padding-right:44px" onkeydown="if(event.key==='Enter')doLogin()">
+            <span class="form-input-icon" onclick="togglePw('loginPw',this)">👁️</span>
+          </div>
+        </div>
+        <div class="form-options">
+          <label class="form-check">
+            <input type="checkbox"><span>로그인 상태 유지</span>
+          </label>
+          <a href="#" class="forgot-link"
+             onclick="closeModal('loginModal');openModal('findModal')">아이디·비밀번호 찾기</a>
+        </div>
+        <button class="btn-login-submit" onclick="doLogin()">로그인</button>
+        <p class="login-footer-text">아직 회원이 아니신가요? <a href="signup.html">회원가입 →</a></p>
+      </div>
+      <div id="phoneForm" style="display:none">
+        <div class="form-group">
+          <label class="form-label">휴대폰 번호</label>
+          <div class="phone-input-group">
+            <input class="form-input" type="tel" placeholder="010-0000-0000">
+            <button class="btn-verify" onclick="sendSms('phoneCode')">인증번호 발송</button>
+          </div>
+        </div>
+        <div class="form-group verify-code-wrap" id="phoneCode">
+          <label class="form-label">인증번호</label>
+          <div class="form-input-wrap">
+            <input class="form-input" type="text" placeholder="6자리 입력" style="padding-right:60px">
+            <span class="verify-timer" id="phoneCodeTimer">3:00</span>
+          </div>
+        </div>
+        <button class="btn-login-submit" onclick="doLogin()">휴대폰으로 로그인</button>
+        <p class="login-footer-text">아직 회원이 아니신가요? <a href="signup.html">회원가입 →</a></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SEARCH OVERLAY ===== -->
+<div id="searchOverlay"
+     style="position:fixed;inset:0;z-index:8500;
+            background:rgba(255,255,255,0.97);backdrop-filter:blur(8px);
+            opacity:0;pointer-events:none;transition:opacity .3s;
+            display:flex;flex-direction:column;">
+  <div style="padding:18px 24px;border-bottom:1px solid #F0F0F0;
+              display:flex;align-items:center;gap:16px;">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+         stroke="#999" stroke-width="2.2" stroke-linecap="round">
+      <circle cx="11" cy="11" r="7"/>
+      <line x1="16.5" y1="16.5" x2="22" y2="22"/>
+    </svg>
+    <input id="searchBig"
+           style="flex:1;border:none;outline:none;font-size:20px;
+                  font-weight:700;font-family:inherit;color:#111;
+                  background:transparent"
+           type="text" placeholder="차량번호 또는 타이어 규격 검색"
+           onkeydown="if(event.key==='Enter')doSearch()">
+    <div onclick="closeSearch()"
+         style="width:38px;height:38px;border-radius:50%;background:#F5F5F5;
+                display:flex;align-items:center;justify-content:center;
+                cursor:pointer;font-size:18px;">✕</div>
+  </div>
+  <div style="flex:1;overflow-y:auto;padding:28px 24px;
+              max-width:800px;margin:0 auto;width:100%">
+    <p style="font-size:12px;font-weight:800;color:#888;
+              letter-spacing:1px;margin-bottom:12px">인기 검색어</p>
+    <div style="display:flex;flex-wrap:wrap;gap:8px" id="popularKeywords"></div>
+  </div>
+</div>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="footer-inner">
+    <div class="footer-top">
+      <div>
+        <div class="footer-logo">TIRETOP</div>
+        <p class="footer-desc">
+          2천만 자차 보유자가 타이어 교체로<br>
+          스트레스 받지 않는 그날까지,<br>
+          타이어탑이 함께합니다.
+        </p>
+        <div class="footer-contact">
+          <div><strong>고객센터</strong> 1660-2103</div>
+          <div>평일 09:00~18:00 / 토 09:00~12:00</div>
+          <div>일·공휴일 휴무</div>
+        </div>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">타이어 서비스</div>
+        <ul>
+          <li><a href="product-list.html?cat=tire&type=all">사계절 타이어</a></li>
+          <li><a href="product-list.html?cat=tire&type=winter">겨울용 타이어</a></li>
+          <li><a href="product-list.html?cat=tire&type=sport">고성능 타이어</a></li>
+          <li><a href="product-list.html?cat=tire&type=suv">SUV 타이어</a></li>
+          <li><a href="product-list.html?cat=tire&type=truck">화물용 타이어</a></li>
+          <li><a href="event.html">타이어 보관 서비스</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">고객지원</div>
+        <ul>
+          <li><a href="cs.html">공지사항</a></li>
+          <li><a href="cs.html">자주 묻는 질문</a></li>
+          <li><a href="cs.html">1:1 문의</a></li>
+          <li><a href="store.html">매장 찾기</a></li>
+          <li><a href="cs.html">매장 제휴 신청</a></li>
+        </ul>
+      </div>
+      <div class="footer-col">
+        <div class="footer-col-title">회사정보</div>
+        <ul>
+          <li><a href="#">회사소개</a></li>
+          <li><a href="#">이용약관</a></li>
+          <li><a href="#">개인정보처리방침</a></li>
+          <li><a href="#">채용정보</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2025 Dealer Tire Co., Ltd. All rights reserved.</div>
+      <div class="footer-sns">
+        <a href="#" class="sns-btn">📘</a>
+        <a href="#" class="sns-btn">📸</a>
+        <a href="#" class="sns-btn">▶️</a>
+        <a href="#" class="sns-btn">💬</a>
+      </div>
+    </div>
+  </div>
+</footer>

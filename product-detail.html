@@ -1,0 +1,1010 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>상품 상세 - TIRETOP</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/common.css">
+<script src="js/store.js"></script>
+<style>
+:root {
+  --primary:#e02020;--primary-dark:#c01010;--dark:#111827;--gray1:#374151;
+  --gray2:#4b5563;--gray3:#6b7280;--gray4:#9ca3af;--gray5:#e5e7eb;--gray6:#f3f4f6;
+  --white:#fff;--accent:#f59e0b;--green:#22c55e;--blue:#2563eb;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.08);--shadow-md:0 4px 20px rgba(0,0,0,.12);
+  --radius-sm:6px;--radius-md:12px;--radius-lg:16px;--max-w:1280px;--transition:.2s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--gray6);color:var(--dark);}
+a{text-decoration:none;color:inherit;}
+
+/* ── TOP HEADER (공통 헤더에서 로드) ── */
+
+/* ── 브레드크럼 ── */
+.breadcrumb-bar {
+  background:#fff; border-bottom:1px solid var(--gray5);
+}
+.breadcrumb-inner {
+  max-width:var(--max-w);margin:0 auto;padding:10px 20px;
+  display:flex;align-items:center;gap:6px;font-size:12px;color:var(--gray3);
+}
+.breadcrumb-inner a:hover{color:var(--primary);}
+.breadcrumb-inner .sep{color:var(--gray4);}
+.breadcrumb-inner .current{color:var(--dark);font-weight:600;}
+
+/* ── 메인 레이아웃 ── */
+.detail-wrap {
+  max-width:var(--max-w);margin:0 auto;padding:24px 20px 0;
+  display:grid;grid-template-columns:520px 1fr;gap:28px;align-items:start;
+}
+
+/* ── 갤러리 ── */
+.gallery-col { position:sticky;top:20px; }
+.gallery-main {
+  border-radius:var(--radius-lg);overflow:hidden;background:#fff;
+  border:1px solid var(--gray5);aspect-ratio:1/1;
+  display:flex;align-items:center;justify-content:center;position:relative;
+}
+.gallery-main img {
+  width:80%;height:80%;object-fit:contain;
+  transition:transform .3s;
+}
+.gallery-main:hover img{transform:scale(1.05);}
+.gallery-badge {
+  position:absolute;top:14px;left:14px;
+  background:var(--primary);color:#fff;
+  font-size:12px;font-weight:800;padding:4px 12px;border-radius:6px;
+}
+.gallery-badge.new{background:#2563eb;}
+.gallery-badge.hot{background:#f59e0b;}
+
+.gallery-thumbs {
+  display:flex;gap:8px;margin-top:10px;
+}
+.thumb-item {
+  width:72px;height:72px;border-radius:var(--radius-sm);
+  border:2px solid var(--gray5);background:#fff;overflow:hidden;
+  cursor:pointer;transition:all .2s;display:flex;align-items:center;justify-content:center;
+}
+.thumb-item.active{border-color:var(--primary);}
+.thumb-item img{width:85%;height:85%;object-fit:contain;}
+
+/* ── 정보 패널 ── */
+.info-col{}
+
+/* 뱃지 + 브랜드 */
+.prod-meta-top {
+  display:flex;align-items:center;gap:8px;margin-bottom:6px;
+}
+.prod-tag {
+  padding:3px 10px;border-radius:20px;font-size:11px;font-weight:700;
+}
+.prod-tag.brand{background:var(--gray6);color:var(--gray2);}
+.prod-tag.season{background:#eff6ff;color:var(--blue);}
+.prod-tag.vehicle{background:#f0fdf4;color:#16a34a;}
+.prod-tag.grade{background:#fffbeb;color:#d97706;}
+
+.prod-name {
+  font-size:26px;font-weight:900;color:var(--dark);line-height:1.25;margin-bottom:6px;
+}
+.prod-size-txt {
+  font-size:14px;color:var(--gray3);font-weight:500;margin-bottom:14px;
+}
+
+/* 별점 요약 */
+.rating-row {
+  display:flex;align-items:center;gap:10px;padding:14px 0;
+  border-top:1px solid var(--gray5);border-bottom:1px solid var(--gray5);
+  margin-bottom:16px;
+}
+.rating-big {font-size:32px;font-weight:900;color:var(--dark);line-height:1;}
+.rating-stars{color:var(--accent);font-size:16px;letter-spacing:-1px;}
+.rating-cnt{font-size:13px;color:var(--gray3);}
+.rating-verified{
+  margin-left:auto;padding:4px 12px;border-radius:20px;
+  background:#f0fdf4;color:#16a34a;font-size:11px;font-weight:700;
+}
+
+/* 성능 인덱스 */
+.perf-grid {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:10px;
+  background:var(--gray6);border-radius:var(--radius-md);
+  padding:14px;margin-bottom:18px;
+}
+.perf-item{text-align:center;}
+.perf-icon{font-size:20px;margin-bottom:4px;}
+.perf-label{font-size:10px;color:var(--gray3);font-weight:600;margin-bottom:6px;}
+.perf-bar-wrap{
+  background:var(--gray5);border-radius:4px;height:5px;overflow:hidden;margin:0 auto;
+  width:80%;
+}
+.perf-bar{height:100%;border-radius:4px;background:var(--primary);transition:width .5s;}
+.perf-val{font-size:11px;font-weight:800;margin-top:4px;color:var(--dark);}
+
+/* 가격 섹션 */
+.price-section {
+  background:#fff;border:1px solid var(--gray5);border-radius:var(--radius-md);
+  padding:18px;margin-bottom:16px;
+}
+.price-discount-badge {
+  display:inline-block;background:var(--primary);color:#fff;
+  font-size:16px;font-weight:900;padding:2px 10px;border-radius:6px;margin-bottom:6px;
+}
+.price-row {display:flex;align-items:flex-end;gap:8px;margin-bottom:4px;}
+.price-main {font-size:32px;font-weight:900;color:var(--dark);line-height:1;}
+.price-unit {font-size:14px;color:var(--gray3);font-weight:500;padding-bottom:3px;}
+.price-original {font-size:13px;color:var(--gray4);text-decoration:line-through;}
+.price-save {font-size:12px;color:var(--primary);font-weight:700;}
+
+/* 사이즈 선택 */
+.option-section {margin-bottom:16px;}
+.option-label {font-size:13px;font-weight:700;color:var(--gray2);margin-bottom:8px;}
+.size-grid {display:flex;flex-wrap:wrap;gap:6px;}
+.size-btn {
+  padding:8px 14px;border-radius:8px;border:1.5px solid var(--gray5);
+  background:#fff;font-size:12px;font-weight:600;color:var(--gray2);
+  cursor:pointer;transition:all .2s;white-space:nowrap;
+}
+.size-btn:hover{border-color:var(--primary);color:var(--primary);}
+.size-btn.active{background:var(--primary);color:#fff;border-color:var(--primary);}
+.size-btn.out{opacity:.4;text-decoration:line-through;cursor:not-allowed;}
+
+/* 수량 */
+.qty-section {
+  display:flex;align-items:center;gap:14px;margin-bottom:18px;
+}
+.qty-label {font-size:13px;font-weight:700;color:var(--gray2);}
+.qty-wrap {
+  display:flex;align-items:center;border:1.5px solid var(--gray5);
+  border-radius:8px;overflow:hidden;
+}
+.qty-btn {
+  width:36px;height:36px;border:none;background:#fff;
+  font-size:18px;cursor:pointer;color:var(--gray2);
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s;
+}
+.qty-btn:hover{background:var(--gray6);}
+.qty-val {
+  min-width:44px;text-align:center;font-size:16px;font-weight:700;
+  border:none;outline:none;background:#fff;font-family:inherit;color:var(--dark);
+}
+.stock-status {
+  display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
+}
+.stock-dot {
+  width:8px;height:8px;border-radius:50%;background:var(--green);
+}
+.stock-dot.low{background:var(--accent);}
+.stock-dot.out{background:var(--gray4);}
+
+/* CTA 버튼 */
+.cta-section {display:flex;flex-direction:column;gap:10px;margin-bottom:18px;}
+.btn-primary-lg {
+  padding:16px;border-radius:var(--radius-md);border:none;
+  background:var(--primary);color:#fff;font-size:16px;font-weight:800;
+  cursor:pointer;transition:all .2s;width:100%;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-primary-lg:hover{background:var(--primary-dark);transform:translateY(-1px);}
+.btn-row {display:flex;gap:8px;}
+.btn-reserve {
+  flex:1;padding:13px;border-radius:var(--radius-md);
+  border:2px solid var(--primary);background:#fff;color:var(--primary);
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;
+}
+.btn-reserve:hover{background:rgba(224,32,32,.06);}
+.btn-cart-lg {
+  flex:1;padding:13px;border-radius:var(--radius-md);
+  border:1.5px solid var(--gray5);background:#fff;color:var(--gray2);
+  font-size:14px;font-weight:700;cursor:pointer;transition:all .2s;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+}
+.btn-cart-lg:hover{border-color:var(--dark);color:var(--dark);}
+.btn-wish-lg {
+  width:50px;height:50px;border-radius:var(--radius-md);
+  border:1.5px solid var(--gray5);background:#fff;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0;
+}
+.btn-wish-lg:hover{border-color:var(--primary);}
+.btn-wish-lg.active{background:rgba(224,32,32,.07);border-color:var(--primary);}
+
+/* 배송/혜택 정보 */
+.benefit-list {
+  border:1px solid var(--gray5);border-radius:var(--radius-md);
+  overflow:hidden;margin-bottom:20px;
+}
+.benefit-item {
+  display:flex;align-items:flex-start;gap:12px;padding:12px 16px;
+  border-bottom:1px solid var(--gray5);font-size:13px;
+}
+.benefit-item:last-child{border-bottom:none;}
+.benefit-icon{font-size:16px;flex-shrink:0;margin-top:1px;}
+.benefit-txt .label{font-weight:700;color:var(--dark);margin-bottom:2px;}
+.benefit-txt .desc{color:var(--gray3);font-size:12px;}
+
+/* ── 탭 시스템 ── */
+.detail-tabs-wrap {
+  max-width:var(--max-w);margin:28px auto 0;padding:0 20px;
+}
+.tab-nav {
+  display:flex;border-bottom:2px solid var(--gray5);
+  background:#fff;border-radius:var(--radius-md) var(--radius-md) 0 0;
+  overflow:hidden;
+}
+.tab-nav-item {
+  flex:1;padding:16px 8px;font-size:14px;font-weight:700;color:var(--gray3);
+  cursor:pointer;text-align:center;border-bottom:3px solid transparent;
+  transition:all .2s;white-space:nowrap;
+}
+.tab-nav-item.active{color:var(--primary);border-bottom-color:var(--primary);}
+.tab-nav-item:hover:not(.active){color:var(--dark);}
+.tab-panel {
+  background:#fff;border:1px solid var(--gray5);border-top:none;
+  border-radius:0 0 var(--radius-md) var(--radius-md);
+  padding:28px;display:none;
+}
+.tab-panel.active{display:block;}
+
+/* ── 탭1: 상품상세 ── */
+.detail-content{font-size:14px;line-height:1.8;color:var(--gray1);}
+.detail-content h3{font-size:16px;font-weight:800;color:var(--dark);margin:20px 0 10px;}
+.detail-content p{margin-bottom:12px;}
+
+/* ── 기술 특징 다크 섹션 ── */
+.tech-dark {
+  background:#111;color:#fff;border-radius:var(--radius-lg);
+  padding:32px;margin:24px 0;
+}
+.tech-dark-title{font-size:20px;font-weight:900;margin-bottom:20px;text-align:center;}
+.tech-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;}
+.tech-card{background:rgba(255,255,255,.07);border-radius:var(--radius-md);padding:20px;text-align:center;}
+.tech-card-icon{font-size:32px;margin-bottom:8px;}
+.tech-card-name{font-size:13px;font-weight:800;margin-bottom:6px;color:#fff;}
+.tech-card-desc{font-size:12px;color:rgba(255,255,255,.6);line-height:1.5;}
+
+/* ── 탭2: 제품규격 ── */
+.spec-table{width:100%;border-collapse:collapse;font-size:13px;}
+.spec-table th{
+  background:var(--gray6);padding:10px 14px;font-weight:700;
+  color:var(--gray2);text-align:left;border:1px solid var(--gray5);
+  width:160px;
+}
+.spec-table td{
+  padding:10px 14px;border:1px solid var(--gray5);color:var(--dark);
+}
+
+/* ── 탭3: 리뷰 ── */
+.review-summary {
+  display:flex;gap:28px;align-items:center;
+  padding:24px;background:var(--gray6);border-radius:var(--radius-md);margin-bottom:24px;
+}
+.review-score-big {font-size:56px;font-weight:900;color:var(--dark);line-height:1;}
+.review-score-stars{color:var(--accent);font-size:20px;margin:4px 0;}
+.review-score-cnt{font-size:13px;color:var(--gray3);}
+.review-bars{flex:1;}
+.review-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:6px;}
+.review-bar-label{font-size:13px;font-weight:600;color:var(--gray2);width:24px;}
+.review-bar-track{flex:1;background:var(--gray5);border-radius:4px;height:7px;overflow:hidden;}
+.review-bar-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .5s;}
+.review-bar-cnt{font-size:12px;color:var(--gray3);width:32px;text-align:right;}
+
+.review-write-btn {
+  padding:10px 20px;border-radius:var(--radius-sm);
+  border:2px solid var(--primary);color:var(--primary);background:#fff;
+  font-size:13px;font-weight:700;cursor:pointer;margin-bottom:20px;
+}
+.review-write-btn:hover{background:rgba(224,32,32,.06);}
+
+.review-card {
+  border:1px solid var(--gray5);border-radius:var(--radius-md);
+  padding:20px;margin-bottom:14px;
+}
+.review-card-top {
+  display:flex;align-items:center;gap:10px;margin-bottom:10px;
+}
+.reviewer-avatar {
+  width:36px;height:36px;border-radius:50%;background:var(--primary);
+  color:#fff;font-size:14px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+}
+.reviewer-name{font-size:14px;font-weight:700;}
+.reviewer-date{font-size:11px;color:var(--gray4);margin-left:auto;}
+.review-stars{color:var(--accent);font-size:13px;margin-bottom:8px;}
+.review-content{font-size:13px;color:var(--gray1);line-height:1.7;}
+.review-sub-ratings {
+  display:flex;gap:12px;margin-top:10px;padding-top:10px;
+  border-top:1px solid var(--gray5);flex-wrap:wrap;
+}
+.sub-rating-item{font-size:11px;color:var(--gray3);}
+.sub-rating-item strong{color:var(--dark);}
+
+/* ── 탭4: Q&A ── */
+.qna-item {
+  border:1px solid var(--gray5);border-radius:var(--radius-md);margin-bottom:10px;overflow:hidden;
+}
+.qna-q {
+  padding:16px 20px;cursor:pointer;display:flex;align-items:flex-start;gap:12px;
+  background:#fff;transition:background .15s;
+}
+.qna-q:hover{background:var(--gray7);}
+.qna-badge {
+  padding:3px 10px;border-radius:20px;font-size:11px;font-weight:800;
+  flex-shrink:0;
+}
+.qna-badge.q{background:#eff6ff;color:#1d4ed8;}
+.qna-badge.a{background:#f0fdf4;color:#15803d;}
+.qna-title{font-size:13px;font-weight:600;flex:1;}
+.qna-date{font-size:11px;color:var(--gray4);white-space:nowrap;}
+.qna-a {
+  padding:16px 20px;background:var(--gray7);
+  border-top:1px solid var(--gray5);display:none;
+}
+.qna-item.open .qna-a{display:block;}
+.qna-a-txt{font-size:13px;color:var(--gray1);line-height:1.7;}
+.qna-ask-btn {
+  padding:10px 20px;border-radius:var(--radius-sm);
+  border:2px solid var(--dark);color:var(--dark);background:#fff;
+  font-size:13px;font-weight:700;cursor:pointer;margin-bottom:20px;
+}
+
+/* ── 탭5: 연관상품 ── */
+.related-grid {
+  display:grid;grid-template-columns:repeat(4,1fr);gap:14px;
+}
+.related-card{
+  background:var(--gray6);border-radius:var(--radius-md);overflow:hidden;
+  cursor:pointer;transition:all .2s;border:1px solid var(--gray5);
+}
+.related-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-sm);}
+.related-img-wrap {
+  aspect-ratio:1/1;display:flex;align-items:center;justify-content:center;
+  background:#fff;padding:8px;
+}
+.related-img{width:80%;height:80%;object-fit:contain;}
+.related-body{padding:10px;}
+.related-brand{font-size:10px;font-weight:700;color:var(--gray3);margin-bottom:2px;}
+.related-name{font-size:12px;font-weight:700;line-height:1.4;margin-bottom:4px;}
+.related-price{font-size:14px;font-weight:900;color:var(--dark);}
+
+/* ── 하단 여백 ── */
+.page-footer-spacer{height:60px;}
+
+/* ── 반응형 ── */
+@media(max-width:1024px){
+  .detail-wrap{grid-template-columns:1fr;gap:16px;}
+  .gallery-col{position:static;}
+  .tech-grid{grid-template-columns:repeat(2,1fr);}
+  .related-grid{grid-template-columns:repeat(3,1fr);}
+  .perf-grid{grid-template-columns:repeat(2,1fr);}
+}
+@media(max-width:640px){
+  .detail-wrap{padding:12px 12px 0;}
+  .detail-tabs-wrap{padding:0 12px;}
+  .prod-name{font-size:20px;}
+  .price-main{font-size:26px;}
+  .tab-nav-item{font-size:11px;padding:14px 4px;}
+  .related-grid{grid-template-columns:repeat(2,1fr);}
+  .tech-grid{grid-template-columns:1fr;}
+  .review-summary{flex-direction:column;gap:16px;}
+}
+</style>
+</head>
+<body>
+<div id="tt-header"></div>
+
+<!-- ── 브레드크럼 ── -->
+<div class="breadcrumb-bar">
+  <div class="breadcrumb-inner">
+    <a href="index.html">홈</a>
+    <span class="sep">›</span>
+    <a href="product-list.html">타이어</a>
+    <span class="sep">›</span>
+    <span class="current" id="breadcrumbName">상품 상세</span>
+  </div>
+</div>
+
+<!-- ── 상품 메인 영역 ── -->
+<div class="detail-wrap">
+
+  <!-- 갤러리 -->
+  <div class="gallery-col">
+    <div class="gallery-main">
+      <img id="mainImg" src="" alt="타이어 이미지">
+      <span class="gallery-badge" id="mainBadge" style="display:none"></span>
+    </div>
+    <div class="gallery-thumbs" id="thumbList"></div>
+  </div>
+
+  <!-- 정보 패널 -->
+  <div class="info-col">
+
+    <!-- 메타 태그 -->
+    <div class="prod-meta-top" id="metaTags"></div>
+
+    <!-- 상품명 -->
+    <h1 class="prod-name" id="prodName">상품명 로딩 중...</h1>
+    <div class="prod-size-txt" id="prodSize"></div>
+
+    <!-- 평점 -->
+    <div class="rating-row">
+      <div class="rating-big" id="ratingBig">0.0</div>
+      <div>
+        <div class="rating-stars" id="ratingStars">☆☆☆☆☆</div>
+        <div class="rating-cnt" id="ratingCnt">리뷰 0개</div>
+      </div>
+      <div class="rating-verified">✓ 구매 인증 리뷰</div>
+    </div>
+
+    <!-- 성능 인덱스 -->
+    <div class="perf-grid">
+      <div class="perf-item">
+        <div class="perf-icon">⛽</div>
+        <div class="perf-label">연료효율</div>
+        <div class="perf-bar-wrap"><div class="perf-bar" id="perfFuel" style="width:80%"></div></div>
+        <div class="perf-val" id="perfFuelVal">B</div>
+      </div>
+      <div class="perf-item">
+        <div class="perf-icon">💧</div>
+        <div class="perf-label">젖은노면</div>
+        <div class="perf-bar-wrap"><div class="perf-bar" id="perfWet" style="width:90%"></div></div>
+        <div class="perf-val" id="perfWetVal">A</div>
+      </div>
+      <div class="perf-item">
+        <div class="perf-icon">🔈</div>
+        <div class="perf-label">소음</div>
+        <div class="perf-bar-wrap"><div class="perf-bar" id="perfNoise" style="width:70%"></div></div>
+        <div class="perf-val" id="perfNoiseVal">71dB</div>
+      </div>
+      <div class="perf-item">
+        <div class="perf-icon">⚙️</div>
+        <div class="perf-label">내구성</div>
+        <div class="perf-bar-wrap"><div class="perf-bar" id="perfDura" style="width:85%"></div></div>
+        <div class="perf-val" id="perfDuraVal">우수</div>
+      </div>
+    </div>
+
+    <!-- 가격 -->
+    <div class="price-section">
+      <div class="price-discount-badge" id="discBadge"></div>
+      <div class="price-row">
+        <div class="price-main" id="priceMain">0</div>
+        <div class="price-unit">원 / 1개</div>
+      </div>
+      <div class="price-original" id="priceOrig"></div>
+      <div class="price-save" id="priceSave"></div>
+    </div>
+
+    <!-- 사이즈 선택 -->
+    <div class="option-section">
+      <div class="option-label">사이즈 선택</div>
+      <div class="size-grid" id="sizeGrid">
+        <div class="size-btn active" id="currentSizeBtn">로딩 중...</div>
+      </div>
+    </div>
+
+    <!-- 수량 + 재고 -->
+    <div class="qty-section">
+      <div class="qty-label">수량</div>
+      <div class="qty-wrap">
+        <button class="qty-btn" onclick="changeQty(-1)">−</button>
+        <input class="qty-val" type="number" id="qtyInput" value="4" min="1" max="16">
+        <button class="qty-btn" onclick="changeQty(1)">+</button>
+      </div>
+      <div class="stock-status">
+        <span class="stock-dot" id="stockDot"></span>
+        <span id="stockTxt">재고 확인 중...</span>
+      </div>
+    </div>
+
+    <!-- CTA 버튼 -->
+    <div class="cta-section">
+      <button class="btn-primary-lg" onclick="buyNow()">
+        🚗 바로 구매하기
+      </button>
+      <div class="btn-row">
+        <button class="btn-reserve" onclick="makeReservation()">
+          📅 장착 예약
+        </button>
+        <button class="btn-cart-lg" onclick="addToCart()">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            <path d="M1 1h4l2.68 13.39a2 2 0 001.98 1.61h9.72a2 2 0 001.98-1.61L23 6H6"/>
+          </svg>
+          장바구니
+        </button>
+        <button class="btn-wish-lg" id="wishBtn" onclick="toggleWish()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#e02020" stroke-width="2.2">
+            <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- 배송/혜택 -->
+    <div class="benefit-list">
+      <div class="benefit-item">
+        <div class="benefit-icon">🚚</div>
+        <div class="benefit-txt">
+          <div class="label">무료 배송</div>
+          <div class="desc">오늘 주문 시 2~3 영업일 내 도착</div>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🏪</div>
+        <div class="benefit-txt">
+          <div class="label">매장 장착</div>
+          <div class="desc">전국 TIRETOP 매장에서 전문가 장착</div>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">🔒</div>
+        <div class="benefit-txt">
+          <div class="label">정품 보증</div>
+          <div class="desc">제조사 공식 품질보증서 제공</div>
+        </div>
+      </div>
+      <div class="benefit-item">
+        <div class="benefit-icon">↩️</div>
+        <div class="benefit-txt">
+          <div class="label">7일 반품</div>
+          <div class="desc">미장착 제품 7일 이내 교환/환불 가능</div>
+        </div>
+      </div>
+    </div>
+  </div><!-- /.info-col -->
+</div><!-- /.detail-wrap -->
+
+<!-- ── 탭 영역 ── -->
+<div class="detail-tabs-wrap">
+  <div class="tab-nav">
+    <div class="tab-nav-item active" onclick="switchTab(this,'tabDetail')">상품상세</div>
+    <div class="tab-nav-item" onclick="switchTab(this,'tabSpec')">제품규격</div>
+    <div class="tab-nav-item" onclick="switchTab(this,'tabReview')">리뷰 <span id="reviewTabCnt"></span></div>
+    <div class="tab-nav-item" onclick="switchTab(this,'tabQna')">Q&amp;A</div>
+    <div class="tab-nav-item" onclick="switchTab(this,'tabRelated')">추천상품</div>
+  </div>
+
+  <!-- 탭1: 상품상세 -->
+  <div class="tab-panel active" id="tabDetail">
+    <div class="detail-content" id="detailContent">
+      <p>해당 상품의 상세 정보를 불러오는 중입니다...</p>
+    </div>
+    <!-- 기술 특징 다크 섹션 -->
+    <div class="tech-dark">
+      <div class="tech-dark-title">핵심 기술 특징</div>
+      <div class="tech-grid">
+        <div class="tech-card">
+          <div class="tech-card-icon">💧</div>
+          <div class="tech-card-name">우수한 젖은 노면 성능</div>
+          <div class="tech-card-desc">혁신적인 트레드 패턴으로 빗길에서의 제동력과 안정성을 극대화했습니다.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">🔇</div>
+          <div class="tech-card-name">저소음 설계</div>
+          <div class="tech-card-desc">소음 최소화 기술로 정숙한 주행 환경을 제공합니다.</div>
+        </div>
+        <div class="tech-card">
+          <div class="tech-card-icon">⛽</div>
+          <div class="tech-card-name">연비 향상</div>
+          <div class="tech-card-desc">저 구름저항 컴파운드로 연료 효율을 높여 유지비를 절감합니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 탭2: 제품규격 -->
+  <div class="tab-panel" id="tabSpec">
+    <table class="spec-table" id="specTable">
+      <tbody>
+        <tr><th>브랜드</th><td id="specBrand">-</td></tr>
+        <tr><th>상품명</th><td id="specName">-</td></tr>
+        <tr><th>사이즈</th><td id="specSize">-</td></tr>
+        <tr><th>시즌</th><td id="specSeason">-</td></tr>
+        <tr><th>차종</th><td id="specVehicle">-</td></tr>
+        <tr><th>등급</th><td id="specGrade">-</td></tr>
+        <tr><th>재고</th><td id="specStock">-</td></tr>
+        <tr><th>카테고리</th><td id="specCategory">-</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- 탭3: 리뷰 -->
+  <div class="tab-panel" id="tabReview">
+    <div class="review-summary">
+      <div style="text-align:center;flex-shrink:0;">
+        <div class="review-score-big" id="reviewScoreBig">0.0</div>
+        <div class="review-score-stars" id="reviewScoreStars">☆☆☆☆☆</div>
+        <div class="review-score-cnt" id="reviewScoreCnt">0개 리뷰</div>
+      </div>
+      <div class="review-bars" id="reviewBars"></div>
+    </div>
+    <button class="review-write-btn" onclick="openReviewForm()">✏️ 리뷰 작성하기</button>
+    <div id="reviewList"></div>
+  </div>
+
+  <!-- 탭4: Q&A -->
+  <div class="tab-panel" id="tabQna">
+    <button class="qna-ask-btn" onclick="openQnaForm()">❓ 질문하기</button>
+    <div id="qnaList">
+      <div class="qna-item">
+        <div class="qna-q" onclick="this.parentElement.classList.toggle('open')">
+          <span class="qna-badge q">Q</span>
+          <span class="qna-title">타이어 장착은 어떻게 신청하나요?</span>
+          <span class="qna-date">2024.03.15</span>
+        </div>
+        <div class="qna-a">
+          <span class="qna-badge a" style="display:inline-block;margin-bottom:8px">A</span>
+          <p class="qna-a-txt">주문 완료 후 장착 예약 메뉴에서 가까운 TIRETOP 매장과 날짜/시간을 선택하시면 됩니다. 전문 기사가 장착해드립니다.</p>
+        </div>
+      </div>
+      <div class="qna-item">
+        <div class="qna-q" onclick="this.parentElement.classList.toggle('open')">
+          <span class="qna-badge q">Q</span>
+          <span class="qna-title">배송 기간이 얼마나 걸리나요?</span>
+          <span class="qna-date">2024.03.10</span>
+        </div>
+        <div class="qna-a">
+          <span class="qna-badge a" style="display:inline-block;margin-bottom:8px">A</span>
+          <p class="qna-a-txt">재고 있는 상품은 주문 확인 후 1~2 영업일 내 출고되며, 택배 배송은 2~3일 소요됩니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 탭5: 추천상품 -->
+  <div class="tab-panel" id="tabRelated">
+    <div class="related-grid" id="relatedGrid">
+      <div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray3);">
+        추천 상품을 불러오는 중...
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="page-footer-spacer"></div>
+<div id="tt-footer"></div>
+
+<script src="components/loader.js" defer></script>
+<script>
+// ─────────────────────────────────────────────
+// 상태
+// ─────────────────────────────────────────────
+let product      = null;
+let selectedSize = '';
+let isWished     = false;
+
+// ─────────────────────────────────────────────
+// 유틸
+// ─────────────────────────────────────────────
+const $ = id => document.getElementById(id);
+
+function renderStars(r, big=false) {
+  const n = parseFloat(r) || 0;
+  const full  = Math.floor(n);
+  const half  = n - full >= 0.5 ? 1 : 0;
+  const empty = 5 - full - half;
+  const size  = big ? '20px' : '13px';
+  return `<span style="color:#f59e0b;font-size:${size}">${'★'.repeat(full)}${half?'⭐':''}${'☆'.repeat(empty)}</span>`;
+}
+
+// ─────────────────────────────────────────────
+// 상품 데이터 로드
+// ─────────────────────────────────────────────
+async function loadProduct() {
+  const params = new URLSearchParams(location.search);
+  const id     = params.get('id') || params.get('product_id');
+
+  if (!id) {
+    $('prodName').textContent = '상품을 찾을 수 없습니다.';
+    return;
+  }
+
+  try {
+    const p = await TTStore.getProduct(id);
+    if (!p) { $('prodName').textContent = '상품 정보를 불러올 수 없습니다.'; return; }
+    product = p;
+    renderProduct(p);
+    loadRelatedProducts(p.brand_key);
+    loadReviews(p.id);
+  } catch(e) {
+    console.error(e);
+    $('prodName').textContent = '상품 정보 로드 실패. 잠시 후 다시 시도해주세요.';
+  }
+}
+
+// ─────────────────────────────────────────────
+// 상품 렌더링
+// ─────────────────────────────────────────────
+function renderProduct(p) {
+  document.title = `${p.name} ${p.size||''} - TIRETOP`;
+  $('breadcrumbName').textContent = p.name;
+
+  // 이미지
+  const img = p.image || `https://via.placeholder.com/500x500/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand)}`;
+  $('mainImg').src   = img;
+  $('mainImg').alt   = p.name;
+  $('mainImg').onerror = () => {
+    $('mainImg').src = `https://via.placeholder.com/500x500/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand)}`;
+  };
+
+  // 썸네일 (같은 이미지 3~4장으로 구성)
+  const thumbs = [img, img, img];
+  $('thumbList').innerHTML = thumbs.map((src,i) => `
+    <div class="thumb-item ${i===0?'active':''}" onclick="switchThumb(this,'${src}')">
+      <img src="${src}" alt="thumb" onerror="this.src='https://via.placeholder.com/72x72/f3f4f6/9ca3af'">
+    </div>`).join('');
+
+  // 뱃지
+  if (p.badge) {
+    $('mainBadge').textContent = p.badge;
+    $('mainBadge').style.display = '';
+    const badgeCls = p.badge==='NEW'?'new':p.badge==='HOT'?'hot':'';
+    if (badgeCls) $('mainBadge').className = `gallery-badge ${badgeCls}`;
+  }
+
+  // 메타 태그
+  const tags = [
+    p.brand   ? `<span class="prod-tag brand">${p.brand}</span>` : '',
+    p.season  ? `<span class="prod-tag season">${p.season}</span>` : '',
+    p.vehicle_type ? `<span class="prod-tag vehicle">${p.vehicle_type}</span>` : '',
+    p.grade   ? `<span class="prod-tag grade">${p.grade}</span>` : '',
+  ].filter(Boolean).join('');
+  $('metaTags').innerHTML = tags;
+
+  // 기본 정보
+  $('prodName').textContent  = p.name;
+  $('prodSize').textContent  = p.size || '';
+  selectedSize = p.size || '';
+
+  // 평점
+  const rat = parseFloat(p.rating)||0;
+  $('ratingBig').textContent   = rat.toFixed(1);
+  $('ratingStars').innerHTML   = renderStars(rat, true);
+  $('ratingCnt').textContent   = `리뷰 ${(p.review_count||0).toLocaleString()}개`;
+
+  // 성능 인덱스 (더미 or 실제)
+  const perf = { fuel:80, wet:90, noise:70, dura:85 };
+  $('perfFuel').style.width  = perf.fuel  + '%';
+  $('perfWet').style.width   = perf.wet   + '%';
+  $('perfNoise').style.width = perf.noise + '%';
+  $('perfDura').style.width  = perf.dura  + '%';
+  $('perfFuelVal').textContent  = 'B등급';
+  $('perfWetVal').textContent   = 'A등급';
+  $('perfNoiseVal').textContent = '71dB';
+  $('perfDuraVal').textContent  = '우수';
+
+  // 가격
+  $('discBadge').textContent = p.discount ? `${p.discount}% 할인` : '';
+  $('discBadge').style.display = p.discount ? '' : 'none';
+  $('priceMain').textContent = p.price ? p.price.toLocaleString() : '0';
+  if (p.original_price > p.price) {
+    $('priceOrig').textContent = `정가 ${p.original_price.toLocaleString()}원`;
+    const saved = p.original_price - p.price;
+    $('priceSave').textContent = `${saved.toLocaleString()}원 절약`;
+  }
+
+  // 사이즈 (현재 사이즈 1개 + 기타 유사 사이즈 더미)
+  const sizes = [p.size, '205/60R16', '215/55R17', '225/45R18'].filter(Boolean);
+  $('sizeGrid').innerHTML = sizes.map((s,i) =>
+    `<div class="size-btn ${i===0?'active':''}" onclick="selectSize(this,'${s}')">${s}</div>`
+  ).join('');
+
+  // 재고
+  const stock = p.stock || 0;
+  const dot   = $('stockDot');
+  if (stock > 10) { dot.className='stock-dot'; $('stockTxt').textContent='재고 충분'; }
+  else if (stock > 0) { dot.className='stock-dot low'; $('stockTxt').textContent=`잔여 ${stock}개`; }
+  else { dot.className='stock-dot out'; $('stockTxt').textContent='품절'; }
+
+  // 규격 탭
+  $('specBrand').textContent   = p.brand  || '-';
+  $('specName').textContent    = p.name   || '-';
+  $('specSize').textContent    = p.size   || '-';
+  $('specSeason').textContent  = p.season || '-';
+  $('specVehicle').textContent = p.vehicle_type || '-';
+  $('specGrade').textContent   = p.grade  || '-';
+  $('specStock').textContent   = stock > 0 ? `${stock}개` : '품절';
+  $('specCategory').textContent = p.category || 'tire';
+
+  // 상세 내용
+  const detailHtml = p.description || `
+    <h3>${p.brand} ${p.name} ${p.size||''}</h3>
+    <p>${p.brand}에서 선보이는 ${p.name}은(는) ${p.season||'사계절'} 사용에 최적화된 타이어입니다.
+    탁월한 주행 성능과 안전성을 제공하며, ${p.vehicle_type||'승용차'} 차량에 적합합니다.</p>
+    <p>최첨단 컴파운드 기술과 혁신적인 트레드 패턴으로 빗길과 건조한 도로 모두에서 우수한 접지력을 발휘합니다.
+    저소음 설계로 정숙한 승차감을 제공하며, 뛰어난 내구성으로 경제적인 선택입니다.</p>
+  `;
+  $('detailContent').innerHTML = detailHtml;
+
+  // 리뷰 탭 카운트
+  $('reviewTabCnt').textContent = p.review_count > 0 ? `(${p.review_count})` : '';
+}
+
+// ─────────────────────────────────────────────
+// 리뷰 로드
+// ─────────────────────────────────────────────
+async function loadReviews(productId) {
+  try {
+    const res = await TTStore.fetchReviews({ product_id: productId, limit: 10 });
+    const reviews = res?.data || [];
+    const total   = res?.total || 0;
+
+    // 요약 통계
+    const rs = product?.review_stats;
+    const avg = parseFloat(product?.rating || 0);
+    $('reviewScoreBig').textContent = avg.toFixed(1);
+    $('reviewScoreStars').innerHTML = renderStars(avg, false);
+    $('reviewScoreCnt').textContent = `${total.toLocaleString()}개 리뷰`;
+
+    // 막대 그래프
+    const rMap = { 5: rs?.r5||0, 4: rs?.r4||0, 3: rs?.r3||0, 2: rs?.r2||0, 1: rs?.r1||0 };
+    let barsHtml = '';
+    for (let s = 5; s >= 1; s--) {
+      const cnt = rMap[s];
+      const pct = total > 0 ? (cnt/total*100) : 0;
+      barsHtml += `
+      <div class="review-bar-row">
+        <div class="review-bar-label">${s}점</div>
+        <div class="review-bar-track"><div class="review-bar-fill" style="width:${pct}%"></div></div>
+        <div class="review-bar-cnt">${cnt}</div>
+      </div>`;
+    }
+    $('reviewBars').innerHTML = barsHtml;
+
+    // 리뷰 카드
+    if (!reviews.length) {
+      $('reviewList').innerHTML = '<p style="text-align:center;padding:40px;color:var(--gray3)">아직 리뷰가 없습니다. 첫 리뷰를 작성해보세요!</p>';
+      return;
+    }
+
+    $('reviewList').innerHTML = reviews.map(r => {
+      const initial = (r.author_name||'익명').charAt(0);
+      const colors  = ['#e02020','#2563eb','#16a34a','#d97706','#7c3aed'];
+      const color   = colors[r.id % colors.length];
+      return `
+      <div class="review-card">
+        <div class="review-card-top">
+          <div class="reviewer-avatar" style="background:${color}">${initial}</div>
+          <div>
+            <div class="reviewer-name">${r.author_name}</div>
+            <div class="review-stars">${'★'.repeat(r.rating||5)}${'☆'.repeat(5-(r.rating||5))}</div>
+          </div>
+          <div class="reviewer-date">${(r.created_at||'').slice(0,10)}</div>
+          ${r.is_verified ? '<span style="font-size:11px;color:#16a34a;font-weight:700;margin-left:8px">✓ 구매 인증</span>' : ''}
+        </div>
+        <div class="review-content">${r.content}</div>
+        ${(r.ride_comfort||r.noise||r.wet_grip||r.durability) ? `
+        <div class="review-sub-ratings">
+          ${r.ride_comfort ? `<span class="sub-rating-item">승차감 <strong>${r.ride_comfort}/5</strong></span>` : ''}
+          ${r.noise        ? `<span class="sub-rating-item">소음 <strong>${r.noise}/5</strong></span>` : ''}
+          ${r.wet_grip     ? `<span class="sub-rating-item">젖은노면 <strong>${r.wet_grip}/5</strong></span>` : ''}
+          ${r.durability   ? `<span class="sub-rating-item">내구성 <strong>${r.durability}/5</strong></span>` : ''}
+        </div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    console.error('리뷰 로드 오류:', e);
+  }
+}
+
+// ─────────────────────────────────────────────
+// 연관 상품
+// ─────────────────────────────────────────────
+async function loadRelatedProducts(brandKey) {
+  try {
+    const res      = await TTStore.fetchProducts({ brand: brandKey, active:1, limit:4 });
+    const products = (res?.data || []).filter(p => p.id !== product?.id).slice(0,4);
+    if (!products.length) {
+      $('relatedGrid').innerHTML = '<p style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gray3)">추천 상품이 없습니다.</p>';
+      return;
+    }
+    $('relatedGrid').innerHTML = products.map(p => {
+      const img = p.image || `https://via.placeholder.com/200x200/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand)}`;
+      return `
+      <div class="related-card" onclick="location.href='product-detail.html?id=${p.product_id||p.id}'">
+        <div class="related-img-wrap">
+          <img class="related-img" src="${img}" alt="${p.name}"
+               onerror="this.src='https://via.placeholder.com/200x200/f3f4f6/9ca3af'">
+        </div>
+        <div class="related-body">
+          <div class="related-brand">${p.brand}</div>
+          <div class="related-name">${p.name} ${p.size||''}</div>
+          <div class="related-price">${(p.price||0).toLocaleString()}원</div>
+        </div>
+      </div>`;
+    }).join('');
+  } catch(e) { console.error(e); }
+}
+
+// ─────────────────────────────────────────────
+// UI 액션
+// ─────────────────────────────────────────────
+function switchThumb(el, src) {
+  document.querySelectorAll('.thumb-item').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  $('mainImg').src = src;
+}
+
+function switchTab(el, tabId) {
+  document.querySelectorAll('.tab-nav-item').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  $(tabId).classList.add('active');
+}
+
+function selectSize(el, size) {
+  document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  selectedSize = size;
+}
+
+function changeQty(delta) {
+  const inp = $('qtyInput');
+  const val = Math.max(1, Math.min(16, parseInt(inp.value||'4') + delta));
+  inp.value = val;
+}
+
+function toggleWish() {
+  isWished = !isWished;
+  const btn = $('wishBtn');
+  btn.classList.toggle('active', isWished);
+  btn.querySelector('svg').style.fill = isWished ? '#e02020' : 'none';
+}
+
+function buyNow() {
+  if (!product) return;
+  const qty = parseInt($('qtyInput').value||'4');
+  const token = TTStore.Auth.getToken();
+  if (!token) {
+    if (confirm('구매를 위해 로그인이 필요합니다.\n로그인 페이지로 이동할까요?')) {
+      location.href = '/login.html?redirect=' + encodeURIComponent(location.pathname + location.search);
+    }
+    return;
+  }
+  alert(`${product.name} ${selectedSize} ${qty}개를 주문합니다.\n(실제 결제 페이지로 이동합니다)`);
+}
+
+function addToCart() {
+  if (!product) return;
+  const qty = parseInt($('qtyInput').value||'4');
+  TTStore.addToCart({ ...product, selectedSize }, qty);
+  alert('장바구니에 추가되었습니다!');
+}
+
+function makeReservation() {
+  if (!product) return;
+  location.href = `/reservation.html?product_id=${product.id}&product_name=${encodeURIComponent(product.name)}`;
+}
+
+function openReviewForm() {
+  const token = TTStore.Auth.getToken();
+  if (!token) {
+    if (confirm('리뷰 작성을 위해 로그인이 필요합니다.')) {
+      location.href = '/login.html';
+    }
+    return;
+  }
+  alert('리뷰 작성 폼 (구현 예정)');
+}
+
+function openQnaForm() {
+  const token = TTStore.Auth.getToken();
+  if (!token) {
+    if (confirm('질문 작성을 위해 로그인이 필요합니다.')) {
+      location.href = '/login.html';
+    }
+    return;
+  }
+  alert('Q&A 작성 폼 (구현 예정)');
+}
+
+// ─────────────────────────────────────────────
+// 초기화
+// ─────────────────────────────────────────────
+loadProduct();
+</script>
+</body>
+</html>
