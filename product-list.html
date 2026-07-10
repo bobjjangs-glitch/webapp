@@ -529,14 +529,14 @@ function buildCard(p) {
   const badgeCls = p.badge ? (badgeMap[p.badge] || '') : '';
   const pid  = p.product_id || p.id;
   const img  = p.image
-    || `https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand || 'TIRE')}`;
+    || `https://placehold.co/300x300/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand || 'TIRE')}`;
 
   return `
   <div class="prod-card" onclick="location.href='product-detail.html?id=${pid}'">
     <div class="prod-card-img-wrap">
       <img class="prod-card-img"
            src="${img}"
-           onerror="this.src='https://via.placeholder.com/300x300/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand || 'TIRE')}'"
+           onerror="this.src='https://placehold.co/300x300/f3f4f6/9ca3af?text=${encodeURIComponent(p.brand || 'TIRE')}'"
            alt="${p.name}" loading="lazy">
       ${p.badge ? `<span class="prod-card-badge ${badgeCls}">${p.badge}</span>` : ''}
       <button class="prod-card-wish"
@@ -556,16 +556,16 @@ function buildCard(p) {
       <div class="prod-card-size">${p.size || ''}</div>
       <div class="prod-card-rating">
         <span style="color:#f59e0b;font-size:11px;">★</span>
-        <span class="star-val">${(p.rating || 0).toFixed(1)}</span>
-        <span class="review-cnt">(${(p.review_count || 0).toLocaleString()})</span>
+        <span class="star-val">${(+(p.rating || 0)).toFixed(1)}</span>
+        <span class="review-cnt">(${(+(p.review_count || p.reviewCount || 0)).toLocaleString()})</span>
       </div>
       <div class="prod-card-price-row">
         ${p.discount ? `<span class="prod-price-disc">${p.discount}%</span>` : ''}
-        <span class="prod-price-main">${Math.floor(p.price / 10000)}만</span>
-        <span class="prod-price-unit">${(p.price % 10000).toLocaleString()}원</span>
+        <span class="prod-price-main">${Math.floor((p.price || p.salePrice || 0) / 10000)}만</span>
+        <span class="prod-price-unit">${((p.price || p.salePrice || 0) % 10000).toLocaleString()}원</span>
       </div>
-      ${p.original_price > p.price
-        ? `<span class="prod-price-orig">${p.original_price.toLocaleString()}원</span>`
+      ${(p.original_price || p.factoryPrice) > (p.price || p.salePrice)
+        ? `<span class="prod-price-orig">${(p.original_price || p.factoryPrice || 0).toLocaleString()}원</span>`
         : ''}
     </div>
     <div class="prod-card-footer" onclick="event.stopPropagation()">
@@ -596,17 +596,17 @@ async function fetchProducts() {
     </div>`;
 
   // 쿼리 파라미터 조립
-  const qs = new URLSearchParams({ active: 1, limit: state.limit, page: state.page });
-  if (state.brand)        qs.set('brand',        state.brand);
+  const qs = new URLSearchParams({ limit: state.limit, page: state.page });
+  if (state.brand)        qs.set('brand',        state.brand);  // brand_key 로 매핑됨
   if (state.season)       qs.set('season',       state.season);
   if (state.vehicle_type) qs.set('vehicle_type', state.vehicle_type);
   if (state.sort)         qs.set('sort',         state.sort);
-  if (state.priceMin)     qs.set('price_min',    state.priceMin);
-  if (state.priceMax)     qs.set('price_max',    state.priceMax);
 
   const data = await apiFetch('/api/products?' + qs.toString());
 
-  if (!data || !data.success) {
+  // Worker 응답: { success: true, data: [...], total, page, limit, total_pages }
+  // 응답이 null 이거나 success 가 명시적으로 false 인 경우만 오류 처리
+  if (!data || data.success === false) {
     grid.innerHTML = `
       <div class="empty-wrap" style="grid-column:1/-1">
         <div class="empty-icon">⚠️</div>
@@ -615,8 +615,11 @@ async function fetchProducts() {
     return;
   }
 
-  const products = data.data || [];
-  const total    = data.total || 0;
+  // data.data 배열 또는 data 자체가 배열인 경우 모두 처리
+  const products = Array.isArray(data.data) ? data.data
+                 : Array.isArray(data)      ? data
+                 : [];
+  const total    = data.total ?? products.length;
   state.total      = total;
   state.totalPages = data.total_pages || Math.ceil(total / state.limit) || 1;
 
@@ -643,13 +646,13 @@ async function updateSidebarCounts() {
     'bridgestone','continental','pirelli','goodyear'
   ];
   // 전체 카운트
-  apiFetch('/api/products?active=1&limit=1').then(r => {
+  apiFetch('/api/products?limit=1').then(r => {
     const el = document.getElementById('cntAll');
     if (el) el.textContent = r?.total ?? '-';
   });
-  // 브랜드별 카운트
+  // 브랜드별 카운트 (brand_key 파라미터 사용)
   brands.forEach(brand => {
-    apiFetch(`/api/products?active=1&brand=${brand}&limit=1`).then(r => {
+    apiFetch(`/api/products?brand=${brand}&limit=1`).then(r => {
       const key = brand.charAt(0).toUpperCase() + brand.slice(1);
       const el  = document.getElementById('cnt' + key);
       if (el) el.textContent = r?.total ?? '-';
